@@ -237,7 +237,7 @@ int main()
           run = false;
         }
 
-        std::lock_guard guard(mtx);
+        std::lock_guard<std::mutex> guard(mtx);
         cmd = readcmd;
       }
     }
@@ -255,7 +255,7 @@ int main()
     iso_tp.Process();
 
     {
-      std::lock_guard guard(mtx);
+      std::lock_guard<std::mutex> guard(mtx);
 
       if (cmd.size() > 0)
       {
@@ -283,8 +283,7 @@ int main()
       readcmd.clear();
     }
 
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(1ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     Timers::TickerCounter::ProcessTick();
   }
 
