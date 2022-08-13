@@ -155,7 +155,7 @@ size_t PciHelper::PackData(uint8_t* data, size_t length, size_t candl, PciType& 
       type = PciType::FF;
       data[0] = static_cast<uint8_t>(type);
 
-      if (length > 4095)
+      if (length > 0xfff)
       {
         // FF > 4095
         data[1] = 0;
@@ -167,7 +167,6 @@ size_t PciHelper::PackData(uint8_t* data, size_t length, size_t candl, PciType& 
       }
       else
       {
-        // FF <= 4096
         data[0] |= ((length >> 8) & 0x0fu);
         data[1] = length & 0xff;
         pci_len = 2;
@@ -206,7 +205,6 @@ size_t PciHelper::PackFlowControl(uint8_t* data, FlowState state, uint8_t bs, ui
 
 size_t PciHelper::PackConseqFrame(uint8_t* data, uint8_t sn)
 {
-  data[0] = static_cast<uint8_t>(PciType::CF);
-  data[0] |= (sn & 0x0fu);
+  data[0] = static_cast<uint8_t>(PciType::CF) | (sn & 0x0fu);
   return 1;
 }

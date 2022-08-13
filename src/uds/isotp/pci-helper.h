@@ -10,7 +10,7 @@ enum class PciType
 
 enum class FlowState
 {
-  CTS = 0, WAIT = 1, OVERFLOW = 2, ERROR
+  CTS = 0, WAIT = 1, OVERFLOW = 2
 };
 
 class PciHelper {

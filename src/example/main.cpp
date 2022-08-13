@@ -30,8 +30,8 @@ class StaticMemAllocator {
 };
 
 /* ---------------------------------------------------------------------------- */
-constexpr size_t RxBufferSize = 4096;
-constexpr size_t TxBufferSize = 4096;
+constexpr size_t RxBufferSize = 8192;
+constexpr size_t TxBufferSize = 8192;
 std::string cmd;
 std::mutex mtx;
 
@@ -51,7 +51,7 @@ static void try_to_set_param(const onepair& pair, uint32_t& vset)
   uint32_t scaned = 0u;
   std::string frmt = "%u";
 
-  if (pair.second.compare("0x") > 0)
+  if (pair.second.size() > 2 && pair.second.at(1) == 'x')
   {
     frmt = "%x";
   }
@@ -103,7 +103,7 @@ static void set_iso_tp(IsoTp& isotp, argsret& params)
     }
   }
 
-  std::cout << "Init iso tp parameters:" <<  std::hex << std::endl;
+  std::cout << "Init iso tp parameters:" << std::endl;
 
   std::cout << "BLKSIZE = " << (int)blksize << std::endl;
   iso_tp.SetParameter(ParName::BLKSZ, blksize);
@@ -111,13 +111,16 @@ static void set_iso_tp(IsoTp& isotp, argsret& params)
   std::cout << "STMIN   = " << (int)stmin << std::endl;
   iso_tp.SetParameter(ParName::ST_MIN, stmin);
 
+  std::cout << std::hex;
   std::cout << "PHYS    = " << (int)phys_id << std::endl;
   iso_tp.SetParameter(ParName::PHYS_ADDR, phys_id);
 
   std::cout << "RESP    = " << (int)resp_id << std::endl;
   iso_tp.SetParameter(ParName::RESP_ADDR, resp_id);
 
-  std::cout << "FUNC    = " << (int)func_id << std::dec << std::endl;
+  std::cout << "FUNC    = " << (int)func_id << std::endl;
+  std::cout << std::dec;
+
   iso_tp.SetParameter(ParName::FUNC_ADDR, func_id);
 }
 
