@@ -127,8 +127,6 @@ int main(int argc, char** argv)
 
   iso_tp.SetParameter(ParName::CANDL, 8);
 
-  set_iso_tp(iso_tp, params);
-
   std::cout << "ISO Tp starting. Binding to '" << ifname << "'" << std::endl;
 
   auto sockfd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
@@ -150,9 +148,16 @@ int main(int argc, char** argv)
   assert(bind(sockfd, (struct sockaddr*)&loc_addr, sizeof(loc_addr)) >= 0);
 
   std::cout << "Started succesfully." << std::endl;
+  std::cout << " ----------------------------------------- " << std::endl;
+  set_iso_tp(iso_tp, params);
+  std::cout << " ----------------------------------------- " << std::endl << std::endl;
 
   listener.SetSocket(sockfd);
   sender.SetSocket(sockfd);
+
+  std::array<uint8_t, TxBufferSize> buffer;
+
+  for (size_t i = 0; i < buffer.size(); buffer[i] = static_cast<uint8_t>(i), i++);
 
   std::thread th1([&]()
   {
@@ -177,10 +182,6 @@ int main(int argc, char** argv)
       }
     }
   });
-
-  std::array<uint8_t, 256> buffer {0};
-
-  for (size_t i = 0; i < buffer.size(); buffer[i] = (i + 1), i++);
 
   std::string readcmd;
 
