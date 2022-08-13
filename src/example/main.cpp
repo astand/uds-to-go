@@ -197,13 +197,14 @@ int main(int argc, char** argv)
         // exit
         break;
       }
-      else if (readcmd.at(0) == 'd')
-      {
-        iso_tp.Request(buffer.data(), 100);
-      }
       else
       {
-        iso_tp.Request(buffer.data(), 7);
+        uint32_t sendsize = 0u;
+
+        if (sscanf(readcmd.c_str(), "%u", &sendsize) == 1)
+        {
+          iso_tp.Request(buffer.data(), sendsize);
+        }
       }
 
       readcmd.clear();
