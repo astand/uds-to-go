@@ -4,6 +4,7 @@
 #include <array>
 #include <thread>
 #include <string.h>
+#include <chrono>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
@@ -45,6 +46,26 @@ static IsoTpMem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(send
 static IsoTp& iso_tp = isotpsource;
 static CanListener listener(iso_tp);
 
+static void simple_timer_process()
+{
+#if 0
+  static auto first_stamp = std::chrono::steady_clock::now();
+  static uint64_t ticked_us = 0u;
+
+  auto now_stamp = std::chrono::steady_clock::now();
+  auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(now_stamp - first_stamp).count();
+
+  while (elapsed_us > 1000)
+  {
+    elapsed_us -= 1000;
+    Timers::TickerCounter::ProcessTick();
+    first_stamp += std::chrono::microseconds(1000);
+  }
+
+#else
+  Timers::TickerCounter::ProcessTick();
+#endif
+}
 
 static void try_to_set_param(const onepair& pair, uint32_t& vset)
 {
@@ -165,7 +186,9 @@ int main(int argc, char** argv)
   std::thread th1([&]()
   {
     std::string readcmd;
-    std::cout << "Read command thread started..." << std::endl;
+    std::cout << "Command read thread started... OK" << std::endl;
+    std::cout << "To send ISO TP packet input number (payload size) and press Enter" << std::endl;
+    std::cout << "If the target instance is available you will see the result in its output..." << std::endl;
     bool run = true;
 
     while (run)
@@ -224,7 +247,7 @@ int main(int argc, char** argv)
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    Timers::TickerCounter::ProcessTick();
+    simple_timer_process();
   }
 
   th1.join();
