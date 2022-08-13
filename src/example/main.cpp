@@ -35,6 +35,9 @@ constexpr size_t TxBufferSize = 4096;
 std::string cmd;
 std::mutex mtx;
 
+// name of socketcan interface for ISO-TP communication test
+static std::string ifname = "vcan0";
+
 /* ---------------------------------------------------------------------------- */
 static CanSender sender;
 static IsoApp isoapp;
@@ -94,6 +97,10 @@ static void set_iso_tp(IsoTp& isotp, argsret& params)
     {
       try_to_set_param(params[i], stmin);
     }
+    else if (params[i].first.compare("-iface") == 0)
+    {
+      ifname = params[i].second;
+    }
   }
 
   std::cout << "Init iso tp parameters:" <<  std::hex << std::endl;
@@ -122,13 +129,13 @@ int main(int argc, char** argv)
 
   set_iso_tp(iso_tp, params);
 
-  std::cout << "Hello uds!" << std::endl;
+  std::cout << "ISO Tp starting. Binding to '" << ifname << "'" << std::endl;
 
   auto sockfd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
   assert(sockfd > 0);
 
   struct ifreq can_iface;
-  strcpy(can_iface.ifr_name, "vcan0");
+  strcpy(can_iface.ifr_name, ifname.c_str());
 
   assert(ioctl(sockfd, SIOCGIFINDEX, &can_iface) >= 0);
 
@@ -141,6 +148,8 @@ int main(int argc, char** argv)
   assert(ioctl(sockfd, SIOCGIFMTU, &can_iface) >= 0);
   assert(fcntl(sockfd, F_SETFL, (fcntl(sockfd, F_GETFL) | O_NONBLOCK)) >= 0);
   assert(bind(sockfd, (struct sockaddr*)&loc_addr, sizeof(loc_addr)) >= 0);
+
+  std::cout << "Started succesfully." << std::endl;
 
   listener.SetSocket(sockfd);
   sender.SetSocket(sockfd);
