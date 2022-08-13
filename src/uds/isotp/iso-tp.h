@@ -23,6 +23,19 @@ class IsoTp : public IsoListener, public IsoTpHost {
   void OnIsoTxEvent(N_Type event, N_Result result);
   ParChangeResult SetParameter(ParName name, uint32_t value);
 
+  typedef struct
+  {
+    uint32_t phys_id;
+    uint32_t func_id;
+    uint32_t resp_id;
+    uint32_t candl;
+    uint8_t padding;
+  } DoCAN_Config_t;
+
+  const DoCAN_Config_t& Config() const {
+    return docan_config;
+  }
+
  private:
   DoCAN_Sender iso_sender;
   DoCAN_Receiver iso_receiver;
@@ -32,11 +45,9 @@ class IsoTp : public IsoListener, public IsoTpHost {
 
   IsoTpClient::IsoTpInfo paydsc{};
 
-  uint32_t phys_addr{0};
-  uint32_t func_addr{0};
+  DoCAN_Config_t docan_config{0};
 
   IsoTpResult state {IsoTpResult::WRONG_STATE};
-
 };
 
 template<size_t Rx, size_t Tx, template<typename, size_t> class Memgiver>

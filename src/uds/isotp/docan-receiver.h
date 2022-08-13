@@ -30,19 +30,17 @@ class DoCAN_Receiver {
     RxState state{RxState::IDLE};
     uint8_t blksize{16};
     uint8_t stmin{0};
-    uint32_t respid{0};
 
     uint32_t rxsize{0};
     uint32_t passed{0};
 
     uint8_t expectsn{0};
     uint8_t currblkn{0};
-
   } RxDescriptor;
 
   RxDescriptor rxds{};
 
-  uint8_t can_message[64u];
+  uint8_t can_message[MAX_CANDL];
 
   IsoTp& itp;
 

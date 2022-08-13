@@ -11,8 +11,8 @@ void IsoTp::Process()
 
 void IsoTp::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
 {
-  bool is_phys = (msgid == phys_addr);
-  bool is_func = (msgid == func_addr);
+  bool is_phys = (msgid == docan_config.phys_id);
+  bool is_func = (msgid == docan_config.func_id);
 
   PciType ptype = static_cast<PciType>(data[0] & 0xf0u);
 
@@ -75,23 +75,25 @@ ParChangeResult IsoTp::SetParameter(ParName name, uint32_t v)
       ret = iso_sender.SetParameter(name, v);
       break;
 
-    case (ParName::PHYS_ADDR):
-      phys_addr = v;
-      break;
-
-    case (ParName::FUNC_ADDR):
-      func_addr = v;
-      break;
-
-    case (ParName::RESP_ADDR):
     case (ParName::CANDL):
-      iso_sender.SetParameter(name, v);
-      ret = (iso_receiver.SetParameter(name, v) == ParChangeResult::OK) &&
-        (iso_sender.SetParameter(name, v) == ParChangeResult::OK) ? ParChangeResult::OK : ParChangeResult::RX_ON;
+      // TODO: check v on available candl's
+      docan_config.candl = v;
       break;
 
     case (ParName::PADD_BYTE):
-      ret = iso_sender.SetParameter(name, v);
+      docan_config.padding = static_cast<uint8_t>(v);
+      break;
+
+    case (ParName::PHYS_ADDR):
+      docan_config.phys_id = v;
+      break;;
+
+    case (ParName::FUNC_ADDR):
+      docan_config.func_id = v;
+      break;
+
+    case (ParName::RESP_ADDR):
+      docan_config.resp_id = v;
       break;
 
     default:

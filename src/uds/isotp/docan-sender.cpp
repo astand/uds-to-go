@@ -11,7 +11,7 @@ IsoTpResult DoCAN_Sender::Send(IsoSender& sender, const uint8_t* data, size_t le
   assert(data != nullptr);
 
   auto ret = CheckTxValid(length);
-  const BaseEnum candl = static_cast<BaseEnum>(itp_conf.can_dl);
+  const uint32_t candl = itp.Config().candl;
 
   if (ret == IsoTpResult::OK)
   {
@@ -28,9 +28,9 @@ IsoTpResult DoCAN_Sender::Send(IsoSender& sender, const uint8_t* data, size_t le
 
       memcpy(can_message + pci_len, data, txds.passed);
 
-      for (size_t i = pci_len + txds.passed; i < candl; can_message[i++] = itp_conf.padding_byte);
+      for (size_t i = pci_len + txds.passed; i < candl; can_message[i++] = itp.Config().padding);
 
-      if (sender.SendFrame(can_message, candl, itp_conf.response_id))
+      if (sender.SendFrame(can_message, candl, itp.Config().resp_id))
       {
         if (pci == PciType::FF)
         {
@@ -70,7 +70,7 @@ IsoTpResult DoCAN_Sender::CheckTxValid(size_t length)
 void DoCAN_Sender::ProcessTx(IsoSender& sender)
 {
   PciHelper pchelper;
-  const size_t candl = static_cast<BaseEnum>(itp_conf.can_dl);
+  const size_t candl = itp.Config().candl;
 
   if (txds.state == DtState::WAIT)
   {
@@ -98,12 +98,12 @@ void DoCAN_Sender::ProcessTx(IsoSender& sender)
         // set pci part of data
         memcpy(can_message + pci_len, txbuff + txds.passed, cpylen);
 
-        for (size_t i = cpylen + pci_len; i < candl; can_message[i++] = itp_conf.padding_byte);
+        for (size_t i = cpylen + pci_len; i < candl; can_message[i++] = itp.Config().padding);
       }
 
       last_send_ok = false;
 
-      if (sender.SendFrame(can_message, candl, itp_conf.response_id) != 0)
+      if (sender.SendFrame(can_message, candl, itp.Config().resp_id) != 0)
       {
         last_send_ok = true;
         // Restart As timer every successful sending
@@ -223,53 +223,20 @@ ParChangeResult DoCAN_Sender::SetParameter(ParName name, uint32_t v)
   {
     switch (name)
     {
-      case (ParName::RESP_ADDR):
-        if (v > 0)
-        {
-          itp_conf.response_id = v;
-        }
-
-        break;
-
       case (ParName::As_TIM_ms):
-        itp_conf.As_tim = v;
-
-        if (itp_conf.As_tim > 0)
-        {
-          N_As_tim.Start(itp_conf.As_tim);
-          N_As_tim.Stop();
-        }
+        N_As_tim.Start(v);
+        N_As_tim.Stop();
 
         break;
 
       case (ParName::Bs_TIM_ms):
-        itp_conf.Bs_tim = v;
-
-        if (itp_conf.Bs_tim > 0)
-        {
-          N_Bs_tim.Start(itp_conf.Bs_tim);
-          N_Bs_tim.Stop();
-        }
-
+        N_Bs_tim.Start(v);
+        N_Bs_tim.Stop();
         break;
 
       case (ParName::Cs_TIM_ms):
-        itp_conf.Cs_tim = v;
-
-        if (itp_conf.Cs_tim > 0)
-        {
-          N_Cs_tim.Start(itp_conf.Cs_tim);
-          N_Cs_tim.Stop();
-        }
-
-        break;
-
-      case (ParName::CANDL):
-        itp_conf.can_dl = v > 64u ? 64u : v < 8 ? 8 : v;
-        break;
-
-      case (ParName::PADD_BYTE):
-        itp_conf.padding_byte = v & 0xffu;
+        N_Cs_tim.Start(v);
+        N_Cs_tim.Stop();
         break;
 
       default:

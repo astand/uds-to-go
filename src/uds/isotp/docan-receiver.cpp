@@ -26,7 +26,7 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
   PciHelper::PciMeta inf;
   size_t pcioffset = helper.UnpackPciInfo(data, candl, inf);
 
-  assert(pcioffset <= candl && candl < 64u);
+  assert(pcioffset <= candl && candl < MAX_CANDL);
 
   if (pcioffset > 0)
   {
@@ -40,7 +40,7 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
         }
 
         // start new multi reception (cannot be less than 7 bytes)
-        if (inf.dlen < 8)
+        if (inf.dlen < MIN_FF_CANDL)
         {
           // Ignore case (ISO 15765 9.6.3.2 (p 29))
         }
@@ -49,13 +49,13 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
           rxds.state = RxState::IDLE;
           // send FC with overflow status
           helper.PackFlowControl(can_message, FlowState::OVERFLOW, 0, 0);
-          sender.SendFrame(can_message, candl, rxds.respid);
+          sender.SendFrame(can_message, candl, itp.Config().resp_id);
         }
         else
         {
           // fine, reception can be processed
           helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
-          sender.SendFrame(can_message, candl, rxds.respid);
+          sender.SendFrame(can_message, candl, itp.Config().resp_id);
           rxds.currblkn = 0;
           rxds.rxsize = inf.dlen;
           uint32_t cpylen = candl - pcioffset;
@@ -111,7 +111,7 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
             {
               // block ended, send FC
               helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
-              sender.SendFrame(can_message, candl, rxds.respid);
+              sender.SendFrame(can_message, candl, itp.Config().resp_id);
               rxds.currblkn = 0;
             }
           }
@@ -155,10 +155,6 @@ ParChangeResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v)
 
     case (ParName::ST_MIN):
       rxds.stmin = v;
-      break;
-
-    case (ParName::RESP_ADDR):
-      rxds.respid = v;
       break;
 
     default:

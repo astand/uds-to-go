@@ -127,3 +127,7 @@ enum class N_TarAddress
   TAtype_7_Physical,
   TAtype_8_Functional
 };
+
+constexpr uint32_t MIN_CANDL = 8;
+constexpr uint32_t MAX_CANDL = 64;
+constexpr uint32_t MIN_FF_CANDL = 8;
