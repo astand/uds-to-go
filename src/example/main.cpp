@@ -4,18 +4,14 @@
 #include <array>
 #include <thread>
 #include <string.h>
-#include <unistd.h>
-#include <linux/can/raw.h>
-#include <net/if.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <mutex>
 #include <uds/isotp/iso-tp.h>
+#include "can-bridge.h"
+#include "iso-app.h"
+#include "argcollector.h"
 
 /* ---------------------------------------------------------------------------- */
 template<typename T, size_t N>
@@ -33,145 +29,7 @@ class StaticMemAllocator {
   uint8_t __raw__[N * sizeof(T)] {0};
 };
 
-class IsoClient : public IsoTpClient {
- public:
-  void OnIsoEvent(N_Type t, N_Result res, const IsoTpInfo& inf) {
-    assert((uint8_t)t < 3 && (uint8_t)res < 13);
-
-    std::cout << "Event [" << type_names[(uint8_t)t] << "] Status [" << res_names[(uint8_t)res] << "]";
-
-    if (t == N_Type::Data && res == N_Result::OK_r) {
-      // print data
-      std::cout << std::endl << "------------------------------------------------" << std::endl;
-      //           "00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff ";
-      assert(inf.data != nullptr && inf.length != 0u);
-
-      std::cout << std::hex;
-
-      for (size_t i = 0; i < inf.length; i++) {
-        if (i != 0 && (i & 0x0f) == 0u) {
-          std::cout << std::endl;
-        }
-
-        if (inf.data[i] < 0x10u) {
-          std::cout << "0";
-        }
-
-        std::cout << (int)inf.data[i] << " ";
-      }
-
-      std::cout << std::endl << "------------------------------------------------";
-      std::cout << std::dec;
-    }
-
-    std::cout << std::endl;
-  }
-
- private:
-  const char* type_names[3] =
-  {
-    "Conf  ",
-    "Data  ",
-    "DataFF"
-  };
-
-  const char* res_names[13] =
-  {
-    "OK_s",
-    "OK_r",
-    "TIMEOUT_As",
-    "TIMEOUT_Ar",
-    "TIMEOUT_Bs",
-    "TIMEOUT_Cr",
-    "WRONG_SN",
-    "INVALID_FS",
-    "UNEXP_PDU",
-    "WFT_OVRN",
-    "BUFFER_OVFLW",
-    "ERROR_s",
-    "ERROR_r"
-  };
-};
-
-class CanSender : public IsoSender {
- public:
-  size_t SendFrame(const uint8_t* data, size_t length, uint32_t msgid) {
-    assert(length <= 8);
-    assert(txsocket != 0);
-
-    struct can_frame frame;
-    frame.can_id = msgid;
-    frame.can_dlc = 8;
-    memcpy(frame.data, data, length);
-    assert(write(txsocket, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame) > 0);
-    return length;
-  }
-
-  void SetSocket(int s) {
-    assert(s != 0);
-    txsocket = s;
-  }
-
- private:
-  int txsocket{0};
-};
-
-class CanListener {
- public:
-  CanListener(IsoListener& receiver) : isoreceiver(receiver) {
-    select_to.tv_sec = 0u;
-    select_to.tv_usec = 0u;
-  }
-
-  void SetSocket(int s) {
-    assert(s != 0);
-    rxsock = s;
-  }
-
-  void ProcessRx() {
-    assert(rxsock != 0);
-    struct canfd_frame read_frame;
-
-    /* Prepare readfds */
-    FD_ZERO(&readfds);
-    FD_SET(rxsock, &readfds);
-    // read all fds with no blocking timeout
-    int ret = select(rxsock + 1, &readfds, NULL, NULL, &select_to);
-    assert(ret >= 0);
-
-    if (FD_ISSET(rxsock, &readfds)) {
-      // read data from vcans
-      do {
-        auto recv_bytes = recv(rxsock, &read_frame, sizeof(struct canfd_frame), 0);
-
-        if (recv_bytes < 0) {
-          if (errno != EWOULDBLOCK) {
-            std::cout << "CAN read error: " << recv_bytes << ". errno = " << errno << std::endl;
-          }
-
-          break;
-        }
-        else if (recv_bytes == CAN_MTU) {
-          isoreceiver.ReadFrame(read_frame.data, 8, read_frame.can_id);
-        }
-        else if (recv_bytes == 0) {
-          break;
-        }
-        else {
-          std::cout << "Unexpected length: " << recv_bytes << std::endl;
-        }
-      }
-      while (true);
-    }
-  }
-
- private:
-  IsoListener& isoreceiver;
-  int rxsock{0};
-  timeval select_to;
-  fd_set readfds;
-};
-
+/* ---------------------------------------------------------------------------- */
 constexpr size_t RxBufferSize = 4096;
 constexpr size_t TxBufferSize = 4096;
 std::string cmd;
@@ -179,22 +37,90 @@ std::mutex mtx;
 
 /* ---------------------------------------------------------------------------- */
 static CanSender sender;
-static IsoClient isoclient;
-static IsoTpMem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, isoclient);
+static IsoApp isoapp;
+static IsoTpMem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, isoapp);
 static IsoTp& iso_tp = isotpsource;
 static CanListener listener(iso_tp);
 
-static uint32_t phys_id = 0x700u;
-static uint32_t resp_id = 0x701u;
 
-int main()
+static void try_to_set_param(const onepair& pair, uint32_t& vset)
 {
-  iso_tp.SetParameter(ParName::BLKSZ, 8);
-  iso_tp.SetParameter(ParName::CANDL, 8);
-  iso_tp.SetParameter(ParName::ST_MIN, 50);
+  uint32_t scaned = 0u;
+  std::string frmt = "%u";
+
+  if (pair.second.compare("0x") > 0)
+  {
+    frmt = "%x";
+  }
+
+  if (sscanf(pair.second.c_str(), frmt.c_str(), &scaned) != 1)
+  {
+    std::cout << "Wrong value (" << pair.second << ") for parameter '" << pair.first << "'";
+  }
+  else
+  {
+    vset = scaned;
+  }
+}
+
+static void set_iso_tp(IsoTp& isotp, argsret& params)
+{
+  int scaned = 0;
+  uint32_t phys_id = 0x700u;
+  uint32_t resp_id = 0x701u;
+  uint32_t func_id = 0x7dfu;
+  uint32_t stmin = 0u;
+  uint32_t blksize = 8u;
+
+  for (size_t i = 0; i < params.size(); i++)
+  {
+    if (params[i].first.compare("-blksize") == 0)
+    {
+      try_to_set_param(params[i], blksize);
+    }
+    else if (params[i].first.compare("-phys") == 0)
+    {
+      try_to_set_param(params[i], phys_id);
+    }
+    else if (params[i].first.compare("-resp") == 0)
+    {
+      try_to_set_param(params[i], resp_id);
+    }
+    else if (params[i].first.compare("-func") == 0)
+    {
+      try_to_set_param(params[i], func_id);
+    }
+    else if (params[i].first.compare("-stmin") == 0)
+    {
+      try_to_set_param(params[i], stmin);
+    }
+  }
+
+  std::cout << "Init iso tp parameters:" <<  std::hex << std::endl;
+
+  std::cout << "BLKSIZE = " << (int)blksize << std::endl;
+  iso_tp.SetParameter(ParName::BLKSZ, blksize);
+
+  std::cout << "STMIN   = " << (int)stmin << std::endl;
+  iso_tp.SetParameter(ParName::ST_MIN, stmin);
+
+  std::cout << "PHYS    = " << (int)phys_id << std::endl;
   iso_tp.SetParameter(ParName::PHYS_ADDR, phys_id);
-  iso_tp.SetParameter(ParName::FUNC_ADDR, 0x7df);
+
+  std::cout << "RESP    = " << (int)resp_id << std::endl;
   iso_tp.SetParameter(ParName::RESP_ADDR, resp_id);
+
+  std::cout << "FUNC    = " << (int)func_id << std::dec << std::endl;
+  iso_tp.SetParameter(ParName::FUNC_ADDR, func_id);
+}
+
+int main(int argc, char** argv)
+{
+  auto params = collectargs(argc, argv);
+
+  iso_tp.SetParameter(ParName::CANDL, 8);
+
+  set_iso_tp(iso_tp, params);
 
   std::cout << "Hello uds!" << std::endl;
 
