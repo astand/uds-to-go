@@ -18,6 +18,15 @@ class IsoTp : public IsoListener, public IsoTpHost {
   virtual void ReadFrame(const uint8_t* data, size_t length, uint32_t msgid) override;
   virtual IsoTpResult Request(const uint8_t* data, size_t length) override;
 
+  // API for sender/receiver
+  size_t PduToCan(uint8_t* data, uint32_t len) {
+    // fill padding byte
+    while (len++ < docan_config.candl) {
+      data[len - 1] = docan_config.padding;
+    }
+
+    return can_sender.SendFrame(data, docan_config.candl, docan_config.resp_id);
+  }
 
   void OnIsoRxEvent(N_Type event, N_Result result, const uint8_t* data = nullptr, size_t length = 0);
   void OnIsoTxEvent(N_Type event, N_Result result);

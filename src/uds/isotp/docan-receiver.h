@@ -1,7 +1,6 @@
 #pragma once
 
 #include <timers/d-timer.h>
-#include "../inc/iso-tp-if.h"
 #include "../inc/iso-tp-types.h"
 
 class IsoTp;
@@ -10,7 +9,7 @@ class DoCAN_Receiver {
  public:
   DoCAN_Receiver(uint8_t* mem, const size_t length, IsoTp& isotp) : rxbuff(mem), RXLEN(length), itp(isotp) {}
   void ProcessRx();
-  void Receive(IsoSender& sender, const uint8_t* data, size_t candl);
+  void Receive(const uint8_t* data, size_t candl);
   ParChangeResult SetParameter(ParName name, uint32_t v);
 
   bool IsBusy() const {

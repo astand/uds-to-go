@@ -5,7 +5,7 @@
 
 void IsoTp::Process()
 {
-  iso_sender.ProcessTx(can_sender);
+  iso_sender.ProcessTx();
   iso_receiver.ProcessRx();
 }
 
@@ -46,7 +46,7 @@ void IsoTp::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
         break;
 
       default:
-        iso_receiver.Receive(can_sender, data, length);
+        iso_receiver.Receive(data, length);
         break;
     }
   }
@@ -54,7 +54,7 @@ void IsoTp::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
 
 IsoTpResult IsoTp::Request(const uint8_t* data, size_t length)
 {
-  return iso_sender.Send(can_sender, data, length);
+  return iso_sender.Send(data, length);
 }
 
 ParChangeResult IsoTp::SetParameter(ParName name, uint32_t v)

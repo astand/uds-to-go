@@ -6,7 +6,7 @@
 #include "iso-tp.h"
 
 
-IsoTpResult DoCAN_Sender::Send(IsoSender& sender, const uint8_t* data, size_t length)
+IsoTpResult DoCAN_Sender::Send(const uint8_t* data, size_t length)
 {
   assert(data != nullptr);
 
@@ -30,7 +30,8 @@ IsoTpResult DoCAN_Sender::Send(IsoSender& sender, const uint8_t* data, size_t le
 
       for (size_t i = pci_len + txds.passed; i < candl; can_message[i++] = itp.Config().padding);
 
-      if (sender.SendFrame(can_message, candl, itp.Config().resp_id))
+
+      if (itp.PduToCan(can_message, pci_len + txds.passed))
       {
         if (pci == PciType::FF)
         {
@@ -67,7 +68,7 @@ IsoTpResult DoCAN_Sender::CheckTxValid(size_t length)
   }
 }
 
-void DoCAN_Sender::ProcessTx(IsoSender& sender)
+void DoCAN_Sender::ProcessTx()
 {
   PciHelper pchelper;
   const size_t candl = itp.Config().candl;
@@ -97,13 +98,12 @@ void DoCAN_Sender::ProcessTx(IsoSender& sender)
       {
         // set pci part of data
         memcpy(can_message + pci_len, txbuff + txds.passed, cpylen);
-
-        for (size_t i = cpylen + pci_len; i < candl; can_message[i++] = itp.Config().padding);
       }
 
       last_send_ok = false;
 
-      if (sender.SendFrame(can_message, candl, itp.Config().resp_id) != 0)
+      // if (sender.SendFrame(can_message, candl, itp.Config().resp_id) != 0)
+      if (itp.PduToCan(can_message, cpylen + pci_len))
       {
         last_send_ok = true;
         // Restart As timer every successful sending

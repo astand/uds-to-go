@@ -20,7 +20,7 @@ void DoCAN_Receiver::ProcessRx()
 }
 
 
-void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t candl)
+void DoCAN_Receiver::Receive(const uint8_t* data, size_t candl)
 {
   PciHelper helper;
   PciHelper::PciMeta inf;
@@ -48,14 +48,15 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
         {
           rxds.state = RxState::IDLE;
           // send FC with overflow status
-          helper.PackFlowControl(can_message, FlowState::OVERFLOW, 0, 0);
-          sender.SendFrame(can_message, candl, itp.Config().resp_id);
+          auto ret = helper.PackFlowControl(can_message, FlowState::OVERFLOW, 0, 0);
+          itp.PduToCan(can_message, ret);
         }
         else
         {
           // fine, reception can be processed
-          helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
-          sender.SendFrame(can_message, candl, itp.Config().resp_id);
+          auto ret = helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
+          itp.PduToCan(can_message, ret);
+
           rxds.currblkn = 0;
           rxds.rxsize = inf.dlen;
           uint32_t cpylen = candl - pcioffset;
@@ -110,8 +111,8 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
             else if (rxds.currblkn >= rxds.blksize)
             {
               // block ended, send FC
-              helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
-              sender.SendFrame(can_message, candl, itp.Config().resp_id);
+              auto ret = helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
+              itp.PduToCan(can_message, ret);
               rxds.currblkn = 0;
             }
           }
