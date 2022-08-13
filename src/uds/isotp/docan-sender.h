@@ -3,11 +3,11 @@
 #include <timers/d-timer.h>
 #include "../inc/iso-tp-types.h"
 
-class IsoTp;
+class DoCAN_TP;
 
 class DoCAN_Sender {
  public:
-  DoCAN_Sender(uint8_t* mem, const size_t length, IsoTp& isotp) : txbuff(mem), TXLEN(length), itp(isotp) {}
+  DoCAN_Sender(uint8_t* mem, const size_t length, DoCAN_TP& isotp) : txbuff(mem), TXLEN(length), itp(isotp) {}
 
   void ProcessTx();
   void OnFlowControl(uint8_t flow_statue, uint8_t blks, uint8_t stm);
@@ -56,6 +56,6 @@ class DoCAN_Sender {
 
   bool last_send_ok{true};
 
-  IsoTp& itp;
+  DoCAN_TP& itp;
 };
 

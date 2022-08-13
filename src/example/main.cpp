@@ -9,7 +9,7 @@
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <mutex>
-#include <uds/isotp/iso-tp.h>
+#include <uds/isotp/docan-tp.h>
 #include "can-bridge.h"
 #include "iso-app.h"
 #include "argcollector.h"
@@ -42,8 +42,8 @@ static std::string ifname = "vcan0";
 /* ---------------------------------------------------------------------------- */
 static CanSender sender;
 static IsoApp isoapp;
-static IsoTpMem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, isoapp);
-static IsoTp& iso_tp = isotpsource;
+static DoCAN_TP_Mem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, isoapp);
+static DoCAN_TP& iso_tp = isotpsource;
 static CanListener listener(iso_tp);
 
 static void simple_timer_process()
@@ -87,7 +87,7 @@ static void try_to_set_param(const onepair& pair, uint32_t& vset)
   }
 }
 
-static void set_iso_tp(IsoTp& isotp, argsret& params)
+static void set_iso_tp(DoCAN_TP& isotp, argsret& params)
 {
   int scaned = 0;
   uint32_t phys_id = 0x700u;

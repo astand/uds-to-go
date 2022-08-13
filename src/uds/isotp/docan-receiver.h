@@ -3,11 +3,11 @@
 #include <timers/d-timer.h>
 #include "../inc/iso-tp-types.h"
 
-class IsoTp;
+class DoCAN_TP;
 
 class DoCAN_Receiver {
  public:
-  DoCAN_Receiver(uint8_t* mem, const size_t length, IsoTp& isotp) : rxbuff(mem), RXLEN(length), itp(isotp) {}
+  DoCAN_Receiver(uint8_t* mem, const size_t length, DoCAN_TP& isotp) : rxbuff(mem), RXLEN(length), itp(isotp) {}
   void ProcessRx();
   void Receive(const uint8_t* data, size_t candl);
   ParChangeResult SetParameter(ParName name, uint32_t v);
@@ -41,7 +41,7 @@ class DoCAN_Receiver {
 
   uint8_t can_message[MAX_CANDL];
 
-  IsoTp& itp;
+  DoCAN_TP& itp;
 
   DTimers::Timer Cr_tim{1000, false, false};
 

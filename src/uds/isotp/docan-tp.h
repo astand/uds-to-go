@@ -5,9 +5,9 @@
 #include "docan-sender.h"
 #include "docan-receiver.h"
 
-class IsoTp : public IsoListener, public IsoTpHost {
+class DoCAN_TP : public IsoListener, public IsoTpHost {
  public:
-  IsoTp(uint8_t* memrx, size_t lengthrx, uint8_t* memtx, size_t lengthtx, IsoSender& sender, IsoTpClient& client) :
+  DoCAN_TP(uint8_t* memrx, size_t lengthrx, uint8_t* memtx, size_t lengthtx, IsoSender& sender, IsoTpClient& client) :
     iso_sender(memtx, lengthtx, *this),
     iso_receiver(memrx, lengthrx, *this),
     can_sender(sender),
@@ -60,9 +60,9 @@ class IsoTp : public IsoListener, public IsoTpHost {
 };
 
 template<size_t Rx, size_t Tx, template<typename, size_t> class Memgiver>
-class IsoTpMem : public IsoTp {
+class DoCAN_TP_Mem : public DoCAN_TP {
  public:
-  IsoTpMem(IsoSender& s, IsoTpClient& c) : IsoTp(rxalloc.ptr(), Rx, rxalloc.ptr(), Tx, s, c) {}
+  DoCAN_TP_Mem(IsoSender& s, IsoTpClient& c) : DoCAN_TP(rxalloc.ptr(), Rx, rxalloc.ptr(), Tx, s, c) {}
 
  private:
   Memgiver<uint8_t, Rx> rxalloc;

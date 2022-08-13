@@ -1,15 +1,15 @@
 #include <string.h>
 #include "pci-helper.h"
-#include "iso-tp.h"
+#include "docan-tp.h"
 
 
-void IsoTp::Process()
+void DoCAN_TP::Process()
 {
   iso_sender.ProcessTx();
   iso_receiver.ProcessRx();
 }
 
-void IsoTp::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
+void DoCAN_TP::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
 {
   bool is_phys = (msgid == docan_config.phys_id);
   bool is_func = (msgid == docan_config.func_id);
@@ -52,12 +52,12 @@ void IsoTp::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
   }
 }
 
-IsoTpResult IsoTp::Request(const uint8_t* data, size_t length)
+IsoTpResult DoCAN_TP::Request(const uint8_t* data, size_t length)
 {
   return iso_sender.Send(data, length);
 }
 
-ParChangeResult IsoTp::SetParameter(ParName name, uint32_t v)
+ParChangeResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
 {
   auto ret = ParChangeResult::WRONG_PARAMETER;
 
@@ -103,7 +103,7 @@ ParChangeResult IsoTp::SetParameter(ParName name, uint32_t v)
   return ret;
 }
 
-void IsoTp::OnIsoRxEvent(N_Type event, N_Result result, const uint8_t* data, size_t length)
+void DoCAN_TP::OnIsoRxEvent(N_Type event, N_Result result, const uint8_t* data, size_t length)
 {
   paydsc.data = data;
   paydsc.length = length;
@@ -112,7 +112,7 @@ void IsoTp::OnIsoRxEvent(N_Type event, N_Result result, const uint8_t* data, siz
   iso_client.OnIsoEvent(event, result, paydsc);
 }
 
-void IsoTp::OnIsoTxEvent(N_Type event, N_Result result)
+void DoCAN_TP::OnIsoTxEvent(N_Type event, N_Result result)
 {
   iso_client.OnIsoEvent(event, result, paydsc);
 }

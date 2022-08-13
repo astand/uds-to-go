@@ -2,7 +2,6 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <uds/isotp/iso-tp.h>
 #include <linux/can/raw.h>
 #include <sys/stat.h>
 #include <fcntl.h>
