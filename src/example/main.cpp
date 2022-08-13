@@ -150,6 +150,7 @@ int main(int argc, char** argv)
   auto params = collectargs(argc, argv);
 
   iso_tp.SetParameter(ParName::CANDL, 8);
+  iso_tp.SetParameter(ParName::PADD_BYTE, 0xcc);
 
   std::cout << "ISO Tp starting. Binding to '" << ifname << "'" << std::endl;
 
@@ -239,6 +240,7 @@ int main(int argc, char** argv)
 
         if (sscanf(readcmd.c_str(), "%u", &sendsize) == 1)
         {
+          std::cout << " ---> SEND " << sendsize << " bytes payload" << std::endl;
           iso_tp.Request(buffer.data(), sendsize);
         }
       }

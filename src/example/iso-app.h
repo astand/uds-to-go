@@ -33,7 +33,7 @@ class IsoApp : public IsoTpClient {
       }
 
       std::cout << std::endl << "------------------------------------------------" << std::dec;
-      std::cout << std::endl << "Received OK: " << inf.length << " bytes.";
+      std::cout << std::endl << " <--- RECV OK: " << inf.length << " bytes.";
     }
     else if (t == N_Type::DataFF && res == N_Result::OK_r) {
       std::cout << " Expected size = " << inf.length << " bytes.";
