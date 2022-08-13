@@ -107,15 +107,13 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
               rxds.state = RxState::IDLE;
               itp.OnIsoRxEvent(N_Type::Data, N_Result::OK_r, rxbuff, rxds.rxsize);
             }
-
-            if (rxds.currblkn >= rxds.blksize)
+            else if (rxds.currblkn >= rxds.blksize)
             {
               // block ended, send FC
               helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
               sender.SendFrame(can_message, candl, rxds.respid);
               rxds.currblkn = 0;
             }
-
           }
         }
 
