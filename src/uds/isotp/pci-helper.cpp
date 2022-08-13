@@ -198,8 +198,7 @@ size_t PciHelper::PackData(uint8_t* data, size_t length, size_t candl, PciType& 
 
 size_t PciHelper::PackFlowControl(uint8_t* data, FlowState state, uint8_t bs, uint8_t stmin)
 {
-  data[0] = static_cast<uint8_t>(PciType::FC);
-  data[0] |= ((static_cast<uint8_t>(state) >> 4) & 0x0f);
+  data[0] = static_cast<uint8_t>(PciType::FC) | static_cast<uint8_t>(state);
   data[1] = bs;
   data[2] = stmin;
   return 3;
