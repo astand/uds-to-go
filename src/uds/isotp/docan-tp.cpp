@@ -59,7 +59,13 @@ IsoTpResult DoCAN_TP::Request(const uint8_t* data, size_t length)
 
 ParChangeResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
 {
-  auto ret = ParChangeResult::WRONG_PARAMETER;
+  auto ret = ParChangeResult::OK;
+
+  if (iso_sender.IsBusy() || iso_receiver.IsBusy())
+  {
+    // TODO: make this return more clear (for the case when Tx is busy)
+    return ParChangeResult::RX_ON;
+  }
 
   switch (name)
   {
@@ -77,8 +83,7 @@ ParChangeResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
       break;
 
     case (ParName::CANDL):
-      // TODO: check v on available candl's
-      docan_config.candl = v;
+      docan_config.candl = (v <= MAX_CANDL) ? v : MAX_CANDL;
       break;
 
     case (ParName::PADD_BYTE):

@@ -221,34 +221,26 @@ ParChangeResult DoCAN_Sender::SetParameter(ParName name, uint32_t v)
 {
   auto ret = ParChangeResult::OK;
 
-  if (txds.state != DtState::IDLE)
+  switch (name)
   {
-    ret = ParChangeResult::WRONG_PARAMETER;
-  }
-  else
-  {
-    switch (name)
-    {
-      case (ParName::As_TIM_ms):
-        N_As_tim.Start(v);
-        N_As_tim.Stop();
+    case (ParName::As_TIM_ms):
+      N_As_tim.Start(v);
+      N_As_tim.Stop();
+      break;
 
-        break;
+    case (ParName::Bs_TIM_ms):
+      N_Bs_tim.Start(v);
+      N_Bs_tim.Stop();
+      break;
 
-      case (ParName::Bs_TIM_ms):
-        N_Bs_tim.Start(v);
-        N_Bs_tim.Stop();
-        break;
+    case (ParName::Cs_TIM_ms):
+      N_Cs_tim.Start(v);
+      N_Cs_tim.Stop();
+      break;
 
-      case (ParName::Cs_TIM_ms):
-        N_Cs_tim.Start(v);
-        N_Cs_tim.Stop();
-        break;
-
-      default:
-        ret = ParChangeResult::WRONG_PARAMETER;
-        break;
-    }
+    default:
+      ret = ParChangeResult::WRONG_PARAMETER;
+      break;
   }
 
   return ret;

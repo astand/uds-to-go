@@ -148,6 +148,8 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
 
 ParChangeResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v)
 {
+  auto ret = ParChangeResult::OK;
+
   switch (name)
   {
     case (ParName::BLKSZ):
@@ -164,8 +166,9 @@ ParChangeResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v)
       break;
 
     default:
+      ret = ParChangeResult::WRONG_PARAMETER;
       break;
   }
 
-  return ParChangeResult::WRONG_PARAMETER;
+  return ret;
 }
