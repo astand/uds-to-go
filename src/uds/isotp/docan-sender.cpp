@@ -28,6 +28,12 @@ IsoTpResult DoCAN_Sender::Send(const uint8_t* data, datasize_t length)
 
       memcpy(can_message + pci_len, data, txds.passed);
 
+      if (IsBusy())
+      {
+        // Active transmittion is in progress. Stop it and process current request
+        txds.state = DtState::IDLE;
+      }
+
       if (itp.PduToCan(can_message, pci_len + txds.passed))
       {
         if (pci == PciType::FF)
