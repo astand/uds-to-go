@@ -13,6 +13,9 @@
 #include "can-bridge.h"
 #include "iso-app.h"
 #include "argcollector.h"
+#include "proc-runner.h"
+#include "ticker-wrapper.h"
+
 
 /* ---------------------------------------------------------------------------- */
 template<typename T, size_t N>
@@ -45,27 +48,7 @@ static IsoApp isoapp;
 static DoCAN_TP_Mem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, isoapp);
 static DoCAN_TP& iso_tp = isotpsource;
 static CanListener listener(iso_tp);
-
-static void simple_timer_process()
-{
-#if 1
-  static auto first_stamp = std::chrono::steady_clock::now();
-  static uint64_t ticked_us = 0u;
-
-  auto now_stamp = std::chrono::steady_clock::now();
-  auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(now_stamp - first_stamp).count();
-
-  while (elapsed_us > 1000)
-  {
-    elapsed_us -= 1000;
-    Timers::TickerCounter::ProcessTick();
-    first_stamp += std::chrono::microseconds(1000);
-  }
-
-#else
-  Timers::TickerCounter::ProcessTick();
-#endif
-}
+static ProcRunner<4> procrunner;
 
 static void try_to_set_param(const onepair& pair, uint32_t& vset)
 {
@@ -87,7 +70,7 @@ static void try_to_set_param(const onepair& pair, uint32_t& vset)
   }
 }
 
-static void set_iso_tp(DoCAN_TP& isotp, argsret& params)
+static void set_do_can_parameters(DoCAN_TP& isotp, argsret& params)
 {
   int scaned = 0;
   uint32_t phys_id = 0x700u;
@@ -174,7 +157,7 @@ int main(int argc, char** argv)
 
   std::cout << "Started succesfully." << std::endl;
   std::cout << " ----------------------------------------- " << std::endl;
-  set_iso_tp(iso_tp, params);
+  set_do_can_parameters(iso_tp, params);
   std::cout << " ----------------------------------------- " << std::endl << std::endl;
 
   listener.SetSocket(sockfd);
@@ -210,12 +193,17 @@ int main(int argc, char** argv)
     }
   });
 
+  static TickerWrapper ticker;
+
+  procrunner.Add(&ticker);
+  procrunner.Add(&iso_tp);
+  procrunner.Add(&listener);
+
   std::string readcmd;
 
   while (true)
   {
-    listener.ProcessRx();
-    iso_tp.Process();
+    procrunner.RunAllProcess();
 
     {
       std::lock_guard<std::mutex> guard(mtx);
@@ -249,7 +237,6 @@ int main(int argc, char** argv)
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    simple_timer_process();
   }
 
   th1.join();

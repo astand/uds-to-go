@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <net/if.h>
+#include <helpers/IProcessable.h>
 
 class CanSender : public ICAN_Sender {
  public:
@@ -31,7 +32,7 @@ class CanSender : public ICAN_Sender {
   int txsocket{0};
 };
 
-class CanListener {
+class CanListener : public IProcessable {
  public:
   CanListener(ICAN_Listener& receiver) : isoreceiver(receiver) {
     select_to.tv_sec = 0u;
@@ -43,7 +44,7 @@ class CanListener {
     rxsock = s;
   }
 
-  void ProcessRx() {
+  virtual void Process() override {
     assert(rxsock != 0);
     struct canfd_frame read_frame;
 

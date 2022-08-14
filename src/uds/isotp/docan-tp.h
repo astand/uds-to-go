@@ -1,11 +1,12 @@
 #pragma once
 
-#include "timers/d-timer.h"
+#include <timers/d-timer.h>
+#include <helpers/IProcessable.h>
 #include "../inc/iso-tp-if.h"
 #include "docan-sender.h"
 #include "docan-receiver.h"
 
-class DoCAN_TP : public ICAN_Listener, public IsoTpImpl {
+class DoCAN_TP : public ICAN_Listener, public IsoTpImpl, public IProcessable {
  public:
   DoCAN_TP(uint8_t* memrx, size_t lengthrx, uint8_t* memtx, size_t lengthtx, ICAN_Sender& sender, IsoTpClient& client) :
     iso_sender(memtx, lengthtx, *this),
@@ -14,7 +15,7 @@ class DoCAN_TP : public ICAN_Listener, public IsoTpImpl {
     iso_client(client)
   {}
 
-  virtual void Process();
+  virtual void Process() override;
   virtual void ReadFrame(const uint8_t* data, size_t length, uint32_t msgid) override;
   virtual IsoTpResult Request(const uint8_t* data, size_t length) override;
 
