@@ -3,9 +3,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-using BaseEnum = uint8_t;
+#include "typedefs.h"
 
-enum class N_Result : BaseEnum
+enum class N_Result : enumbase_t
 {
   // This value means that the service execution has been completed successfully; it can be issued to a
   // service user on both the sender and receiver sides.
@@ -51,7 +51,7 @@ enum class N_Result : BaseEnum
 // Type: enumeration.
 // Range: N_OK, N_RX_ON, N_WRONG_PARAMETER, N_WRONG_VALUE
 // Description: This parameter contains the status relating to the outcome of a service execution.
-enum class ParChangeResult : BaseEnum
+enum class ParChangeResult : enumbase_t
 {
   // This value means that the service execution has been completed successfully; it can be issued to a
   // service user on both the sender and receiver sides.
@@ -68,7 +68,7 @@ enum class ParChangeResult : BaseEnum
   WRONG_VALUE
 };
 
-enum class ParName : BaseEnum
+enum class ParName : enumbase_t
 {
   ST_MIN,
   BLKSZ,
@@ -84,14 +84,14 @@ enum class ParName : BaseEnum
 };
 
 
-enum class N_Type : BaseEnum
+enum class N_Type : enumbase_t
 {
   Conf,
   Data,
   DataFF,
 };
 
-enum class IsoTpResult : BaseEnum
+enum class IsoTpResult : enumbase_t
 {
   OK,
   BUSY,
@@ -99,7 +99,7 @@ enum class IsoTpResult : BaseEnum
   OVERFLOW
 };
 
-enum class CanDl : BaseEnum
+enum class CanDl : enumbase_t
 {
   CANDL_8 = 8,
   CANDL_12 = 12,

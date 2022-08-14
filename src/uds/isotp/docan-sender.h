@@ -2,6 +2,7 @@
 
 #include <timers/d-timer.h>
 #include "../inc/iso-tp-types.h"
+#include "../inc/iso-tp-const.h"
 
 class DoCAN_TP;
 
@@ -11,7 +12,7 @@ class DoCAN_Sender {
 
   void ProcessTx();
   void OnFlowControl(uint8_t flow_statue, uint8_t blks, uint8_t stm);
-  IsoTpResult Send(const uint8_t* data, size_t len);
+  IsoTpResult Send(const uint8_t* data, datasize_t len);
   ParChangeResult SetParameter(ParName name, uint32_t v);
 
   bool IsBusy() const {
@@ -19,14 +20,14 @@ class DoCAN_Sender {
   }
 
  private:
-  IsoTpResult CheckTxValid(size_t l);
+  IsoTpResult CheckTxValid(datasize_t l);
 
   DTimers::Timer N_As_tim{1000, false, false};
   DTimers::Timer N_Bs_tim{1000, false, false};
   DTimers::Timer N_Cs_tim{1000, false, false};
   DTimers::Timer STmin_tim{0, false, false};
 
-  uint8_t can_message[(uint8_t)CanDl::CANDL_64] {0};
+  uint8_t can_message[MAX_CANDL] {0};
   uint8_t* const txbuff;
   const size_t TXLEN;
 
@@ -43,8 +44,8 @@ class DoCAN_Sender {
   {
     DtState state {DtState::IDLE};
     // control block
-    size_t passed{0};
-    size_t size{0};
+    datasize_t passed{0};
+    datasize_t size{0};
     uint8_t sn{0};
     uint8_t currblksize{0};
     // flow control config from this (sender) side

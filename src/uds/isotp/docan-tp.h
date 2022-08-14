@@ -19,7 +19,7 @@ class DoCAN_TP : public IsoListener, public IsoTpHost {
   virtual IsoTpResult Request(const uint8_t* data, size_t length) override;
 
   // API for sender/receiver
-  size_t PduToCan(uint8_t* data, uint32_t len) {
+  size_t PduToCan(uint8_t* data, datasize_t len) {
     // fill padding byte
     while (len++ < docan_config.candl) {
       data[len - 1] = docan_config.padding;
@@ -37,7 +37,7 @@ class DoCAN_TP : public IsoListener, public IsoTpHost {
     uint32_t phys_id;
     uint32_t func_id;
     uint32_t resp_id;
-    uint32_t candl;
+    datasize_t candl;
     uint8_t padding;
   } DoCAN_Config_t;
 

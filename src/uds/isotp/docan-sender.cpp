@@ -6,12 +6,12 @@
 #include "docan-tp.h"
 
 
-IsoTpResult DoCAN_Sender::Send(const uint8_t* data, size_t length)
+IsoTpResult DoCAN_Sender::Send(const uint8_t* data, datasize_t length)
 {
   assert(data != nullptr);
 
   auto ret = CheckTxValid(length);
-  const uint32_t candl = itp.Config().candl;
+  const datasize_t candl = itp.Config().candl;
 
   if (ret == IsoTpResult::OK)
   {
@@ -52,7 +52,7 @@ IsoTpResult DoCAN_Sender::Send(const uint8_t* data, size_t length)
   return ret;
 }
 
-IsoTpResult DoCAN_Sender::CheckTxValid(size_t length)
+IsoTpResult DoCAN_Sender::CheckTxValid(datasize_t length)
 {
   if (length == 0)
   {
@@ -71,7 +71,6 @@ IsoTpResult DoCAN_Sender::CheckTxValid(size_t length)
 void DoCAN_Sender::ProcessTx()
 {
   PciHelper pchelper;
-  const size_t candl = itp.Config().candl;
 
   if (txds.state == DtState::WAIT)
   {
@@ -87,12 +86,11 @@ void DoCAN_Sender::ProcessTx()
   {
     while (true)
     {
-      const size_t pci_len = pchelper.PackConseqFrame(can_message, ++txds.sn);
+      const datasize_t pci_len = pchelper.PackConseqFrame(can_message, ++txds.sn);
       // get the data len
-      const size_t candlen = candl - pci_len;
-
+      const datasize_t candlen = itp.Config().candl - pci_len;
       // get the length of data for putting in frame payload
-      const size_t cpylen = ((txds.passed + candlen) < txds.size) ? candlen : (txds.size - txds.passed);
+      const datasize_t cpylen = ((txds.passed + candlen) < txds.size) ? candlen : (txds.size - txds.passed);
 
       if (txds.passed == 0 || last_send_ok)
       {
