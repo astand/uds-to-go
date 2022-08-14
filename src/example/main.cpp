@@ -48,7 +48,7 @@ static CanListener listener(iso_tp);
 
 static void simple_timer_process()
 {
-#if 0
+#if 1
   static auto first_stamp = std::chrono::steady_clock::now();
   static uint64_t ticked_us = 0u;
 
