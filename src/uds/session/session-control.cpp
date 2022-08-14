@@ -1,13 +1,13 @@
 #include <assert.h>
 #include "session-control.h"
-#include <uds/inc/app-nrcs.h>
+#include <uds/inc/diag/nrcnames.h>
 
 SessionControl::SessionControl()
 {
   sState.session = SessionState::DEFAULT;
-  tims.S3_max = 5000;
-  tims.p2_max = 250;
-  tims.p2_enhanced = 5000;
+  tims.S3_max = tims.S3_max;
+  tims.p2_max = tims.p2_max;
+  tims.p2_enhanced = tims.p2_enhanced;
 }
 
 void SessionControl::SendRequest(const uint8_t* data, uint32_t len)
@@ -143,7 +143,7 @@ void SessionControl::ProcessSessionMode()
     if (S3.Elapsed())
     {
       SetSessionMode(true);
-      NotifyS3Timeout();
+      NotifySessionChanged();
     }
 
     if (p2.Elapsed())

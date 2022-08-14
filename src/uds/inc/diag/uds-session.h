@@ -20,21 +20,8 @@ enum class S_Result
 typedef uint8_t ServiceID_t;
 typedef uint8_t SubFunctionID_t;
 
-enum class DiagSession
-{
-  Default = 1,
-  Extended = 3,
-  Programming = 2
-};
-
 // result of servicediag process
 typedef enum { kSI_NotHandled, kSI_HandledResponseOk, kSI_HandledNoResponse } ProcessResult_t;
-
-//------------------------------------------------------------------------------
-// Security access levels
-// kSA_Locked - equivalent for (sa_unlocked == false)
-//------------------------------------------------------------------------------
-typedef enum { kSA_Locked = 0, kSA_Level_0 = 1, kSA_Level_1 = 2, kSA_Level_2 = 3, kSA_Level_3 = 4} SA_Level_t;
 
 typedef struct
 {
@@ -53,4 +40,23 @@ enum class SendResult
   OK,
   OVRF,
   ERROR
+};
+
+typedef struct
+{
+  const uint8_t* data;
+  uint32_t size;
+  UdsAddress addr;
+  SI_Head_t head;
+} IndicationInfo;
+
+typedef struct
+{
+  uint8_t sess;
+  uint8_t sec_level;
+} SessionInfo;
+
+enum class A_Result
+{
+  OK, ERROR
 };

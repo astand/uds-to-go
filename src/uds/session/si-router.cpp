@@ -24,7 +24,7 @@ SiRouter::SiRouter()
   now_clients_cnt = 0;
 
   sess_info.sec_level = 0;
-  sess_info.sess = DiagSession::Default;
+  sess_info.sess = DSC_SF_DS;
 
   router_is_disabled = false;
 }
@@ -69,7 +69,7 @@ void SiRouter::SendNegResponse(NRCs_t nrc)
 }
 
 
-void SiRouter::SetServiceSession(DiagSession s)
+void SiRouter::SetServiceSession(uint8_t s)
 {
   // make all the control inside the session layer
   SessionChangeEvent(s);
@@ -79,15 +79,15 @@ void SiRouter::SetServiceSession(DiagSession s)
 }
 
 
-void SiRouter::SetSecurityLevel(SA_Level_t sa_level)
+void SiRouter::SetSecurityLevel(uint8_t sa_level)
 {
   sess_info.sec_level = sa_level;
 }
 
 
-void SiRouter::SessionChangeEvent(DiagSession s)
+void SiRouter::SessionChangeEvent(uint8_t s)
 {
-  SetSessionMode(s == DiagSession::Default);
+  SetSessionMode(s == DSC_SF_DS);
 
   if (sess_info.sess != s)
   {
@@ -202,10 +202,10 @@ void SiRouter::NotifyS3Timeout()
   // the current SSL session must be kSSL_Default
 
   // make self proccessing and notify all the clients
-  if (sess_info.sess != DiagSession::Default)
+  if (sess_info.sess != DSC_SF_DS)
   {
     // appPci.dsc_state.prev = sess_info.sess;
-    sess_info.sess = DiagSession::Default;
+    sess_info.sess = DSC_SF_DS;
   }
 
   NotifyDSCSessionChanged(true);
@@ -360,26 +360,26 @@ void SiRouter::SID_DiagServiceControl()
   }
   else
   {
-    tData[2] = ((P2_max_ms >> 8) & 0xFF);
-    tData[3] = (P2_max_ms & 0xFF);
-    tData[4] = (((P2_enchanced_max_ms / 10) >> 8) & 0xFF);
-    tData[5] = ((P2_enchanced_max_ms / 10) & 0xFF);
+    tData[2] = ((tims.p2_max >> 8) & 0xFF);
+    tData[3] = (tims.p2_max & 0xFF);
+    tData[4] = (((tims.p2_enhanced / 10) >> 8) & 0xFF);
+    tData[5] = ((tims.p2_enhanced / 10) & 0xFF);
     tLength = 6;
 
     // everything is ok. restart session
     if (sihead.SF == DSC_SF_PRGS)
     {
-      SetServiceSession(DiagSession::Programming);
+      SetServiceSession(DSC_SF_PRGS);
     }
     else if (sihead.SF == DSC_SF_EXTDS)
     {
       // reset programming session here but NOT extended
-      SetServiceSession(DiagSession::Extended);
+      SetServiceSession(DSC_SF_EXTDS);
     }
     else if (sihead.SF == DSC_SF_DS)
     {
       // TODO: Reset (if possible) or what?
-      SetServiceSession(DiagSession::Default);
+      SetServiceSession(DSC_SF_DS);
     }
   }
 }
@@ -402,7 +402,7 @@ bool SiRouter::MakeBaseSIDChecks()
   {
     // do nothing here,the true will be returned and no further actions will be made
   }
-  else if (((flags & SID_NoInDef) != 0) && (sess_info.sess == DiagSession::Default))
+  else if (((flags & SID_NoInDef) != 0) && (sess_info.sess == DSC_SF_DS))
   {
     SendNegResponse(NRC_SNSIAS);
   }

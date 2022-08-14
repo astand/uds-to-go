@@ -6,6 +6,7 @@
 #pragma once
 
 #include "session-control.h"
+#include <uds/inc/diag/diag.h>
 
 #define SID________       (0)
 #define SID_Phyaddr       (1u << 3u)
@@ -18,7 +19,7 @@
 
 class SiClient;
 
-class SiRouter : public SessCan {
+class SiRouter : public SessionControl {
  public:
   SiRouter();
   // this function exports for clients
@@ -45,13 +46,14 @@ class SiRouter : public SessCan {
   // disable any service processing (to be used before reset or power-off)
   void RouterDisable();
   // Changed the session mode by user
-  void SetServiceSession(DiagSession s);
+  void SetServiceSession(uint8_t s);
   // Set current security access level by user
-  void SetSecurityLevel(SA_Level_t sa_level);
+  void SetSecurityLevel(uint8_t level);
 
  public:
 
   // this readonly descriptor for clients to be informed about UDS curr state
+  static constexpr size_t TX_DATA_MAX_LEN = 4096;
   uint8_t tData[TX_DATA_MAX_LEN];
   int32_t tLength;
 
@@ -77,7 +79,7 @@ class SiRouter : public SessCan {
 
   // This method must be called when any session related
   // activity is invoked
-  void SessionChangeEvent(DiagSession s);
+  void SessionChangeEvent(uint8_t sessnum);
 
   // this method perform calling the notify event func of each registered client
   void NotifyDSCSessionChanged(bool s3timer);
@@ -97,6 +99,7 @@ class SiRouter : public SessCan {
 
  private:
   bool router_is_disabled;
+  static constexpr size_t SI_CLIENT_MAX = 8;
   SiClient* cls[SI_CLIENT_MAX];
   uint16_t now_clients_cnt;
   ProcessResult_t clientHandRes;
