@@ -2,6 +2,7 @@
 
 #include <timers/d-timer.h>
 #include "../inc/iso-tp-types.h"
+#include "../inc/iso-tp-const.h"
 
 class DoCAN_TP;
 
@@ -9,7 +10,7 @@ class DoCAN_Receiver {
  public:
   DoCAN_Receiver(uint8_t* mem, const size_t length, DoCAN_TP& isotp) : rxbuff(mem), RXLEN(length), itp(isotp) {}
   void ProcessRx();
-  void Receive(const uint8_t* data, size_t candl);
+  void Receive(const uint8_t* data, datasize_t candl);
   ParChangeResult SetParameter(ParName name, uint32_t v);
 
   bool IsBusy() const {
@@ -24,14 +25,15 @@ class DoCAN_Receiver {
   {
     IDLE, ACTIVE
   };
+
   typedef struct
   {
     RxState state{RxState::IDLE};
     uint8_t blksize{16};
     uint8_t stmin{0};
 
-    uint32_t rxsize{0};
-    uint32_t passed{0};
+    datasize_t rxsize{0};
+    datasize_t passed{0};
 
     uint8_t expectsn{0};
     uint8_t currblkn{0};

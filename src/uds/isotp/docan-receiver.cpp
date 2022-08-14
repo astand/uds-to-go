@@ -20,13 +20,13 @@ void DoCAN_Receiver::ProcessRx()
 }
 
 
-void DoCAN_Receiver::Receive(const uint8_t* data, size_t candl)
+void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
 {
   PciHelper helper;
   PciHelper::PciMeta inf;
-  size_t pcioffset = helper.UnpackPciInfo(data, candl, inf);
+  datasize_t pcioffset = helper.UnpackPciInfo(data, candl, inf);
 
-  assert(pcioffset <= candl && candl < MAX_CANDL);
+  assert(pcioffset <= candl && candl < CANFD_DL_MAX);
 
   if (pcioffset > 0)
   {
@@ -59,7 +59,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, size_t candl)
 
           rxds.currblkn = 0;
           rxds.rxsize = inf.dlen;
-          uint32_t cpylen = candl - pcioffset;
+          datasize_t cpylen = candl - pcioffset;
           memcpy(rxbuff + rxds.passed, data + pcioffset, cpylen);
           rxds.passed = cpylen;
           rxds.expectsn = 1;
@@ -88,7 +88,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, size_t candl)
           else
           {
             Cr_tim.Restart();
-            size_t cpylen = candl - pcioffset;
+            datasize_t cpylen = candl - pcioffset;
 
             if ((rxds.passed + cpylen) > rxds.rxsize)
             {
