@@ -5,6 +5,7 @@ project(${project} LANGUAGES C CXX)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 add_executable(udstogo-test
     ${CMAKE_CURRENT_SOURCE_DIR}/uds/isotp/docan-receiver.cpp
@@ -21,3 +22,6 @@ target_include_directories(
   udstogo-test PRIVATE 
   ${CMAKE_CURRENT_SOURCE_DIR}/etc
 )
+  
+find_package(Threads REQUIRED)
+target_link_libraries(udstogo-test PRIVATE Threads::Threads)
