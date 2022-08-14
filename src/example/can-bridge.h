@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <net/if.h>
 
-class CanSender : public IsoSender {
+class CanSender : public ICAN_Sender {
  public:
   size_t SendFrame(const uint8_t* data, size_t length, uint32_t msgid) {
     assert(length <= 8);
@@ -33,7 +33,7 @@ class CanSender : public IsoSender {
 
 class CanListener {
  public:
-  CanListener(IsoListener& receiver) : isoreceiver(receiver) {
+  CanListener(ICAN_Listener& receiver) : isoreceiver(receiver) {
     select_to.tv_sec = 0u;
     select_to.tv_usec = 0u;
   }
@@ -81,7 +81,7 @@ class CanListener {
   }
 
  private:
-  IsoListener& isoreceiver;
+  ICAN_Listener& isoreceiver;
   int rxsock{0};
   timeval select_to;
   fd_set readfds;

@@ -41,7 +41,7 @@ void DoCAN_TP::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
     switch (ptype)
     {
       case (PciType::FC):
-        // flow control message for isosender
+        // flow control message for ICAN_Sender
         iso_sender.OnFlowControl(data[0] & 0x0fu, data[1], data[2]);
         break;
 

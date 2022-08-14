@@ -25,7 +25,7 @@ class DiagRouter : public IsoTpClient {
     return dscsess;
   }
 
-  void SetIsoTp(IsoTpHost* h) {
+  void SetIsoTp(IsoTpImpl* h) {
     assert(h != nullptr);
     host = h;
   }
@@ -39,7 +39,7 @@ class DiagRouter : public IsoTpClient {
   N_Result nres;
   IsoTpInfo ninf;
 
-  IsoTpHost* host{nullptr};
+  IsoTpImpl* host{nullptr};
 
   uint8_t* const sbuff;
   const size_t SBUFF_LEN;
