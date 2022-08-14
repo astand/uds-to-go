@@ -21,6 +21,9 @@ class DoCAN_Receiver {
   uint8_t* const rxbuff;
   const size_t RXLEN;
 
+  // reference to HOST DoCAN (DoCAN_TP)
+  DoCAN_TP& itp;
+
   enum class RxState
   {
     IDLE, ACTIVE
@@ -29,21 +32,21 @@ class DoCAN_Receiver {
   typedef struct
   {
     RxState state{RxState::IDLE};
-    uint8_t blksize{16};
-    uint8_t stmin{0};
 
     datasize_t rxsize{0};
     datasize_t passed{0};
 
     uint8_t expectsn{0};
     uint8_t currblkn{0};
+    uint8_t blksize{16};
+    uint8_t stmin{0};
   } RxDescriptor;
 
   RxDescriptor rxds{};
 
+  // DoCAN will put padding byte, so the size
+  // of this array must be minimum 64 bytes (MAX_CANDL)
   uint8_t can_message[MAX_CANDL];
-
-  DoCAN_TP& itp;
 
   DTimers::Timer Cr_tim{1000, false, false};
 

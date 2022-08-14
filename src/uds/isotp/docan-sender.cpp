@@ -28,9 +28,6 @@ IsoTpResult DoCAN_Sender::Send(const uint8_t* data, datasize_t length)
 
       memcpy(can_message + pci_len, data, txds.passed);
 
-      for (size_t i = pci_len + txds.passed; i < candl; can_message[i++] = itp.Config().padding);
-
-
       if (itp.PduToCan(can_message, pci_len + txds.passed))
       {
         if (pci == PciType::FF)
@@ -43,6 +40,11 @@ IsoTpResult DoCAN_Sender::Send(const uint8_t* data, datasize_t length)
         }
         else if (pci == PciType::SF)
         {
+          // TODO: this is simplification. when it is necessary
+          // to get true HW CAN node confirmation of sending
+          // this call should be removed and CAN HW sending provider
+          // must call it by itself after successful frame acceptance by BUS
+          // that means that CAN HW sender has to have reference to DoCAN_TP
           itp.OnIsoTxEvent(N_Type::Conf, N_Result::OK_s);
         }
       }
@@ -112,6 +114,12 @@ void DoCAN_Sender::ProcessTx()
         {
           // done, transfer stopped
           txds.state = DtState::IDLE;
+
+          // TODO: this is simplification. when it is necessary
+          // to get true HW CAN node confirmation of sending
+          // this call should be removed and CAN HW sending provider
+          // must call it by itself after successful frame acceptance by BUS
+          // that means that CAN HW sender has to have reference to DoCAN_TP
           itp.OnIsoTxEvent(N_Type::Conf, N_Result::OK_s);
           break;
         }

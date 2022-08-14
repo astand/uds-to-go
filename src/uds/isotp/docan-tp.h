@@ -21,6 +21,8 @@ class DoCAN_TP : public IsoListener, public IsoTpHost {
   // API for sender/receiver
   size_t PduToCan(uint8_t* data, datasize_t len) {
     // fill padding byte
+    // WARNING: data has to have enough space for padding bytes,
+    // it cannot be maximun possible candl value (64)
     while (len++ < docan_config.candl) {
       data[len - 1] = docan_config.padding;
     }

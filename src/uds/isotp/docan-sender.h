@@ -22,22 +22,15 @@ class DoCAN_Sender {
  private:
   IsoTpResult CheckTxValid(datasize_t l);
 
-  DTimers::Timer N_As_tim{1000, false, false};
-  DTimers::Timer N_Bs_tim{1000, false, false};
-  DTimers::Timer N_Cs_tim{1000, false, false};
-  DTimers::Timer STmin_tim{0, false, false};
-
-  uint8_t can_message[MAX_CANDL] {0};
   uint8_t* const txbuff;
   const size_t TXLEN;
 
+  // reference to HOST DoCAN (DoCAN_TP)
+  DoCAN_TP& itp;
+
   enum class DtState
   {
-    IDLE,
-    SF_DT,
-    MF_DT,
-    PAUSE,
-    WAIT,
+    IDLE, SF_DT, MF_DT, PAUSE, WAIT,
   };
 
   typedef struct
@@ -46,17 +39,31 @@ class DoCAN_Sender {
     // control block
     datasize_t passed{0};
     datasize_t size{0};
+    // flow control information block
+    // @sn - serial number for the next CF
     uint8_t sn{0};
+    // @currblksize - current number of sent CF
     uint8_t currblksize{0};
-    // flow control config from this (sender) side
+    // @blksize - number of CF for the next FC confirmation
+    // from receiver side
     uint8_t blksize{25};
+    // @stmin - timeout between two CF which is required by
+    // receiver side
     uint8_t stmin{0};
   } TxDescriptor;
 
   TxDescriptor txds{};
 
+  // DoCAN will put padding byte, so the size
+  // of this array must be minimum 64 bytes (MAX_CANDL)
+  uint8_t can_message[MAX_CANDL] {0};
+
+  DTimers::Timer N_As_tim{1000, false, false};
+  DTimers::Timer N_Bs_tim{1000, false, false};
+  DTimers::Timer N_Cs_tim{1000, false, false};
+  DTimers::Timer STmin_tim{0, false, false};
+
   bool last_send_ok{true};
 
-  DoCAN_TP& itp;
 };
 
