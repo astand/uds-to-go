@@ -12,7 +12,8 @@ add_executable(udstogo-test
     ${CMAKE_CURRENT_SOURCE_DIR}/uds/isotp/docan-sender.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/uds/isotp/docan-tp.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/uds/isotp/pci-helper.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/uds/diag/diag-router.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/uds/session/session-control.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/uds/session/si-router.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/d-timer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/tickerup.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/example/main.cpp
