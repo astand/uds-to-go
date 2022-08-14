@@ -17,7 +17,7 @@ IsoTpResult DoCAN_Sender::Send(const uint8_t* data, size_t length)
   {
     PciHelper helper;
     PciType pci{};
-    auto pci_len = helper.PackData(can_message, length, candl, pci);
+    auto pci_len = helper.PackPciForData(can_message, length, candl, pci);
 
     assert(pci_len < candl);
 
