@@ -158,6 +158,11 @@ ParChangeResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v)
       rxds.stmin = v;
       break;
 
+    case (ParName::Cr_TIM_ms):
+      Cr_tim.Start(v);
+      Cr_tim.Stop();
+      break;
+
     default:
       break;
   }

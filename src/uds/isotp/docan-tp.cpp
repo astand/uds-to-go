@@ -66,6 +66,7 @@ ParChangeResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
     case (ParName::BLKSZ):
     case (ParName::ST_MIN):
     case (ParName::Br_TIM_ms):
+    case (ParName::Cr_TIM_ms):
       ret = iso_receiver.SetParameter(name, v);
       break;
 
