@@ -78,7 +78,6 @@ ParChangeResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
 
     case (ParName::As_TIM_ms):
     case (ParName::Bs_TIM_ms):
-    case (ParName::Cs_TIM_ms):
       ret = iso_sender.SetParameter(name, v);
       break;
 

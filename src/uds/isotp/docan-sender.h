@@ -60,7 +60,7 @@ class DoCAN_Sender {
 
   DTimers::Timer N_As_tim{1000, false, false};
   DTimers::Timer N_Bs_tim{1000, false, false};
-  DTimers::Timer N_Cs_tim{1000, false, false};
+  // STmin is Cs timer
   DTimers::Timer STmin_tim{0, false, false};
 
   bool last_send_ok{true};

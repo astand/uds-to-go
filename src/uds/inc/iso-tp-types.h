@@ -78,7 +78,6 @@ enum class ParName : enumbase_t
   CANDL,
   As_TIM_ms,
   Bs_TIM_ms,
-  Cs_TIM_ms,
   Br_TIM_ms,
   Cr_TIM_ms,
   PADD_BYTE,
