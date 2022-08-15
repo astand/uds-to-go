@@ -7,8 +7,12 @@
   (x == NRC_SFNSIAS) ||\
   (x == NRC_ROOR))
 
-#define SI_Flags_DSC    SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
-#define SI_Flags_TP     SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
+template<uint8_t low, uint8_t high>
+bool out_of_range(uint8_t v)
+{
+  assert(low < high);
+  return (v < low || v > high);
+}
 
 SiRouter::SiRouter(IKeeper<SiClient>& vec) : cls(vec)
 {
@@ -99,8 +103,11 @@ void SiRouter::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr)
 
   data_info.data = data;
   data_info.size = length;
-
   sihead.SI = data_info.data[0];
+
+  // ISO 14229-1 7.3.2 table 2 (p. 25)
+  bool bad_sid = out_of_range<0x10, 0x3e>(sihead.SI) && out_of_range<0x83, 0x88>(sihead.SI);
+
   sihead.SF = (data_info.data[1] & 0x7FU);
   sihead.respSI = RESPONSE_ON_SID(sihead.SI);
   // services without subfunctions must set NoResponse bit to 0 by themself!!!
@@ -110,7 +117,7 @@ void SiRouter::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr)
   tData[1] = data_info.data[1];
   tLength = 0;
 
-  if (router_is_disabled)
+  if (router_is_disabled || bad_sid)
   {
     return;
   }
