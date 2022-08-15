@@ -10,16 +10,10 @@
 #define SI_Flags_DSC    SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
 #define SI_Flags_TP     SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
 
-SiRouter::SiRouter()
+SiRouter::SiRouter(IKeeper<SiClient>& vec) : cls(vec)
 {
   SID_Flag[PUDS_SI_DiagnosticSessionControl] = SI_Flags_DSC;
   SID_Flag[PUDS_SI_TesterPresent] = SI_Flags_TP;
-
-  // clear all the clients
-  for (int32_t i = 0; i < SI_CLIENT_MAX; i++)
-  {
-    cls[i] = nullptr;
-  }
 
   now_clients_cnt = 0;
 
@@ -128,14 +122,15 @@ void SiRouter::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr)
     return;
   }
 
-  // event is passing to client
-  for (int32_t i = 0; i < now_clients_cnt && i < SI_CLIENT_MAX; i++)
-  {
-    clientHandRes = cls[i]->OnIndication(data_info);
+  SiClient* client = nullptr;
+  uint32_t i = 0u;
 
-    if (clientHandRes != kSI_NotHandled)
+  while (cls.Item(i++, client))
+  {
+    clientHandRes = client->OnIndication(data_info);
+
+    if (clientHandRes == kSI_NotHandled)
     {
-      // One of the clients accepted request
       break;
     }
   }
@@ -175,16 +170,16 @@ void SiRouter::NotifyConf(S_Result res)
   data_info.addr = UdsAddress::UNKNOWN;
   data_info.head = sihead;
 
-  // one of the client must handle request
-  for (int32_t i = 0; i < now_clients_cnt && i < SI_CLIENT_MAX; i++)
+  SiClient* client = nullptr;
+  uint32_t i = 0u;
+
+  while (cls.Item(i++, client))
   {
-    clientHandRes = cls[i]->OnConfirmation(res);
+    clientHandRes = client->OnIndication(data_info);
+
+    if (clientHandRes == kSI_NotHandled)
     {
-      if (clientHandRes != kSI_NotHandled)
-      {
-        // one of the clients accepted the request
-        break;
-      }
+      break;
     }
   }
 }
@@ -214,10 +209,12 @@ void SiRouter::On_s3_Timeout()
 
 void SiRouter::NotifyDSCSessionChanged(bool s3timer)
 {
-  // event is passing to client
-  for (int32_t i = 0; i < now_clients_cnt && i < SI_CLIENT_MAX; i++)
+  SiClient* client = nullptr;
+  uint32_t i = 0u;
+
+  while (cls.Item(i++, client))
   {
-    cls[i]->DSCSessionEvent(s3timer);
+    client->DSCSessionEvent(s3timer);
   }
 }
 
@@ -267,20 +264,9 @@ bool SiRouter::ResponseAllowed()
   return true;
 }
 
-
-
 void SiRouter::RegisterClient(SiClient* client)
 {
-  if (now_clients_cnt < SI_CLIENT_MAX)
-  {
-    cls[now_clients_cnt] = client;
-    now_clients_cnt++;
-  }
-  else
-  {
-    // deadloop here because it is a static allocation (will happen in the start code)
-    for (;;);
-  }
+  cls.Add(client);
 }
 
 void SiRouter::RouterDisable()

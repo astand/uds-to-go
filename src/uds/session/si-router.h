@@ -6,6 +6,7 @@
 #pragma once
 
 #include "session-control.h"
+#include <helpers/IKeeper.h>
 #include <uds/inc/diag/diag.h>
 
 #define SID________       (0)
@@ -21,7 +22,7 @@ class SiClient;
 
 class SiRouter : public SessionControl {
  public:
-  SiRouter();
+  SiRouter(IKeeper<SiClient>& vec);
   // this function exports for clients
   void SendResponse(const uint8_t* data, int32_t len);
   void SendNegResponse(NRCs_t nrc);
@@ -80,9 +81,8 @@ class SiRouter : public SessionControl {
   bool ResponseAllowed();
 
  private:
+  IKeeper<SiClient>& cls;
   bool router_is_disabled;
-  static constexpr size_t SI_CLIENT_MAX = 8;
-  SiClient* cls[SI_CLIENT_MAX];
   uint16_t now_clients_cnt;
   ProcessResult_t clientHandRes;
   uint8_t router_tx_buff[8];
