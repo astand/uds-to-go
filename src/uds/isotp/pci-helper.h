@@ -34,7 +34,7 @@ class PciHelper {
  public:
   datasize_t UnpackPciInfo(const uint8_t* data, datasize_t length, PciMeta& pci);
 
-  datasize_t PackPciForData(uint8_t* data, datasize_t length, datasize_t candl, PciType& type);
+  datasize_t PackPciForData(uint8_t* data, datasize_t length, datasize_t candl, PciType& reftype);
 
   datasize_t PackFlowControl(uint8_t* data, FlowState state, uint8_t bs, uint8_t stmin);
 

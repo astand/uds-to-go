@@ -35,14 +35,14 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
       case (PciType::FF):
         if (rxds.state == RxState::ACTIVE)
         {
-          // reception is in progress (ISO 15765 tab 23 p 38)
+          // reception is in progress (ISO 15765-2 tab 23 (p 38))
           itp.OnIsoRxEvent(N_Type::Data, N_Result::UNEXP_PDU);
         }
 
         // start new multi reception (cannot be less than 7 bytes)
         if (inf.dlen < MIN_FF_CANDL)
         {
-          // Ignore case (ISO 15765 9.6.3.2 (p 29))
+          // Ignore case (ISO 15765-2 9.6.3.2 (p 29))
         }
         else if (inf.dlen > RXLEN)
         {

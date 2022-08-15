@@ -5,20 +5,18 @@
 #include "pci-helper.h"
 #include "docan-tp.h"
 
-
 IsoTpResult DoCAN_Sender::Send(const uint8_t* data, datasize_t length)
 {
-  assert(data != nullptr);
-
-  auto ret = CheckTxValid(length);
+  IsoTpResult ret = CheckTxValid(length);
   const datasize_t candl = itp.Config().candl;
 
-  if (ret == IsoTpResult::OK)
+  if ((ret == IsoTpResult::OK) && (candl > 0))
   {
+    assert(data != nullptr);
     PciHelper helper;
-    PciType pci{};
-    auto pci_len = helper.PackPciForData(can_message, length, candl, pci);
+    PciType pci{PciType::ERROR};
 
+    auto pci_len = helper.PackPciForData(can_message, length, candl, pci);
     assert(pci_len < candl);
 
     if (pci != PciType::ERROR)
@@ -193,10 +191,10 @@ void DoCAN_Sender::OnFlowControl(uint8_t flow_status, uint8_t blks, uint8_t stm)
     return;
   }
 
-  switch (flow_status)
+  switch (from_byte<FlowState>(flow_status))
   {
     // CTS - client ready to receive BS messages
-    case (0):
+    case (FlowState::CTS):
       N_Bs_tim.Stop();
       txds.currblksize = 0;
       txds.blksize = blks;
@@ -227,13 +225,11 @@ void DoCAN_Sender::OnFlowControl(uint8_t flow_status, uint8_t blks, uint8_t stm)
       STmin_tim.Start(txds.stmin, true);
       break;
 
-    // wait state, reset Bs timer
-    case (1):
+    case (FlowState::WAIT):
       N_Bs_tim.Restart();
       break;
 
-    // Receiver side buffer overflow
-    case (2):
+    case (FlowState::OVERFLOW):
       txds.state = DtState::IDLE;
       itp.OnIsoTxEvent(N_Type::Conf, N_Result::BUFFER_OVFLW);
       break;
