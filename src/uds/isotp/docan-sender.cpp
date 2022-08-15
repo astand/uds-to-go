@@ -197,6 +197,7 @@ void DoCAN_Sender::OnFlowControl(uint8_t flow_status, uint8_t blks, uint8_t stm)
   {
     // CTS - client ready to receive BS messages
     case (0):
+      N_Bs_tim.Stop();
       txds.currblksize = 0;
       txds.blksize = blks;
 
@@ -214,10 +215,15 @@ void DoCAN_Sender::OnFlowControl(uint8_t flow_status, uint8_t blks, uint8_t stm)
         txds.stmin = 0x7fu;
       }
 
-      // leave WAIT state here, stop Bs and restart As
-      txds.state = DtState::MF_DT;
-      // restart N_As before CF sending
-      N_Bs_tim.Stop();
+      if (txds.stmin != 0)
+      {
+        txds.state = DtState::PAUSE;
+      }
+      else
+      {
+        txds.state = DtState::MF_DT;
+      }
+
       STmin_tim.Start(txds.stmin, true);
       break;
 
