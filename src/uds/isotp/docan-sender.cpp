@@ -80,89 +80,106 @@ void DoCAN_Sender::ProcessTx()
 {
   PciHelper pchelper;
 
-  if (txds.state == DtState::WAIT)
+  switch (txds.state)
   {
-    // segmented transmition is in progress wait for FC
-    if (N_Bs_tim.Elapsed())
-    {
-      // wNo FC in specified time
-      txds.state = DtState::IDLE;
-      itp.OnIsoTxEvent(N_Type::Conf, N_Result::TIMEOUT_Bs);
-    }
-  }
-  else if (txds.state == DtState::MF_DT)
-  {
-    while (true)
-    {
-      const datasize_t pci_len = pchelper.PackConseqFrame(can_message, ++txds.sn);
-      // get the data len
-      const datasize_t candlen = itp.Config().candl - pci_len;
-      // get the length of data for putting in frame payload
-      const datasize_t cpylen = ((txds.passed + candlen) < txds.size) ? candlen : (txds.size - txds.passed);
-
-      if (txds.passed == 0 || last_send_ok)
+    case (DtState::WAIT):
+      if (N_Bs_tim.Elapsed())
       {
-        // set pci part of data
-        memcpy(can_message + pci_len, txbuff + txds.passed, cpylen);
+        // check BS timer while wait next FC, timeout leads to stop transmittion
+        txds.state = DtState::IDLE;
+        itp.OnIsoTxEvent(N_Type::Conf, N_Result::TIMEOUT_Bs);
       }
 
-      last_send_ok = false;
+      break;
 
-      // if (sender.SendFrame(can_message, candl, itp.Config().resp_id) != 0)
-      if (itp.PduToCan(can_message, cpylen + pci_len))
+    case (DtState::MF_DT):
+      while (true)
       {
-        last_send_ok = true;
-        // Restart As timer every successful sending
-        N_As_tim.Restart();
-        txds.passed += cpylen;
+        const datasize_t pci_len = pchelper.PackConseqFrame(can_message, ++txds.sn);
+        // get the data len
+        const datasize_t candlen = itp.Config().candl - pci_len;
+        // get the length of data for putting in frame payload
+        const datasize_t cpylen = ((txds.passed + candlen) < txds.size) ? candlen : (txds.size - txds.passed);
 
-        if (txds.passed >= txds.size)
+        if (txds.passed == 0 || last_send_ok)
         {
-          // done, transfer stopped
-          txds.state = DtState::IDLE;
-
-          // TODO: this is simplification. when it is necessary
-          // to get true HW CAN node confirmation of sending
-          // this call should be removed and CAN HW sending provider
-          // must call it by itself after successful frame acceptance by BUS
-          // that means that CAN HW sender has to have reference to DoCAN_TP
-          itp.OnIsoTxEvent(N_Type::Conf, N_Result::OK_s);
-          break;
+          // set pci part of data
+          memcpy(can_message + pci_len, txbuff + txds.passed, cpylen);
         }
-        else
+
+        last_send_ok = false;
+
+        // Start As timer just before attempt to send CAN frame
+        if (!N_As_tim.IsActive())
         {
-          if (++txds.currblksize >= txds.blksize)
+          N_As_tim.Restart();
+        }
+
+        // if (sender.SendFrame(can_message, candl, itp.Config().resp_id) != 0)
+        if (itp.PduToCan(can_message, cpylen + pci_len))
+        {
+          // CAN sending result it OK, stop As timer
+          N_As_tim.Stop();
+          last_send_ok = true;
+
+          txds.passed += cpylen;
+
+          if (txds.passed >= txds.size)
           {
-            //
-            txds.state = DtState::WAIT;
+            // done, transfer stopped
+            txds.state = DtState::IDLE;
+
+            // TODO: this is simplification. when it is necessary
+            // to get true HW CAN node confirmation of sending
+            // this call should be removed and CAN HW sending provider
+            // must call it by itself after successful frame acceptance by BUS
+            // that means that CAN HW sender has to have reference to DoCAN_TP
+            itp.OnIsoTxEvent(N_Type::Conf, N_Result::OK_s);
+            break;
+          }
+          else
+          {
+            if (++txds.currblksize >= txds.blksize)
+            {
+              //
+              txds.state = DtState::WAIT;
+              break;
+            }
+          }
+
+          if (txds.stmin != 0)
+          {
+            // STmin time have to be waited
+            txds.state = DtState::PAUSE;
+            N_As_tim.Stop();
             break;
           }
         }
-
-        if (txds.stmin != 0)
+        else
         {
-          // STmin time have to be waited
-          txds.state = DtState::PAUSE;
-          N_As_tim.Stop();
-          // break and wait in pause state
+          // impossible to send, quit and try next time
           break;
         }
       }
-    }
 
-    if (N_As_tim.Elapsed())
-    {
-      txds.state = DtState::IDLE;
-      itp.OnIsoTxEvent(N_Type::Conf, N_Result::TIMEOUT_As);
-    }
-  }
-  else if (txds.state == DtState::PAUSE)
-  {
-    // wait STmin
-    if (STmin_tim.Elapsed())
-    {
-      txds.state = DtState::MF_DT;
-    }
+      if (N_As_tim.Elapsed())
+      {
+        txds.state = DtState::IDLE;
+        itp.OnIsoTxEvent(N_Type::Conf, N_Result::TIMEOUT_As);
+      }
+
+      break;
+
+    case (DtState::PAUSE):
+      if (STmin_tim.Elapsed())
+      {
+        txds.state = DtState::MF_DT;
+      }
+
+      break;
+
+    default:
+      break;
   }
 }
 
@@ -200,7 +217,6 @@ void DoCAN_Sender::OnFlowControl(uint8_t flow_status, uint8_t blks, uint8_t stm)
       // leave WAIT state here, stop Bs and restart As
       txds.state = DtState::MF_DT;
       // restart N_As before CF sending
-      N_As_tim.Restart();
       N_Bs_tim.Stop();
       STmin_tim.Start(txds.stmin, true);
       break;
