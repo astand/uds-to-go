@@ -1,14 +1,14 @@
-// The SiClient is the base class for common UDS service client.
-// It also provides SiRouter registration and base dummy Process()
+// The UdsServiceHandler is the base class for common UDS service client.
+// It also provides UdsServerBase registration and base dummy Process()
 // implementation
 #pragma once
 
 #include <stdint.h>
-#include "si-router.h"
+#include "uds-server-base.h"
 
-class SiClient : public IProcessable {
+class UdsServiceHandler : public IProcessable {
  public:
-  SiClient(SiRouter& router_) : rtr1(router_) {
+  UdsServiceHandler(UdsServerBase& router_) : rtr1(router_) {
     rtr1.RegisterClient(this);
   }
 
@@ -48,6 +48,6 @@ class SiClient : public IProcessable {
   virtual void Process() {}
 
  protected:
-  SiRouter& rtr1;
+  UdsServerBase& rtr1;
 };
 

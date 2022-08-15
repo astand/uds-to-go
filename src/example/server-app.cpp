@@ -16,8 +16,8 @@
 #include "proc-runner.h"
 #include "ticker-wrapper.h"
 #include "test-siclient.h"
-#include <uds/session/si-router.h>
-#include <uds/session/si-client.h>
+#include <uds/session/uds-server-base.h>
+#include <uds/session/uds-service-handler.h>
 
 /* ---------------------------------------------------------------------------- */
 template<typename T, size_t N>
@@ -47,10 +47,10 @@ static std::string ifname = "vcan0";
 /* ---------------------------------------------------------------------------- */
 static CanSender sender;
 
-static MemKeeper<SiClient, 4> sicl_keeper;
-static SiRouter sirout(sicl_keeper);
+static MemKeeper<UdsServiceHandler, 4> sicl_keeper;
+static UdsServerBase sirout(sicl_keeper);
 static DoCAN_TP_Mem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, sirout);
-static TestSiClient testclient(sirout);
+static TestUdsServiceHandler testclient(sirout);
 
 static DoCAN_TP& iso_tp = isotpsource;
 static CanListener listener(iso_tp);

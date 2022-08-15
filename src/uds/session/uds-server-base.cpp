@@ -1,5 +1,5 @@
-#include "si-router.h"
-#include "si-client.h"
+#include "uds-server-base.h"
+#include "uds-service-handler.h"
 
 #define IS_NRC_PASSED(x) ((x == NRC_SNS) ||\
   (x == NRC_SNSIAS) ||\
@@ -17,7 +17,7 @@ bool out_of_range(uint8_t v)
   return (v < low || v > high);
 }
 
-SiRouter::SiRouter(IKeeper<SiClient>& vec) : cls(vec)
+UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec) : cls(vec)
 {
   SID_Flag[PUDS_SI_DiagnosticSessionControl] = SI_Flags_DSC;
   SID_Flag[PUDS_SI_TesterPresent] = SI_Flags_TP;
@@ -29,7 +29,7 @@ SiRouter::SiRouter(IKeeper<SiClient>& vec) : cls(vec)
 }
 
 
-void SiRouter::SendResponse(const uint8_t* data, int32_t len)
+void UdsServerBase::SendResponse(const uint8_t* data, int32_t len)
 {
   if (len <= 0)
   {
@@ -51,7 +51,7 @@ void SiRouter::SendResponse(const uint8_t* data, int32_t len)
   }
 }
 
-void SiRouter::SendNegResponse(uint8_t sid, NRCs_t nrc)
+void UdsServerBase::SendNegResponse(uint8_t sid, NRCs_t nrc)
 {
   router_tx_buff[0] = PUDS_NR_SI;
   router_tx_buff[1] = sid;
@@ -62,13 +62,13 @@ void SiRouter::SendNegResponse(uint8_t sid, NRCs_t nrc)
   SendResponse(router_tx_buff, 3);
 }
 
-void SiRouter::SendNegResponse(NRCs_t nrc)
+void UdsServerBase::SendNegResponse(NRCs_t nrc)
 {
   SendNegResponse(sihead.SI, nrc);
 }
 
 
-void SiRouter::SetServiceSession(uint8_t s)
+void UdsServerBase::SetServiceSession(uint8_t s)
 {
   // make all the control inside the session layer
   SessionChangeEvent(s);
@@ -78,13 +78,13 @@ void SiRouter::SetServiceSession(uint8_t s)
 }
 
 
-void SiRouter::SetSecurityLevel(uint8_t sa_level)
+void UdsServerBase::SetSecurityLevel(uint8_t sa_level)
 {
   sess_info.sec_level = sa_level;
 }
 
 
-void SiRouter::SessionChangeEvent(uint8_t s)
+void UdsServerBase::SessionChangeEvent(uint8_t s)
 {
   SetSessionMode(s == DSC_SF_DS);
 
@@ -95,7 +95,7 @@ void SiRouter::SessionChangeEvent(uint8_t s)
   }
 }
 
-void SiRouter::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr)
+void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr)
 {
   nrc_code = NRC_PR;
   nrc_bad_param = false;
@@ -130,7 +130,7 @@ void SiRouter::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr)
     return;
   }
 
-  SiClient* client = nullptr;
+  UdsServiceHandler* client = nullptr;
   uint32_t i = 0u;
 
   while (cls.Item(i++, client))
@@ -165,7 +165,7 @@ void SiRouter::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr)
   }
 }
 
-void SiRouter::NotifyConf(S_Result res)
+void UdsServerBase::NotifyConf(S_Result res)
 {
   if (SelfConfHandler())
   {
@@ -178,7 +178,7 @@ void SiRouter::NotifyConf(S_Result res)
   data_info.addr = UdsAddress::UNKNOWN;
   data_info.head = sihead;
 
-  SiClient* client = nullptr;
+  UdsServiceHandler* client = nullptr;
   uint32_t i = 0u;
 
   while (cls.Item(i++, client))
@@ -193,13 +193,13 @@ void SiRouter::NotifyConf(S_Result res)
 }
 
 
-uint8_t SiRouter::GetNRC()
+uint8_t UdsServerBase::GetNRC()
 {
   return nrc_code;
 }
 
 
-void SiRouter::On_s3_Timeout()
+void UdsServerBase::On_s3_Timeout()
 {
   // the session layer says that S3 timer is out
   // the current SSL session must be kSSL_Default
@@ -215,9 +215,9 @@ void SiRouter::On_s3_Timeout()
 }
 
 
-void SiRouter::NotifyDSCSessionChanged(bool s3timer)
+void UdsServerBase::NotifyDSCSessionChanged(bool s3timer)
 {
-  SiClient* client = nullptr;
+  UdsServiceHandler* client = nullptr;
   uint32_t i = 0u;
 
   while (cls.Item(i++, client))
@@ -227,7 +227,7 @@ void SiRouter::NotifyDSCSessionChanged(bool s3timer)
 }
 
 
-bool SiRouter::ResponseAllowed()
+bool UdsServerBase::ResponseAllowed()
 {
   if (req_addr == UdsAddress::FUNC)
   {
@@ -272,19 +272,19 @@ bool SiRouter::ResponseAllowed()
   return true;
 }
 
-void SiRouter::RegisterClient(SiClient* client)
+void UdsServerBase::RegisterClient(UdsServiceHandler* client)
 {
   cls.Add(client);
 }
 
-void SiRouter::RouterDisable()
+void UdsServerBase::RouterDisable()
 {
   router_is_disabled = true;
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-bool SiRouter::SelfIndHandler()
+bool UdsServerBase::SelfIndHandler()
 {
   bool ret = true;
 
@@ -313,14 +313,14 @@ bool SiRouter::SelfIndHandler()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-bool SiRouter::SelfConfHandler()
+bool UdsServerBase::SelfConfHandler()
 {
   return false;
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void SiRouter::SID_TesterPresent()
+void UdsServerBase::SID_TesterPresent()
 {
   if (sihead.SF != 0)
   {
@@ -340,7 +340,7 @@ void SiRouter::SID_TesterPresent()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void SiRouter::SID_DiagServiceControl()
+void UdsServerBase::SID_DiagServiceControl()
 {
   // minimal length check already done
   if (sihead.SF == 0 || sihead.SF > 3)
@@ -367,7 +367,7 @@ void SiRouter::SID_DiagServiceControl()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-bool SiRouter::MakeBaseSIDChecks()
+bool UdsServerBase::MakeBaseSIDChecks()
 {
   //service is available
   bool ret = true;

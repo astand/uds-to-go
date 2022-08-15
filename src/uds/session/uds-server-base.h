@@ -18,17 +18,17 @@
 
 #define SID_MinLen(x)     (SID_HasMinL | ((uint8_t)(x) > 7u) ? (7u) : ((uint8_t)(x) & 0x07U))
 
-class SiClient;
+class UdsServiceHandler;
 
-class SiRouter : public SessionControl {
+class UdsServerBase : public SessionControl {
  public:
-  SiRouter(IKeeper<SiClient>& vec);
+  UdsServerBase(IKeeper<UdsServiceHandler>& vec);
   // this function exports for clients
   void SendResponse(const uint8_t* data, int32_t len);
   void SendNegResponse(NRCs_t nrc);
   void SendNegResponse(uint8_t sid, NRCs_t nrc);
 
-  void RegisterClient(SiClient* client);
+  void RegisterClient(UdsServiceHandler* client);
   void RouterDisable();
   void SetServiceSession(uint8_t s);
   void SetSecurityLevel(uint8_t level);
@@ -81,7 +81,7 @@ class SiRouter : public SessionControl {
   bool ResponseAllowed();
 
  private:
-  IKeeper<SiClient>& cls;
+  IKeeper<UdsServiceHandler>& cls;
   bool router_is_disabled;
   ProcessResult_t clientHandRes;
   uint8_t router_tx_buff[8];

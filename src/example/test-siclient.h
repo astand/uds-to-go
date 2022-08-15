@@ -1,11 +1,11 @@
 #pragma once
 
-#include <uds/session/si-client.h>
+#include <uds/session/uds-service-handler.h>
 
-class TestSiClient : public SiClient {
+class TestUdsServiceHandler : public UdsServiceHandler {
 
  public:
-  TestSiClient(SiRouter& router) : SiClient(router) {}
+  TestUdsServiceHandler(UdsServerBase& router) : UdsServiceHandler(router) {}
 
   virtual ProcessResult_t OnIndication(const IndicationInfo& inf) override {
     std::cout << "SC : " << "On Ind -> " << "Addr: " << ((inf.addr == UdsAddress::PHYS) ? ("PHYS ") : ("FUNC "));
