@@ -196,7 +196,7 @@ uint8_t SiRouter::GetNRC()
 }
 
 
-void SiRouter::NotifyS3Timeout()
+void SiRouter::On_s3_Timeout()
 {
   // the session layer says that S3 timer is out
   // the current SSL session must be kSSL_Default

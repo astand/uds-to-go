@@ -32,85 +32,83 @@ void SessionControl::OnIsoEvent(N_Type event, N_Result res, const IsoTpInfo& inf
 {
   sState.atype = (info.address == N_TarAddress::TAtype_1_Physical) ? (UdsAddress::PHYS) : (UdsAddress::FUNC);
 
-  if (event == N_Type::Data)
+  switch (event)
   {
-    if (res == N_Result::OK_r)
-    {
-      // data indication from Transport layer
-      p2.Start(tims.p2_max);
+    case (N_Type::Data):
+      if (res == N_Result::OK_r)
+      {
+        // data indication from Transport layer
+        p2.Start(tims.p2_max);
 
-      if (sState.session == SessionState::NONDEFAULT)
-      {
-        // when non default session is active S3 timer must be stopped to
-        // complete req/repsond transfer
-        S3.Stop();
-      }
+        if (sState.session == SessionState::NONDEFAULT)
+        {
+          // when non default session is active S3 timer must be stopped to
+          // complete req/repsond transfer
+          S3.Stop();
+        }
 
-      NotifyInd(info.data, info.length, sState.atype);
-    }
-    else
-    {
-      // the data was corrupted of something else happened
-      NotifyConf(S_Result::NOK);
-    }
-  }
-  else if (event == N_Type::DataFF)
-  {
-    if (res == N_Result::OK_r)
-    {
-      // SOM indication is not sending to Diag app.
-      // TODO: restart timings?
-      if (sState.session == SessionState::NONDEFAULT)
-      {
-        // when non default session is active S3 timer must be stopped to
-        // complete req/repsond transfer
-        S3.Stop();
-      }
-    }
-    else
-    {
-      // what happend?
-      SetSessionMode(sState.session);
-      assert(false);
-    }
-  }
-  else if (event == N_Type::Conf)
-  {
-    // confirmation about timeout error and data transferring ending like this
-    if (res == N_Result::OK_s)
-    {
-      // response send OK, check what was that
-      if ((GetNRC() == NRC_RCRRP) && (sState.session == SessionState::NONDEFAULT))
-      {
-        // response was NRC_RCRRP - set p2 enhanced timeout
-        p2.Start(tims.p2_enhanced);
+        NotifyInd(info.data, info.length, sState.atype);
       }
       else
       {
+        // the data was corrupted of something else happened
+        NotifyConf(S_Result::NOK);
+      }
+
+      break;
+
+    case (N_Type::DataFF):
+      if (res == N_Result::OK_r)
+      {
+        // SOM indication is not sending to Diag app.
+        // TODO: restart timings?
+        if (sState.session == SessionState::NONDEFAULT)
+        {
+          // when non default session is active S3 timer must be stopped to
+          // complete req/repsond transfer
+          S3.Stop();
+        }
+      }
+      else
+      {
+        // what happend?
+        SetSessionMode(sState.session);
+        assert(false);
+      }
+
+      break;
+
+    case (N_Type::Conf):
+
+      // confirmation about timeout error and data transferring ending like this
+      if (res == N_Result::OK_s)
+      {
+        // response send OK, check what was that
+        if ((GetNRC() == NRC_RCRRP) && (sState.session == SessionState::NONDEFAULT))
+        {
+          // response was NRC_RCRRP - set p2 enhanced timeout
+          p2.Start(tims.p2_enhanced);
+        }
+        else
+        {
+          SetSessionMode(sState.session);
+        }
+      }
+      else if (res == N_Result::TIMEOUT_Cr)
+      {
+        // segmented receptions is broken
         SetSessionMode(sState.session);
       }
-    }
-    else if (res == N_Result::TIMEOUT_Cr)
-    {
-      // segmented receptions is broken
-      SetSessionMode(sState.session);
-    }
-    else
-    {
-      // error occured
-    }
+      else
+      {
+        // error occured
+      }
   }
 
   return;
 }
 
 
-// this function can be used from the upper UDS layers or
-// from the SessionControl itself. From the itselt it can only
-// RESTART current active session and therefore there is
-// no need to notify clients about session changing from this
-// method. The only one need is present - notify when S3 timer
-// is run off
 void SessionControl::SetSessionMode(bool is_default)
 {
   if (is_default)
@@ -129,7 +127,7 @@ void SessionControl::SetSessionMode(bool is_default)
     }
     else
     {
-      // subsequent start
+      // already not default -> subsequent start
       S3.Restart();
     }
   }
@@ -143,7 +141,7 @@ void SessionControl::ProcessSessionMode()
     if (S3.Elapsed())
     {
       SetSessionMode(true);
-      NotifySessionChanged();
+      On_s3_Timeout();
     }
 
     if (p2.Elapsed())

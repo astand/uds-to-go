@@ -14,12 +14,6 @@ class SessionControl : public IsoTpClient, public IProcessable {
     host = sender;
   }
 
-  typedef struct
-  {
-    SessionState session;
-    UdsAddress atype;
-  } S_PDU_t;
-
  public:
   // Session state processing API
   virtual void Process();
@@ -28,23 +22,19 @@ class SessionControl : public IsoTpClient, public IProcessable {
 
  protected:
 
+  typedef struct
+  {
+    SessionState session;
+    UdsAddress atype;
+  } S_PDU_t;
 
   void SendRequest(const uint8_t* data, uint32_t len);
 
-
   // For heritance classes to react on session events
-  virtual void NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr) {
-    (void)data;
-    (void)length;
-    (void)addr;
-  }
-
-  virtual void NotifyConf(S_Result res) {
-    (void)res;
-  }
-
+  virtual void NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr) = 0;
+  virtual void NotifyConf(S_Result res) = 0;
   // one of the upper inheritor must consume this event
-  virtual void NotifySessionChanged() = 0;
+  virtual void On_s3_Timeout() = 0;
   virtual uint8_t GetNRC() = 0;
   void SetSessionMode(bool is_default);
   void ProcessSessionMode();

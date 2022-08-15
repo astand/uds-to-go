@@ -24,30 +24,12 @@ class SiRouter : public SessionControl {
   SiRouter();
   // this function exports for clients
   void SendResponse(const uint8_t* data, int32_t len);
-
-  /**
-   * @brief Sending negative response on the request in current UDS context
-   *
-   * @param nrc Negative response code
-   */
   void SendNegResponse(NRCs_t nrc);
-
-  /**
-   * @brief Sending independent negative response
-   *
-   * @param sid Servide ID
-   * @param nrc Negative response code
-   */
   void SendNegResponse(uint8_t sid, NRCs_t nrc);
 
-  // this function registers new si-client and it will
-  // !!! be blocked if there is no slot for client in stack
   void RegisterClient(SiClient* client);
-  // disable any service processing (to be used before reset or power-off)
   void RouterDisable();
-  // Changed the session mode by user
   void SetServiceSession(uint8_t s);
-  // Set current security access level by user
   void SetSecurityLevel(uint8_t level);
 
  public:
@@ -89,7 +71,7 @@ class SiRouter : public SessionControl {
  private:
   // Session layer calls this method when S3 timer is out
   // and session goes to the kSSL_Default
-  virtual void NotifyS3Timeout();
+  virtual void On_s3_Timeout();
   // Handlers for UDS lower datalink layer events
   void IndRouterEvent();
   void ConfRouterEvent();
