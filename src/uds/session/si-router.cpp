@@ -347,7 +347,7 @@ void SiRouter::SID_DiagServiceControl()
   {
     SendNegResponse(NRC_SFNS);
   }
-  else  if (data_info.size != 2)
+  else if (data_info.size != 2)
   {
     // DSC : total length check
     SendNegResponse(NRC_IMLOIF);
@@ -361,20 +361,7 @@ void SiRouter::SID_DiagServiceControl()
     tLength = 6;
 
     // everything is ok. restart session
-    if (sihead.SF == DSC_SF_PRGS)
-    {
-      SetServiceSession(DSC_SF_PRGS);
-    }
-    else if (sihead.SF == DSC_SF_EXTDS)
-    {
-      // reset programming session here but NOT extended
-      SetServiceSession(DSC_SF_EXTDS);
-    }
-    else if (sihead.SF == DSC_SF_DS)
-    {
-      // TODO: Reset (if possible) or what?
-      SetServiceSession(DSC_SF_DS);
-    }
+    SetServiceSession(sihead.SF);
   }
 }
 

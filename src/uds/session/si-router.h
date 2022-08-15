@@ -94,7 +94,6 @@ class SiRouter : public SessionControl {
    */
   bool nrc_bad_param;
 
-
  private:
   bool MakeBaseSIDChecks();
   void SID_TesterPresent();
