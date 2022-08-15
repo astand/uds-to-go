@@ -6,6 +6,9 @@
   (x == NRC_SFNS) ||\
   (x == NRC_SFNSIAS) ||\
   (x == NRC_ROOR))
+/* ------------------- SID_Phyaddr   SID_Support   SID_NoInDef   SID_NoSubFu   SID_HasMinL */
+#define SI_Flags_DSC   SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
+#define SI_Flags_TP    SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
 
 template<uint8_t low, uint8_t high>
 bool out_of_range(uint8_t v)
@@ -18,8 +21,6 @@ SiRouter::SiRouter(IKeeper<SiClient>& vec) : cls(vec)
 {
   SID_Flag[PUDS_SI_DiagnosticSessionControl] = SI_Flags_DSC;
   SID_Flag[PUDS_SI_TesterPresent] = SI_Flags_TP;
-
-  now_clients_cnt = 0;
 
   sess_info.sec_level = 0;
   sess_info.sess = DSC_SF_DS;

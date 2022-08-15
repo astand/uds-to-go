@@ -83,7 +83,6 @@ class SiRouter : public SessionControl {
  private:
   IKeeper<SiClient>& cls;
   bool router_is_disabled;
-  uint16_t now_clients_cnt;
   ProcessResult_t clientHandRes;
   uint8_t router_tx_buff[8];
   NRCs_t nrc_code;
