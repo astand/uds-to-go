@@ -6,6 +6,9 @@
   (x == NRC_SFNS) ||\
   (x == NRC_SFNSIAS) ||\
   (x == NRC_ROOR))
+
+#define IS_NRC_PHYS_NOPOS(x) ((x) == NRC_ROOR || (x) == NRC_SNS || (x) == NRC_SFNS)
+
 /* ------------------- SID_Phyaddr   SID_Support   SID_NoInDef   SID_NoSubFu   SID_HasMinL */
 #define SI_Flags_DSC   SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
 #define SI_Flags_TP    SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
@@ -29,17 +32,15 @@ UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec) : cls(vec)
 }
 
 
-void UdsServerBase::SendResponse(const uint8_t* data, int32_t len)
+void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len)
 {
-  if (len <= 0)
+  if (len == 0)
   {
-    // the service handled the request but the response will be
-    // returned in the next loop cycle.
     return;
   }
 
   // check address and NRC code
-  if (len > 0 && ResponseAllowed())
+  if (ResponseAllowed())
   {
     SendRequest(data, len);
   }
@@ -232,44 +233,15 @@ bool UdsServerBase::ResponseAllowed()
   if (req_addr == UdsAddress::FUNC)
   {
     // ISO 14229-1 Table 5
-    if (sihead.NoResponse == false)
-    {
-      // Only POS answers or reading error related NRC is allowed
-      if ((nrc_code == NRC_PR) || (nrc_bad_param))
-      {
-        return true;
-      }
-    }
-    else
-    {
-      // Only reading error related NRC is allowed (g)
-      if (nrc_bad_param)
-      {
-        return true;
-      }
-    }
-
-    // answer doesn't allowed
-    return false;
+    return (nrc_bad_param || (sihead.NoResponse == false && nrc_code == NRC_PR));
   }
   else if (req_addr == UdsAddress::PHYS)
   {
-    if (sihead.NoResponse == true)
-    {
-      /* Table 4 (h, i, j) */
-      /* Table 4 (g) - client sets this state */
-      if (IS_NRC_PASSED(nrc_code) ||  nrc_bad_param)
-      {
-        return true;
-      }
-      else
-      {
-        return false;
-      }
-    }
+    /* ISO 14229-1 7.5.3.2 tab 4 (p 30)               h, i, j                  */
+    return (sihead.NoResponse && (IS_NRC_PHYS_NOPOS(nrc_code) ||  nrc_bad_param));
   }
 
-  return true;
+  return false;
 }
 
 void UdsServerBase::RegisterClient(UdsServiceHandler* client)

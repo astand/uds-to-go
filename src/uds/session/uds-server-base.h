@@ -24,7 +24,7 @@ class UdsServerBase : public SessionControl {
  public:
   UdsServerBase(IKeeper<UdsServiceHandler>& vec);
   // this function exports for clients
-  void SendResponse(const uint8_t* data, int32_t len);
+  void SendResponse(const uint8_t* data, uint32_t len);
   void SendNegResponse(NRCs_t nrc);
   void SendNegResponse(uint8_t sid, NRCs_t nrc);
 
