@@ -54,3 +54,54 @@ You can also inspect CAN log in the ***isotpdump*** terminal
 
 _Example of using server-client communication with isotpdump logging_
 ![Drag Racing](docs/test-run-example.png)
+
+
+# Basic code explanation
+
+The driver was made as light as possible (in a resonable extent). It completely ready to be used on MCU and
+any kind of other embedded devices
+
+The main features:
+- No dynamic memory allocation
+- No exception throwing
+- Possibility to have more than one UDS instances in the same time
+
+
+To integrate UDS driver to your project you have to provide adapters from low-level side 
+and make base class implementation from the APP side
+
+## Low level adaptation
+### Timers
+Both layers (network and session) use timers. To process timer you have to call static method of TickerCounter class periodically with frequency 1 Hz. In the example project it has been made by wrapping this call to class ***TickerWrapper*** (_src/example/ticker-wrapper.h_) which method _Process_ is called from main thread. It Processes core tick counter each 1 ms. For MCU implementation you can put this call _Timers::TickerCounter::ProcessTick()_ inside timer IRQ hanlder Attention: timers will work properly only if the size of core timer counter type (32-bit by default) is the same as the system base bit-width
+As long as your system bit width is the same as the core timer counter type (32bit by default) everything is ok, timer is safe to be used in multithread environment, because ticker increment is going to be atomic. In other cases it is unsafe to use it with default implementation
+### CAN Sender
+You have to implement **_ICAN_Sender_** interface. Its main task is to send CAN frames to diagnostic CAN bus.
+There is no difference if you use block approach (direct access to CAN HW and waiting transmittion compeletence) or async approach (with intermediate buffering). You have to return meaningful result.
+> In example I use socketCAN wrapper ***CanSender*** (src/example/can-bridge.h)
+
+Object which implements this interface must be binded to DoCAN_TP object by passing it as the first argument of DoCAN_TP constructor
+### CAN Listener
+You have to process **_ICAN_Listenere_** interface of DoCAN_TP object. In exmaple I made ***CanListener*** class (_src/example/can-bridge.h_) which passes all CAN frames from SocetCAN to DoCAN_TP instance which is binded to CanListener by passing a reference to constructor 
+
+### Processing
+Some classes implement interface IProcessable. This is quite useful for making processing more simple in the main thread. DoCAN_TP and SessionControl classes implement this interface. The TimerWrapper also implements this interface. 
+There is also class **_ProcRunner_** which is able to collect a few IProcessable instances and run them all in main thread
+```c
+ProcRunner<4> procrunner;
+
+procrunner.Add(&ticker);
+procrunner.Add(&iso_tp);
+procrunner.Add(&listener);
+
+while (true)
+{
+  procrunner.RunAllProcess();
+  ...
+  sleep(1ms);
+}
+```
+This processing aproach is optional. You can use any other way to make periodic processing all these instances.
+
+From this point you are ready to send and receive ISO TP packets, as it is main in udstogo-test app.
+Don't forget to set DoCAN_TP parameters (addresses, timeouts etc).
+
