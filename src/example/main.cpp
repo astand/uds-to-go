@@ -136,7 +136,9 @@ int main(int argc, char** argv)
   iso_tp.SetParameter(ParName::PADD_BYTE, 0xcc);
 
   std::cout << "ISO Tp starting. Binding to '" << ifname << "'" << std::endl;
-
+  std::cout << " ----------------------------------------- " << std::endl;
+  set_do_can_parameters(iso_tp, params);
+  std::cout << " ----------------------------------------- " << std::endl << std::endl;
   auto sockfd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
   assert(sockfd > 0);
 
@@ -156,8 +158,6 @@ int main(int argc, char** argv)
   assert(bind(sockfd, (struct sockaddr*)&loc_addr, sizeof(loc_addr)) >= 0);
 
   std::cout << "Started succesfully." << std::endl;
-  std::cout << " ----------------------------------------- " << std::endl;
-  set_do_can_parameters(iso_tp, params);
   std::cout << " ----------------------------------------- " << std::endl << std::endl;
 
   listener.SetSocket(sockfd);
