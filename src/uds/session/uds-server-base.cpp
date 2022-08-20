@@ -20,8 +20,11 @@ bool out_of_range(uint8_t v)
   return (v < low || v > high);
 }
 
-UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec) : cls(vec)
+UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasize_t s) : cls(vec), tData(d), TX_SIZE(s)
 {
+  assert(tData != nullptr);
+  assert(TX_SIZE != 0);
+
   SID_Flag[PUDS_SI_DiagnosticSessionControl] = SI_Flags_DSC;
   SID_Flag[PUDS_SI_TesterPresent] = SI_Flags_TP;
 
@@ -54,13 +57,13 @@ void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len)
 
 void UdsServerBase::SendNegResponse(uint8_t sid, NRCs_t nrc)
 {
-  router_tx_buff[0] = PUDS_NR_SI;
-  router_tx_buff[1] = sid;
-  router_tx_buff[2] = static_cast<uint8_t>(nrc);
+  tData[0] = PUDS_NR_SI;
+  tData[1] = sid;
+  tData[2] = static_cast<uint8_t>(nrc);
   nrc_bad_param = (nrc == NRC_IMLOIF);
   nrc_code = nrc;
 
-  SendResponse(router_tx_buff, 3);
+  SendResponse(tData, 3);
 }
 
 void UdsServerBase::SendNegResponse(NRCs_t nrc)

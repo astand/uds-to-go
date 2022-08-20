@@ -48,7 +48,7 @@ static std::string ifname = "vcan0";
 static CanSender sender;
 
 static MemKeeper<UdsServiceHandler, 4> sicl_keeper;
-static UdsServerBase sirout(sicl_keeper);
+static UdsServerBase sirout(sicl_keeper, nullptr, 0);
 static DoCAN_TP_Mem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, sirout);
 static TestUdsServiceHandler testclient(sirout);
 

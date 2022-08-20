@@ -22,7 +22,7 @@ class UdsServiceHandler;
 
 class UdsServerBase : public SessionControl {
  public:
-  UdsServerBase(IKeeper<UdsServiceHandler>& vec);
+  UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* txptr, datasize_t txsize);
   // this function exports for clients
   void SendResponse(const uint8_t* data, uint32_t len);
   void SendNegResponse(NRCs_t nrc);
@@ -35,10 +35,9 @@ class UdsServerBase : public SessionControl {
 
  public:
 
-  // this readonly descriptor for clients to be informed about UDS curr state
-  static constexpr size_t TX_DATA_MAX_LEN = 4096;
-  uint8_t tData[TX_DATA_MAX_LEN];
-  int32_t tLength;
+  const datasize_t TX_SIZE;
+  uint8_t* const tData;
+  datasize_t tLength;
 
   SI_Head_t sihead;
 
@@ -84,7 +83,6 @@ class UdsServerBase : public SessionControl {
   IKeeper<UdsServiceHandler>& cls;
   bool router_is_disabled;
   ProcessResult_t clientHandRes;
-  uint8_t router_tx_buff[8];
   NRCs_t nrc_code;
   UdsAddress req_addr{UdsAddress::UNKNOWN};
 
