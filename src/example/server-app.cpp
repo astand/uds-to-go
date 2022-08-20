@@ -10,6 +10,7 @@
 #include <sys/select.h>
 #include <mutex>
 #include <uds/isotp/docan-tp.h>
+#include "static-allocator.h"
 #include "can-bridge.h"
 #include "iso-app.h"
 #include "argcollector.h"
@@ -19,21 +20,7 @@
 #include <uds/session/uds-server-base.h>
 #include <uds/session/uds-service-handler.h>
 
-/* ---------------------------------------------------------------------------- */
-template<typename T, size_t N>
-class StaticMemAllocator {
- public:
-  uint8_t* ptr() {
-    return static_cast<uint8_t*>(__raw__);
-  }
 
-  StaticMemAllocator() = default;
-  StaticMemAllocator(const StaticMemAllocator&) = delete;
-  StaticMemAllocator& operator=(const StaticMemAllocator&) = delete;
-
- private:
-  uint8_t __raw__[N * sizeof(T)] {0};
-};
 
 /* ---------------------------------------------------------------------------- */
 constexpr size_t RxBufferSize = 8192;
