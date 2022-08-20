@@ -240,8 +240,17 @@ bool UdsServerBase::ResponseAllowed()
   }
   else if (req_addr == UdsAddress::PHYS)
   {
-    /* ISO 14229-1 7.5.3.2 tab 4 (p 30)               h, i, j                  */
-    return (sihead.NoResponse && (IS_NRC_PHYS_NOPOS(nrc_code) ||  nrc_bad_param));
+    if (nrc_code != NRC_RCRRP)
+    {
+      /* ISO 14229-1 7.5.3.2 tab 4 (p 30)               h, i, j                  */
+      return (sihead.NoResponse && (IS_NRC_PHYS_NOPOS(nrc_code) ||  nrc_bad_param));
+    }
+    else
+    {
+      /* ISO 14229-1 7.5.3.2 tab 4 (p 30) - *for the case with RCRRP negative response */
+      sihead.NoResponse = false;
+      return true;
+    }
   }
 
   return false;
