@@ -38,6 +38,7 @@ class SessionControl : public IsoTpClient, public IProcessable {
   virtual uint8_t GetNRC() = 0;
   void SetSessionMode(bool is_default);
   void ProcessSessionMode();
+  SessResult SetSessionParam(SessParam par, uint32_t v);
 
   typedef struct
   {

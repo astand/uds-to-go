@@ -60,3 +60,13 @@ enum class A_Result
 {
   OK, ERROR
 };
+
+enum class SessResult
+{
+  OK, ERR
+};
+
+enum class SessParam
+{
+  S3_TIM, P2_TIM, P2_ENHC
+};
