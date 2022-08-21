@@ -10,7 +10,6 @@
 #define IS_NRC_PHYS_NOPOS(x) ((x) == NRC_ROOR || (x) == NRC_SNS || (x) == NRC_SFNS)
 
 /* ------------------- SID_Phyaddr   SID_Support   SID_NoInDef   SID_NoSubFu   SID_HasMinL */
-#define SI_Flags_DSC   SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
 #define SI_Flags_TP    SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
 
 template<uint8_t low, uint8_t high>
@@ -25,7 +24,6 @@ UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasi
   assert(tData != nullptr);
   assert(TX_SIZE != 0);
 
-  SID_Flag[PUDS_SI_DiagnosticSessionControl] = SI_Flags_DSC;
   SID_Flag[PUDS_SI_TesterPresent] = SI_Flags_TP;
 
   sess_info.sec_level = 0;
@@ -68,7 +66,7 @@ void UdsServerBase::SendNegResponse(uint8_t sid, NRCs_t nrc)
 
 void UdsServerBase::SendNegResponse(NRCs_t nrc)
 {
-  SendNegResponse(sihead.SI, nrc);
+  SendNegResponse(data_info.head.SI, nrc);
 }
 
 
@@ -108,17 +106,17 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress a
 
   data_info.data = data;
   data_info.size = length;
-  sihead.SI = data_info.data[0];
+  data_info.head.SI = data_info.data[0];
 
   // ISO 14229-1 7.3.2 table 2 (p. 25)
-  bool bad_sid = out_of_range<0x10, 0x3e>(sihead.SI) && out_of_range<0x83, 0x88>(sihead.SI);
+  bool bad_sid = out_of_range<0x10, 0x3e>(data_info.head.SI) && out_of_range<0x83, 0x88>(data_info.head.SI);
 
-  sihead.SF = (data_info.data[1] & 0x7FU);
-  sihead.respSI = RESPONSE_ON_SID(sihead.SI);
+  data_info.head.SF = (data_info.data[1] & 0x7FU);
+  data_info.head.respSI = RESPONSE_ON_SID(data_info.head.SI);
   // services without subfunctions must set NoResponse bit to 0 by themself!!!
-  sihead.NoResponse = data_info.data[1] & 0x80U ? 1 : 0;
+  data_info.head.NoResponse = data_info.data[1] & 0x80U ? 1 : 0;
   // set most frequent case
-  tData[0] = sihead.respSI;
+  tData[0] = data_info.head.respSI;
   tData[1] = data_info.data[1];
   tLength = 0;
 
@@ -141,7 +139,7 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress a
   {
     clientHandRes = client->OnIndication(data_info);
 
-    if (clientHandRes == kSI_NotHandled)
+    if (clientHandRes != kSI_NotHandled)
     {
       break;
     }
@@ -180,7 +178,7 @@ void UdsServerBase::NotifyConf(S_Result res)
   data_info.data = nullptr;
   data_info.size = 0;
   data_info.addr = UdsAddress::UNKNOWN;
-  data_info.head = sihead;
+  data_info.head = data_info.head;
 
   UdsServiceHandler* client = nullptr;
   uint32_t i = 0u;
@@ -236,19 +234,19 @@ bool UdsServerBase::ResponseAllowed()
   if (req_addr == UdsAddress::FUNC)
   {
     // ISO 14229-1 Table 5
-    return (nrc_bad_param || (sihead.NoResponse == false && nrc_code == NRC_PR));
+    return (nrc_bad_param || (data_info.head.NoResponse == false && nrc_code == NRC_PR));
   }
   else if (req_addr == UdsAddress::PHYS)
   {
     if (nrc_code != NRC_RCRRP)
     {
-      /* ISO 14229-1 7.5.3.2 tab 4 (p 30)               h, i, j                  */
-      return (sihead.NoResponse && (IS_NRC_PHYS_NOPOS(nrc_code) ||  nrc_bad_param));
+      /* ISO 14229-1 7.5.3.2 tab 4 (p 30)                               h, i, j                  */
+      return (data_info.head.NoResponse == false || (IS_NRC_PHYS_NOPOS(nrc_code) ||  nrc_bad_param));
     }
     else
     {
       /* ISO 14229-1 7.5.3.2 tab 4 (p 30) - *for the case with RCRRP negative response */
-      sihead.NoResponse = false;
+      data_info.head.NoResponse = false;
       return true;
     }
   }
@@ -279,14 +277,14 @@ bool UdsServerBase::SelfIndHandler()
     return ret;
   }
 
-  if (sihead.SI == PUDS_SI_TesterPresent)
+  if (data_info.head.SI == PUDS_SI_TesterPresent)
   {
     SID_TesterPresent();
   }
-  else if (sihead.SI == PUDS_SI_DiagnosticSessionControl)
-  {
-    SID_DiagServiceControl();
-  }
+  // else if (data_info.head.SI == PUDS_SI_DiagnosticSessionControl)
+  // {
+  //   SID_DiagServiceControl();
+  // }
   else
   {
     ret = false;
@@ -306,7 +304,7 @@ bool UdsServerBase::SelfConfHandler()
 //------------------------------------------------------------------------------
 void UdsServerBase::SID_TesterPresent()
 {
-  if (sihead.SF != 0)
+  if (data_info.head.SF != 0)
   {
     // invalid SF
     SendNegResponse(NRC_SFNS);
@@ -322,32 +320,6 @@ void UdsServerBase::SID_TesterPresent()
   }
 }
 
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-void UdsServerBase::SID_DiagServiceControl()
-{
-  // minimal length check already done
-  if (sihead.SF == 0 || sihead.SF > 3)
-  {
-    SendNegResponse(NRC_SFNS);
-  }
-  else if (data_info.size != 2)
-  {
-    // DSC : total length check
-    SendNegResponse(NRC_IMLOIF);
-  }
-  else
-  {
-    tData[2] = ((tims.p2_max >> 8) & 0xFF);
-    tData[3] = (tims.p2_max & 0xFF);
-    tData[4] = (((tims.p2_enhanced / 10) >> 8) & 0xFF);
-    tData[5] = ((tims.p2_enhanced / 10) & 0xFF);
-    tLength = 6;
-
-    // everything is ok. restart session
-    SetServiceSession(sihead.SF);
-  }
-}
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -355,7 +327,7 @@ bool UdsServerBase::MakeBaseSIDChecks()
 {
   //service is available
   bool ret = true;
-  uint8_t flags = SID_Flag[sihead.SI];
+  uint8_t flags = SID_Flag[data_info.head.SI];
 
   // negResponse handling
   if (flags == 0)
@@ -383,7 +355,7 @@ bool UdsServerBase::MakeBaseSIDChecks()
   // noResponse bit handling
   if (flags & SID_NoSubFu)
   {
-    sihead.NoResponse = 0;
+    data_info.head.NoResponse = 0;
   }
 
   return ret;

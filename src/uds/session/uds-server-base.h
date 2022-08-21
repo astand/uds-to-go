@@ -39,8 +39,6 @@ class UdsServerBase : public SessionControl {
   uint8_t* const tData;
   datasize_t tLength;
 
-  SI_Head_t sihead;
-
   const SessionInfo& GetSession() const {
     return sess_info;
   }
@@ -95,6 +93,5 @@ class UdsServerBase : public SessionControl {
  private:
   bool MakeBaseSIDChecks();
   void SID_TesterPresent();
-  void SID_DiagServiceControl();
 };
 
