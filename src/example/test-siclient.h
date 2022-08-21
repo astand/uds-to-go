@@ -9,11 +9,11 @@ class TestUdsServiceHandler : public UdsServiceHandler {
 
   virtual ProcessResult_t OnIndication(const IndicationInfo& inf) override {
     std::cout << "SC : " << "On Ind -> " << "Addr: " << ((inf.addr == UdsAddress::PHYS) ? ("PHYS ") : ("FUNC "));
-    std::cout << "SI " << inf.head.SI << "] SF [" << inf.head.SF << "]";
+    std::cout << " -> SI [" << (int)inf.head.SI << "] SF [" << (int)inf.head.SF << "]";
     std::cout << "Data size = " << inf.size << " b." << std::endl;
     std::cout << std::endl;
 
-    return ProcessResult_t::kSI_HandledResponseOk;
+    return ProcessResult_t::kSI_NotHandled;
   }
 
 
@@ -21,7 +21,7 @@ class TestUdsServiceHandler : public UdsServiceHandler {
     std::cout << "SC : On Confirmation [" << ((res == S_Result::OK) ? (" OK ") : (" ! NOK ")) << "]";
     std::cout << std::endl;
 
-    return ProcessResult_t::kSI_HandledResponseOk;
+    return ProcessResult_t::kSI_NotHandled;
   }
 
 
