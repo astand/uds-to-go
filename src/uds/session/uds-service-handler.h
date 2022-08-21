@@ -18,7 +18,7 @@ class UdsServiceHandler : public IProcessable {
     * @param inf PDU packet descriptor
     * @return Status of handling
     * */
-  virtual ProcessResult_t OnIndication(const IndicationInfo& inf) = 0;
+  virtual ProcessResult OnIndication(const IndicationInfo& inf) = 0;
 
 
   /**
@@ -28,7 +28,7 @@ class UdsServiceHandler : public IProcessable {
    *
    * @return Status of confirmation handling
    * */
-  virtual ProcessResult_t OnConfirmation(S_Result res) = 0;
+  virtual ProcessResult OnConfirmation(S_Result res) = 0;
 
 
   /**

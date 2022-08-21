@@ -139,13 +139,13 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress a
   {
     clientHandRes = client->OnIndication(data_info);
 
-    if (clientHandRes != kSI_NotHandled)
+    if (clientHandRes != ProcessResult::NOT_HANDLED)
     {
       break;
     }
   }
 
-  if (clientHandRes == kSI_NotHandled)
+  if (clientHandRes == ProcessResult::NOT_HANDLED)
   {
     // there was no service to answer. so if the address is physycal
     // NRC NRC_SNS must be sent (ISO 14229-1 table 4 (i))
@@ -154,11 +154,11 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress a
       SendNegResponse(NRC_SNS);
     }
   }
-  else if (clientHandRes == kSI_HandledResponseOk)
+  else if (clientHandRes == ProcessResult::HANDLED_RESP_OK)
   {
     SendResponse(tData, tLength);
   }
-  else if (clientHandRes == kSI_HandledNoResponse)
+  else if (clientHandRes == ProcessResult::HANDLED_RESP_NO)
   {
     // the service handled the request but decided that
     // there is no necessity to send response, the current
@@ -187,7 +187,7 @@ void UdsServerBase::NotifyConf(S_Result res)
   {
     clientHandRes = client->OnIndication(data_info);
 
-    if (clientHandRes == kSI_NotHandled)
+    if (clientHandRes ==ProcessResult::NOT_HANDLED)
     {
       break;
     }
@@ -281,10 +281,6 @@ bool UdsServerBase::SelfIndHandler()
   {
     SID_TesterPresent();
   }
-  // else if (data_info.head.SI == PUDS_SI_DiagnosticSessionControl)
-  // {
-  //   SID_DiagServiceControl();
-  // }
   else
   {
     ret = false;

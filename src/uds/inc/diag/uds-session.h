@@ -20,9 +20,6 @@ enum class S_Result
 typedef uint8_t ServiceID_t;
 typedef uint8_t SubFunctionID_t;
 
-// result of servicediag process
-typedef enum { kSI_NotHandled, kSI_HandledResponseOk, kSI_HandledNoResponse } ProcessResult_t;
-
 typedef struct
 {
   uint8_t SI;
@@ -30,6 +27,12 @@ typedef struct
   uint8_t NoResponse;
   uint8_t respSI;
 } SI_Head_t;
+
+enum class ProcessResult
+{
+  NOT_HANDLED, HANDLED_RESP_OK, HANDLED_RESP_NO
+};
+
 
 /**
  * @brief High level based sending operation result types

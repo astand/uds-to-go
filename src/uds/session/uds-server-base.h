@@ -80,7 +80,7 @@ class UdsServerBase : public SessionControl {
  private:
   IKeeper<UdsServiceHandler>& cls;
   bool router_is_disabled;
-  ProcessResult_t clientHandRes;
+  ProcessResult clientHandRes;
   NRCs_t nrc_code;
   UdsAddress req_addr{UdsAddress::UNKNOWN};
 

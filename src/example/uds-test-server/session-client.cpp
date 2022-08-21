@@ -2,7 +2,7 @@
 #include "session-client.h"
 
 
-ProcessResult_t DSCClient::OnIndication(const IndicationInfo& inf)
+ProcessResult DSCClient::OnIndication(const IndicationInfo& inf)
 {
   std::cout << "DSC handler : ";
 
@@ -27,13 +27,13 @@ ProcessResult_t DSCClient::OnIndication(const IndicationInfo& inf)
       rtr1.SendNegResponse(NRC_SFNS);
     }
 
-    return kSI_HandledResponseOk;
+    return ProcessResult::HANDLED_RESP_OK;
   }
   else
   {
     std::cout << std::endl;
   }
 
-  return kSI_NotHandled;
+  return ProcessResult::NOT_HANDLED;
 
 }

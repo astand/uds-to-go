@@ -6,9 +6,9 @@ class DSCClient : public UdsServiceHandler {
  public:
   DSCClient(UdsServerBase& router_) : UdsServiceHandler(router_) {}
 
-  virtual ProcessResult_t OnIndication(const IndicationInfo& inf);
+  virtual ProcessResult OnIndication(const IndicationInfo& inf) override;
 
-  virtual ProcessResult_t OnConfirmation(S_Result res) {
-    return kSI_NotHandled;
+  virtual ProcessResult OnConfirmation(S_Result res) override {
+    return ProcessResult::NOT_HANDLED;
   }
 };
