@@ -29,7 +29,7 @@ typedef struct
  * to response on routine requests and SiClient for routine
  * control UDS service
  */
-class RoutinerBase : public UdsServiceHandler {
+class BaseRctrlRouter : public UdsServiceHandler {
  public:
 
   /**
@@ -90,7 +90,7 @@ class RoutinerBase : public UdsServiceHandler {
 
  protected:
   // protected constructor to prevent instance
-  RoutinerBase(UdsServerBase& r, size_t maxlen) : UdsServiceHandler(r), MAX_RESP_SIZE(maxlen) {}
+  BaseRctrlRouter(UdsServerBase& r, size_t maxlen) : UdsServiceHandler(r), MAX_RESP_SIZE(maxlen) {}
 
   const size_t MAX_RESP_SIZE;
 };
@@ -99,7 +99,7 @@ class RoutinerBase : public UdsServiceHandler {
  * @brief Interface class for Routine Control clients
  *
  */
-class RoutineClient {
+class RoutineHandler {
  public:
 
   /**
@@ -115,7 +115,7 @@ class RoutineClient {
   virtual ProcessResult OnRoutine(routine_id_t rid, uint8_t rtype, const uint8_t* data, size_t size) = 0;
 
  protected:
-  RoutineClient(RoutinerBase& routiner) : routman(routiner) {}
+  RoutineHandler(BaseRctrlRouter& routiner) : routman(routiner) {}
 
   void LoadRoutineContext(routine_id_t rid, uint8_t reqtype) {
     rcontext.id = rid;
@@ -126,7 +126,7 @@ class RoutineClient {
   /**
    * @brief Routine control manager. Provide API to client for sending responses
    */
-  RoutinerBase& routman;
+  BaseRctrlRouter& routman;
 
   /**
    * @brief client routine info
@@ -135,16 +135,16 @@ class RoutineClient {
 };
 
 /**
- * @brief Final class for RoutinerBase, can keep up to T clients (based on IKeeper)
+ * @brief Final class for BaseRctrlRouter, can keep up to T clients (based on IKeeper)
  * Must be instantiate single per programm
  *
  * @tparam T number of clients available for keeping in IKeeper
  * @tparam M maximum UDS transmit packet size
  */
 template<int32_t T, size_t M>
-class Routiner : public IKeeper<RoutineClient>, public RoutinerBase {
+class Routiner : public IKeeper<RoutineHandler>, public BaseRctrlRouter {
  public:
-  Routiner(UdsServerBase& router_) : IKeeper<RoutineClient>(list, T), RoutinerBase(router_, M)  {}
+  Routiner(UdsServerBase& router_) : IKeeper<RoutineHandler>(list, T), BaseRctrlRouter(router_, M)  {}
 
   /* SiClient */
   ProcessResult OnIndication(const IndicationInfo& inf) {
@@ -179,7 +179,7 @@ class Routiner : public IKeeper<RoutineClient>, public RoutinerBase {
 
     // Routiner will never return state for positive response by
     // UdsServerBase to avoid response duplications. Clients of routiner
-    // have to only use API of RoutinerBase for sending responses,
+    // have to only use API of BaseRctrlRouter for sending responses,
     // which uses direct UdsServerBase reponse sending
     return ProcessResult::HANDLED_RESP_NO;
   }
@@ -192,5 +192,5 @@ class Routiner : public IKeeper<RoutineClient>, public RoutinerBase {
 
  private:
 
-  RoutineClient* list[T];
+  RoutineHandler* list[T];
 };

@@ -19,6 +19,7 @@
 #include "test-siclient.h"
 #include "uds-test-server/test-uds-server.h"
 #include "uds-test-server/session-client.h"
+#include <uds/session/apps/rctrl-router.h>
 
 
 
