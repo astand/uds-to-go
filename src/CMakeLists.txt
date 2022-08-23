@@ -31,6 +31,7 @@ add_executable(ecu-server-test
     ${CMAKE_CURRENT_SOURCE_DIR}/uds/isotp/pci-helper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/uds/session/session-control.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/uds/session/uds-server-base.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/uds/session/apps/did-router.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/d-timer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/tickerup.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/example/server-app.cpp
