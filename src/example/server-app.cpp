@@ -19,7 +19,10 @@
 #include "test-siclient.h"
 #include "uds-test-server/test-uds-server.h"
 #include "uds-test-server/session-client.h"
+#include "uds-test-server/test-did-reader.h"
 #include <uds/session/apps/rctrl-router.h>
+#include <uds/session/apps/did-router.h>
+#include <uds/session/apps/did-keeper.h>
 
 
 
@@ -40,6 +43,10 @@ static TestUdsServer sirout(sicl_keeper, servarray, 1024);
 static DoCAN_TP_Mem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, sirout);
 static TestUdsServiceHandler testclient(sirout);
 static DSCClient dschandler(sirout);
+
+static DidKeeper<4> didkeeper;
+static TestDidReader didreader;
+static DidRouter didrouter(sirout, didkeeper);
 
 static DoCAN_TP& iso_tp = isotpsource;
 static CanListener listener(iso_tp);
@@ -229,6 +236,7 @@ int main(int argc, char** argv)
   procrunner.Add(&iso_tp);
   procrunner.Add(&listener);
   procrunner.Add(&sirout);
+  didkeeper.Add(&didreader);
 
   std::string readcmd;
 
