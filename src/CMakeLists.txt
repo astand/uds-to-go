@@ -34,6 +34,7 @@ add_executable(ecu-server-test
     ${CMAKE_CURRENT_SOURCE_DIR}/uds/session/apps/did-router.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/d-timer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/tickerup.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/example/app-builder/serv-factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/example/server-app.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/example/uds-test-server/test-uds-server.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/example/uds-test-server/session-client.cpp

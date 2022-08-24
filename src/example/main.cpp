@@ -10,7 +10,7 @@
 #include <sys/select.h>
 #include <mutex>
 #include <uds/isotp/docan-tp.h>
-#include "static-allocator.h"
+#include <etc/helpers/static-allocator.h>
 #include "can-bridge.h"
 #include "iso-app.h"
 #include "argcollector.h"

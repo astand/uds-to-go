@@ -2,6 +2,8 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <iostream>
 #include <linux/can/raw.h>
 #include <sys/stat.h>
 #include <fcntl.h>

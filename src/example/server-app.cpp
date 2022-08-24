@@ -1,34 +1,13 @@
 #include <assert.h>
 #include <stdlib.h>
-#include <iostream>
-#include <array>
 #include <thread>
-#include <string.h>
-#include <chrono>
-#include <sys/types.h>
+#include <string>
 #include <sys/ioctl.h>
-#include <sys/select.h>
 #include <mutex>
-#include <uds/isotp/docan-tp.h>
-#include "static-allocator.h"
-#include "can-bridge.h"
-#include "iso-app.h"
 #include "argcollector.h"
-#include "proc-runner.h"
-#include "ticker-wrapper.h"
-#include "test-siclient.h"
-#include "uds-test-server/test-uds-server.h"
-#include "uds-test-server/session-client.h"
-#include "uds-test-server/test-did-reader.h"
-#include <uds/session/apps/rctrl-router.h>
-#include <uds/session/apps/did-router.h>
-#include <uds/session/apps/did-keeper.h>
-
-
+#include "app-builder/serv-factory.h"
 
 /* ---------------------------------------------------------------------------- */
-constexpr size_t RxBufferSize = 8192;
-constexpr size_t TxBufferSize = 8192;
 std::string cmd;
 std::mutex mtx;
 
@@ -36,21 +15,10 @@ std::mutex mtx;
 static std::string ifname = "vcan0";
 
 /* ---------------------------------------------------------------------------- */
-static CanSender sender;
-static uint8_t servarray[1024u] {};
-static MemKeeper<UdsServiceHandler, 4> sicl_keeper;
-static TestUdsServer sirout(sicl_keeper, servarray, 1024);
-static DoCAN_TP_Mem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, sirout);
-static TestUdsServiceHandler testclient(sirout);
-static DSCClient dschandler(sirout);
+static UdsServerBase& uds_server = GetBaseUdsServer();
 
-static DidKeeper<4> didkeeper;
-static TestDidReader didreader;
-static DidRouter didrouter(sirout, didkeeper);
-
-static DoCAN_TP& iso_tp = isotpsource;
+static DoCAN_TP& iso_tp = GetDoCAN();
 static CanListener listener(iso_tp);
-static ProcRunner<4> procrunner;
 
 bool set_byte(char c, uint8_t& byte, bool is_high)
 {
@@ -196,9 +164,9 @@ int main(int argc, char** argv)
   std::cout << " ----------------------------------------- " << std::endl << std::endl;
 
   listener.SetSocket(sockfd);
-  sender.SetSocket(sockfd);
+  GetCanSender().SetSocket(sockfd);
 
-  std::array<uint8_t, TxBufferSize> buffer;
+  std::array<uint8_t, 5000> buffer;
 
   for (size_t i = 0; i < buffer.size(); buffer[i] = static_cast<uint8_t>(i), i++);
 
@@ -228,22 +196,14 @@ int main(int argc, char** argv)
     }
   });
 
-  static TickerWrapper ticker;
-
-  sirout.SetIsoTp(&iso_tp);
-
-  procrunner.Add(&ticker);
-  procrunner.Add(&iso_tp);
-  procrunner.Add(&listener);
-  procrunner.Add(&sirout);
-  didkeeper.Add(&didreader);
+  BuildApp();
 
   std::string readcmd;
 
   while (true)
   {
-    procrunner.RunAllProcess();
-
+    GetMainProcHandler().Process();
+    listener.Process();
     {
       std::lock_guard<std::mutex> guard(mtx);
 

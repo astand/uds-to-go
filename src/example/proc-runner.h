@@ -4,13 +4,13 @@
 #include <helpers/IKeeper.h>
 
 template<size_t N>
-class ProcRunner : public IKeeper<IProcessable> {
+class ProcRunner : public IKeeper<IProcessable>, public IProcessable {
  public:
   ProcRunner() : IKeeper<IProcessable>(__raw__, N) {
     assert(N != 0);
   }
 
-  void RunAllProcess() {
+  virtual void Process() override {
     IProcessable* proc{nullptr};
 
     for (size_t i = 0; i < Count(); i++) {
