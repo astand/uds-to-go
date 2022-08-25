@@ -141,7 +141,7 @@ class RoutineHandler {
  * @tparam T number of clients available for keeping in IKeeper
  * @tparam M maximum UDS transmit packet size
  */
-template<int32_t T, size_t M>
+template<size_t T, size_t M>
 class Routiner : public IKeeper<RoutineHandler>, public BaseRctrlRouter {
  public:
   Routiner(UdsServerBase& router_) : IKeeper<RoutineHandler>(list, T), BaseRctrlRouter(router_, M)  {}

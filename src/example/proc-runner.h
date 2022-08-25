@@ -4,9 +4,9 @@
 #include <helpers/IKeeper.h>
 
 template<size_t N>
-class ProcRunner : public IKeeper<IProcessable>, public IProcessable {
+class ProcRunner : public AsKeeper<IProcessable> {
  public:
-  ProcRunner() : IKeeper<IProcessable>(__raw__, N) {
+  ProcRunner() : AsKeeper<IProcessable>(__raw__, N) {
     assert(N != 0);
   }
 

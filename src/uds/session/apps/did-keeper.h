@@ -5,9 +5,9 @@
 #include "did-handler.h"
 
 template<size_t N>
-class DidKeeper : public DidHandler, public IKeeper<DidHandler> {
+class DidKeeper : public AsKeeper<DidHandler> {
  public:
-  DidKeeper() : IKeeper<DidHandler>(dids, N) {}
+  DidKeeper() : AsKeeper<DidHandler>(dids, N) {}
 
   virtual DidResult ReadDID(uint32_t did, uint8_t* data, size_t capacity, size_t& len_out, NRCs_t& nrc_out) override {
     DidResult ret = DidResult::Ignored;

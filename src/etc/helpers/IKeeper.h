@@ -133,6 +133,11 @@ class IKeeper {
   size_t iter_id{};
 };
 
+template<typename C>
+class AsKeeper : public IKeeper<C>, public C {
+ protected:
+  AsKeeper(C** array, size_t SIZE) : IKeeper<C>(array, SIZE) {}
+};
 
 template<typename T, size_t N>
 class MemKeeper : public IKeeper<T> {
