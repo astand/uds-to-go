@@ -6,6 +6,7 @@
 #include <mutex>
 #include "argcollector.h"
 #include "app-builder/serv-factory.h"
+#include "app-helper.h"
 
 /* ---------------------------------------------------------------------------- */
 std::string cmd;
@@ -20,58 +21,7 @@ static DoCAN_TP& iso_tp = GetDoCAN();
 // get CAN can_reader to process it in the loop
 static SocketCanReader can_reader(iso_tp);
 
-bool set_byte(char c, uint8_t& byte, bool is_high)
-{
-  uint8_t value = 0u;
 
-  if (c >= '0' && c <= '9')
-  {
-    value = c - '0';
-  }
-  else if (c >= 'a' && c <= 'f')
-  {
-    value = (c - 'a') + 10;
-  }
-  else if (c >= 'A' && c <= 'F')
-  {
-    value = (c - 'A') + 10;
-  }
-  else
-  {
-    return false;
-  }
-
-  if (is_high)
-  {
-    byte = value << 4;
-  }
-  else
-  {
-    byte |= value & 0x0fu;
-  }
-
-  return true;
-}
-
-static void try_to_set_param(const onepair& pair, uint32_t& vset)
-{
-  uint32_t scaned = 0u;
-  std::string frmt = "%u";
-
-  if (pair.second.size() > 2 && pair.second.at(1) == 'x')
-  {
-    frmt = "%x";
-  }
-
-  if (sscanf(pair.second.c_str(), frmt.c_str(), &scaned) != 1)
-  {
-    std::cout << "Wrong value (" << pair.second << ") for parameter '" << pair.first << "'";
-  }
-  else
-  {
-    vset = scaned;
-  }
-}
 
 static void set_do_can_parameters(DoCAN_TP& isotp, argsret& params)
 {
@@ -135,10 +85,14 @@ int main(int argc, char** argv)
 {
   auto params = collectargs(argc, argv);
 
+  std::cout << " ----------- ECU simulation -------------- " << std::endl;
+  set_do_can_parameters(iso_tp, params);
+  std::cout << " ----------------------------------------- " << std::endl << std::endl;
+
   iso_tp.SetParameter(ParName::CANDL, 8);
   iso_tp.SetParameter(ParName::PADD_BYTE, 0xcc);
 
-  std::cout << "ISO Tp starting. Binding to '" << ifname << "'" << std::endl;
+  std::cout << "Can channel name '" << ifname << "'" << std::endl;
 
   auto sockfd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
   assert(sockfd > 0);
@@ -159,9 +113,6 @@ int main(int argc, char** argv)
   assert(bind(sockfd, (struct sockaddr*)&loc_addr, sizeof(loc_addr)) >= 0);
 
   std::cout << "Started succesfully." << std::endl;
-  std::cout << " ----------------------------------------- " << std::endl;
-  set_do_can_parameters(iso_tp, params);
-  std::cout << " ----------------------------------------- " << std::endl << std::endl;
 
   // Bind FD to can_reader
   can_reader.SetSocket(sockfd);
