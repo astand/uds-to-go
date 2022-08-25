@@ -15,10 +15,10 @@ std::mutex mtx;
 static std::string ifname = "vcan0";
 
 /* ---------------------------------------------------------------------------- */
-static UdsServerBase& uds_server = GetBaseUdsServer();
-
+// get ISO tp instance to set its params from arguments in command line
 static DoCAN_TP& iso_tp = GetDoCAN();
-static CanListener listener(iso_tp);
+// get CAN can_reader to process it in the loop
+static SocketCanReader can_reader(iso_tp);
 
 bool set_byte(char c, uint8_t& byte, bool is_high)
 {
@@ -163,7 +163,9 @@ int main(int argc, char** argv)
   set_do_can_parameters(iso_tp, params);
   std::cout << " ----------------------------------------- " << std::endl << std::endl;
 
-  listener.SetSocket(sockfd);
+  // Bind FD to can_reader
+  can_reader.SetSocket(sockfd);
+  // Bind FD to sender
   GetCanSender().SetSocket(sockfd);
 
   std::array<uint8_t, 5000> buffer;
@@ -203,7 +205,7 @@ int main(int argc, char** argv)
   while (true)
   {
     GetMainProcHandler().Process();
-    listener.Process();
+    can_reader.Process();
     {
       std::lock_guard<std::mutex> guard(mtx);
 

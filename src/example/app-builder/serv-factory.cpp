@@ -15,9 +15,9 @@
 constexpr size_t RxBufferSize = 8192;
 constexpr size_t TxBufferSize = 8192;
 
-CanSender& GetCanSender()
+SocketCanSender& GetCanSender()
 {
-  static CanSender sender;
+  static SocketCanSender sender;
   return sender;
 }
 

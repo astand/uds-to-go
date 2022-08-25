@@ -11,7 +11,7 @@
 #include <net/if.h>
 #include <helpers/IProcessable.h>
 
-class CanSender : public ICAN_Sender {
+class SocketCanSender : public ICAN_Sender {
  public:
   size_t SendFrame(const uint8_t* data, size_t length, uint32_t msgid) {
     assert(length <= 8);
@@ -34,9 +34,9 @@ class CanSender : public ICAN_Sender {
   int txsocket{0};
 };
 
-class CanListener : public IProcessable {
+class SocketCanReader : public IProcessable {
  public:
-  CanListener(ICAN_Listener& receiver) : isoreceiver(receiver) {
+  SocketCanReader(ICAN_Listener& receiver) : isoreceiver(receiver) {
     select_to.tv_sec = 0u;
     select_to.tv_usec = 0u;
   }

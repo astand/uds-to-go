@@ -4,7 +4,7 @@
 #include <uds/isotp/docan-tp.h>
 #include <example/can-bridge.h>
 
-CanSender& GetCanSender();
+SocketCanSender& GetCanSender();
 UdsServerBase& GetBaseUdsServer();
 DoCAN_TP& GetDoCAN();
 IProcessable& GetMainProcHandler();
