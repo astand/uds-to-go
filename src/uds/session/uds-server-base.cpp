@@ -1,6 +1,8 @@
 #include "uds-server-base.h"
 #include "uds-service-handler.h"
 
+constexpr uint8_t DSC_SF_DS = 0x01u;
+
 #define IS_NRC_PASSED(x) ((x == NRC_SNS) ||\
   (x == NRC_SNSIAS) ||\
   (x == NRC_SFNS) ||\
