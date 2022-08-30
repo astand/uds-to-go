@@ -16,6 +16,8 @@ add_executable(udstogo-test
     ${CMAKE_CURRENT_SOURCE_DIR}/uds/session/uds-server-base.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/d-timer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/tickerup.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/example/iso-tp-server/serv-factory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/example/app-helper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/example/main.cpp
 )
 

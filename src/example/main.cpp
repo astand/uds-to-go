@@ -12,10 +12,9 @@
 #include <uds/isotp/docan-tp.h>
 #include <etc/helpers/static-allocator.h>
 #include "can-bridge.h"
-#include "iso-app.h"
 #include "argcollector.h"
-#include "proc-runner.h"
-#include "ticker-wrapper.h"
+#include "iso-tp-server/serv-factory.h"
+#include "app-helper.h"
 
 /* ---------------------------------------------------------------------------- */
 constexpr size_t RxBufferSize = 8192;
@@ -27,32 +26,8 @@ std::mutex mtx;
 static std::string ifname = "vcan0";
 
 /* ---------------------------------------------------------------------------- */
-static CanSender sender;
-static IsoApp isoapp;
-static DoCAN_TP_Mem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(sender, isoapp);
-static DoCAN_TP& iso_tp = isotpsource;
-static CanListener listener(iso_tp);
-static ProcRunner<4> procrunner;
-
-static void try_to_set_param(const onepair& pair, uint32_t& vset)
-{
-  uint32_t scaned = 0u;
-  std::string frmt = "%u";
-
-  if (pair.second.size() > 2 && pair.second.at(1) == 'x')
-  {
-    frmt = "%x";
-  }
-
-  if (sscanf(pair.second.c_str(), frmt.c_str(), &scaned) != 1)
-  {
-    std::cout << "Wrong value (" << pair.second << ") for parameter '" << pair.first << "'";
-  }
-  else
-  {
-    vset = scaned;
-  }
-}
+static DoCAN_TP& iso_tp = GetDoCAN();
+static SocketCanReader listener(iso_tp);
 
 static void set_do_can_parameters(DoCAN_TP& isotp, argsret& params)
 {
@@ -145,7 +120,7 @@ int main(int argc, char** argv)
   std::cout << " ----------------------------------------- " << std::endl << std::endl;
 
   listener.SetSocket(sockfd);
-  sender.SetSocket(sockfd);
+  GetCanSender().SetSocket(sockfd);
 
   std::array<uint8_t, TxBufferSize> buffer;
 
@@ -177,17 +152,14 @@ int main(int argc, char** argv)
     }
   });
 
-  static TickerWrapper ticker;
-
-  procrunner.Add(&ticker);
-  procrunner.Add(&iso_tp);
-  procrunner.Add(&listener);
+  BuildApp();
 
   std::string readcmd;
 
   while (true)
   {
-    procrunner.RunAllProcess();
+    GetMainProcHandler().Process();
+    listener.Process();
 
     {
       std::lock_guard<std::mutex> guard(mtx);
