@@ -5,7 +5,7 @@
 #include <sys/ioctl.h>
 #include <mutex>
 #include "argcollector.h"
-#include "app-builder/serv-factory.h"
+#include "uds-test-server/serv-factory.h"
 #include "app-helper.h"
 
 /* ---------------------------------------------------------------------------- */
