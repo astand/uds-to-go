@@ -80,7 +80,8 @@ CliMen& GetClientUds()
   extsess.cmd = { 0x10, 0x03 };
   prgsess.cmd = { 0x10, 0x02 };
 
-  read22.cmd = { 0x22, 22, 22 };
+  read22.cmd = { 0x22, 0x22, 0x22 };
+  tester.cmd = { 0x3e, 0x00};
 
   sessctrl.SetNext(&readdid);
   sessctrl.SetDown(&defsess);
@@ -89,6 +90,7 @@ CliMen& GetClientUds()
   extsess.SetNext(&prgsess);
 
   readdid.SetDown(&read22);
+  readdid.SetNext(&tester);
 
   static CliMen client(&sessctrl);
   return client;
