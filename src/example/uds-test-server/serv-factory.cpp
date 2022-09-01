@@ -65,3 +65,31 @@ void BuildApp()
 
   didkeeper.Add(&didreader);
 }
+
+CliMen& GetClientUds()
+{
+  static Menu sessctrl = Menu("Session Control");
+  static Menu readdid = Menu("Read DID");
+  static Menu defsess = Menu("Default");
+  static Menu extsess = Menu("Extended");
+  static Menu prgsess = Menu("Programming");
+  static Menu read22 = Menu("Read 22");
+  static Menu tester = Menu("Tester Present");
+
+  defsess.cmd = { 0x10, 0x01 };
+  extsess.cmd = { 0x10, 0x03 };
+  prgsess.cmd = { 0x10, 0x02 };
+
+  read22.cmd = { 0x22, 22, 22 };
+
+  sessctrl.SetNext(&readdid);
+  sessctrl.SetDown(&defsess);
+
+  defsess.SetNext(&extsess);
+  extsess.SetNext(&prgsess);
+
+  readdid.SetDown(&read22);
+
+  static CliMen client(&sessctrl);
+  return client;
+}

@@ -14,7 +14,7 @@ std::string cmd;
 // name of socketcan interface for ISO-TP communication test
 static std::string ifname = "vcan0";
 
-static CliMen climen;
+static CliMen& climen = GetClientUds();
 
 /* ---------------------------------------------------------------------------- */
 // get ISO tp instance to set its params from arguments in command line

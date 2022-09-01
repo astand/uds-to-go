@@ -52,17 +52,9 @@ class Menu {
 };
 
 class CliMen {
-
-
  public:
-  CliMen() : root(new Menu("hellllo")) {
+  CliMen(Menu* m) : root(m) {
     assert(root != nullptr);
-    static Menu* top1_2 = new Menu("world");
-    static Menu* top2_1 = new Menu("and");
-    static Menu* top2_2 = new Menu("what");
-    root->SetNext(top1_2);
-    top1_2->SetDown(top2_1);
-    top2_1->SetNext(top2_2);
   }
 
  public:
@@ -80,15 +72,16 @@ class CliMen {
       }
 
       item = start;
+      uint32_t count = 0;
 
       do {
-        std::cout << item->text << std::endl;
+        std::cout << ++count << " : " << item->text << std::endl;
         item = item->GetNext();
       }
       while (item != nullptr);
 
       std::string in;
-
+      std::cout << "Input number > ";
       std::cin >> in;
       int32_t scaned = -1;
 
@@ -108,7 +101,7 @@ class CliMen {
               deep.push(item);
             }
             else {
-              std::cout << "command level in " << item->text << std::endl;
+              std::cout << "Send command '" << item->text << "' to iso TP" << std::endl << std::endl;
               std::lock_guard<std::mutex> guard(mtx);
               veccmd = &item->cmd;
               cmd_ready = true;
