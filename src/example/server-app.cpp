@@ -6,6 +6,7 @@
 #include <mutex>
 #include "argcollector.h"
 #include "uds-test-server/serv-factory.h"
+#include "uds-test-server/cli-client.h"
 #include "app-helper.h"
 
 /* ---------------------------------------------------------------------------- */
@@ -14,6 +15,8 @@ std::mutex mtx;
 
 // name of socketcan interface for ISO-TP communication test
 static std::string ifname = "vcan0";
+
+static CliMen climen;
 
 /* ---------------------------------------------------------------------------- */
 // get ISO tp instance to set its params from arguments in command line
@@ -125,28 +128,7 @@ int main(int argc, char** argv)
 
   std::thread th1([&]()
   {
-    std::string readcmd;
-    std::cout << "Command read thread started... OK" << std::endl;
-    std::cout << "To send ISO TP packet input number (payload size) and press Enter" << std::endl;
-    std::cout << "If the target instance is available you will see the result in its output..." << std::endl;
-    bool run = true;
-
-    while (run)
-    {
-      std::cin >> readcmd;
-
-      if (readcmd.size() > 0)
-      {
-        if (readcmd.at(0) == 'e')
-        {
-          // return from thread (exit)
-          run = false;
-        }
-
-        std::lock_guard<std::mutex> guard(mtx);
-        cmd = readcmd;
-      }
-    }
+    climen.Run();
   });
 
   BuildApp();
