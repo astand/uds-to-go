@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <mutex>
 
 class Menu {
  public:
@@ -108,6 +109,9 @@ class CliMen {
             }
             else {
               std::cout << "command level in " << item->text << std::endl;
+              std::lock_guard<std::mutex> guard(mtx);
+              veccmd = &item->cmd;
+              cmd_ready = true;
             }
           }
         }
@@ -131,7 +135,21 @@ class CliMen {
     } // while
   }
 
+  bool IsCmd() const {
+    return cmd_ready;
+  }
+
+  std::vector<uint8_t> GetData() {
+    std::lock_guard<std::mutex> guard(mtx);
+    auto retv = *veccmd;
+    cmd_ready = false;
+    return retv;
+  }
+
  private:
   Menu* const root{nullptr};
   std::stack<Menu*> deep;
+  std::vector<uint8_t>* veccmd;
+  std::mutex mtx;
+  bool cmd_ready {false};
 };

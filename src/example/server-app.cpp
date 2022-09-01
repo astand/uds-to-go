@@ -3,7 +3,6 @@
 #include <thread>
 #include <string>
 #include <sys/ioctl.h>
-#include <mutex>
 #include "argcollector.h"
 #include "uds-test-server/serv-factory.h"
 #include "uds-test-server/cli-client.h"
@@ -11,7 +10,6 @@
 
 /* ---------------------------------------------------------------------------- */
 std::string cmd;
-std::mutex mtx;
 
 // name of socketcan interface for ISO-TP communication test
 static std::string ifname = "vcan0";
@@ -139,47 +137,11 @@ int main(int argc, char** argv)
   {
     GetMainProcHandler().Process();
     can_reader.Process();
+
+    if (climen.IsCmd())
     {
-      std::lock_guard<std::mutex> guard(mtx);
-
-      if (cmd.size() > 0)
-      {
-        readcmd = cmd;
-        cmd.clear();
-      }
-    }
-
-    if (readcmd.size() > 0)
-    {
-      if (readcmd.at(0) == 'e')
-      {
-        // exit
-        break;
-      }
-      else
-      {
-        std::vector<uint8_t> payload;
-        uint8_t byte;
-
-
-        for (size_t i = 0; i < readcmd.size(); i++)
-        {
-          if (set_byte(readcmd.at(i), byte, i % 2 == 0) == false)
-          {
-            payload.clear();
-            break;
-          }
-
-          if (i % 2 == 1)
-          {
-            payload.push_back(byte);
-          }
-        }
-
-        iso_tp.Request(payload.data(), payload.size());
-      }
-
-      readcmd.clear();
+      auto payload = climen.GetData();
+      iso_tp.Request(payload.data(), payload.size());
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
