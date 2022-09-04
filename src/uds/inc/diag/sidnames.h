@@ -29,9 +29,7 @@ typedef enum
   PUDS_SI_RequestUpload = 0x35,
   PUDS_SI_TransferData = 0x36,
   PUDS_SI_RequestTransferExit = 0x37,
-  /// <summary>
-  /// Negative response code
-  /// </summary>
+
   PUDS_NR_SI = 0x7f,
 } SIDs_t;
 
