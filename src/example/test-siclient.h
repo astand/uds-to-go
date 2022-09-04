@@ -8,7 +8,7 @@ class TestUdsServiceHandler : public UdsServiceHandler {
   TestUdsServiceHandler(UdsServerBase& router) : UdsServiceHandler(router) {}
 
   virtual ProcessResult OnIndication(const IndicationInfo& inf) override {
-    std::cout << "SC : " << "On Ind -> " << "Addr: " << ((inf.addr == UdsAddress::PHYS) ? ("PHYS ") : ("FUNC "));
+    std::cout << "SC : On Ind  -> " << "Addr: " << ((inf.addr == UdsAddress::PHYS) ? ("PHYS ") : ("FUNC "));
     std::cout << " -> SI [" << (int)inf.head.SI << "] SF [" << (int)inf.head.SF << "]";
     std::cout << "Data size = " << inf.size << " b." << std::endl;
     std::cout << std::endl;
@@ -18,7 +18,7 @@ class TestUdsServiceHandler : public UdsServiceHandler {
 
 
   virtual ProcessResult OnConfirmation(S_Result res) override {
-    std::cout << "SC : On Confirmation [" << ((res == S_Result::OK) ? (" OK ") : (" ! NOK ")) << "]";
+    std::cout << "SC : On Conf -> [" << ((res == S_Result::OK) ? (" OK ") : (" ! NOK ")) << "]";
     std::cout << std::endl;
 
     return ProcessResult::NOT_HANDLED;
@@ -26,8 +26,8 @@ class TestUdsServiceHandler : public UdsServiceHandler {
 
 
   virtual void DSCSessionEvent(bool s3timer_event) override {
-    std::cout << "DSC session change event. S3:" << ((s3timer_event) ? ("YES") : ("NO"));
-    std::cout << ". Session= " << (int)rtr1.GetSession().sess;
+    std::cout << ((s3timer_event) ? (" s3 ") : (" -- "));
+    std::cout << "Session update :" << (int)rtr1.GetSession().sess;
     std::cout << std::endl;
   }
 
