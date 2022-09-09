@@ -189,7 +189,7 @@ void UdsServerBase::NotifyConf(S_Result res)
   {
     clientHandRes = client->OnIndication(data_info);
 
-    if (clientHandRes ==ProcessResult::NOT_HANDLED)
+    if (clientHandRes == ProcessResult::NOT_HANDLED)
     {
       break;
     }

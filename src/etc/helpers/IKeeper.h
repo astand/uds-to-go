@@ -7,25 +7,30 @@
 template<class T>
 class IKeeper {
  public:
-  enum KeeperResult
+  enum class KeeperResult
   {
     ERROR,
     OK,
   };
 
-  /** --------------------------------------------------------------------------
-   * @brief construction with direct passing resources for collection
-   * */
+  /**
+   * @brief Construct a new IKeeper object
+   *
+   * @param mem pointer to the array memory for holding items
+   * @param capacity array capacity
+   */
   IKeeper(T** mem, size_t capacity) : vect(mem), Max(capacity) {}
 
-  /** ------------------------------------------------------------------------
-   * @brief adding new instance to collection
-   * @param c pointer to instance
-   * @param dub allowing or prohibing dublicates on adding
-   * @retval result of attemt
-   * */
+  /**
+   * @brief Attempts to add new item to the next free container space
+   *
+   * @param c pointer to object to add to the container
+   * @param allowduplicate if it is allowed to have more than one instance
+   * of the object in container
+   * @return KeeperResult: OK if the object was added to the container
+   *                       ERROR if the object wasn't added
+   */
   KeeperResult Add(T* c, bool allowduplicate = true) {
-
     size_t addedid = Max;
 
     // if count = Max the collection full, no one loop iteration will be run
@@ -43,47 +48,41 @@ class IKeeper {
       }
     }
 
-    return (addedid == Max) ? (ERROR) : (OK);
+    return (addedid == Max) ? (KeeperResult::ERROR) : (KeeperResult::OK);
   }
 
-  /** --------------------------------------------------------------------------
-   * @brief removing instance from collection.
-   * @param c pointer to instance to be deleted
-   * @retval result of removing operation
-   * */
+  /**
+   * @brief Removes the object from the container
+   *
+   * @param c pointer to the object to be removed from the container
+   * @return KeeperResult: OK object was removed from the container
+   *                       ERROR object wasn't removed
+   */
   KeeperResult Remove(T* c) {
-    // This method must perform two parts:
-    // 1 find client and clear its position
-    // 2 remove empty hole by putting last pointer from the tail to
-    // the cell of previously deleted client
-    // 3 decrement count
     // For now removing prohibited
-    return ERROR;
+    return KeeperResult::ERROR;
   }
 
-  /** --------------------------------------------------------------------------
-   * @brief resets private cursor to the beginning of collection
-   * ATTENTION - this API is not thread safe (!!!)
-   * */
+  /**
+   * @brief Resets internal iterator index to zero (it is not thread safe API)
+   *
+   */
   void Start() {
     iter_id = 0;
   }
 
-
-  /** --------------------------------------------------------------------------
-   * @brief checks if the last Next() call returned last item from collection
-   * ATTENTION - this API is not thread safe (!!!)
-   * @retval true if next Next() call will return nullptr
-   * */
+  /**
+   * @brief Tests if the current index is on the last object of the container
+   */
   bool Last() {
     return (iter_id >= count);
   }
 
-  /** --------------------------------------------------------------------------
-   * @brief returns pointer to item from collection if the current position
-   * ATTENTION - this API is not thread safe (!!!)
-   * of the cursor is inside the range
-   * */
+  /**
+   * @brief returns pointer to the object from container (container[internal_index])
+   *
+   * @return T* pointer to object or NULLPTR
+   */
   T* Next() {
     T* ret = nullptr;
 
@@ -98,33 +97,31 @@ class IKeeper {
   }
 
   /**
-   * @brief reads instance from keeper position
+   * @brief Reads pointer to the object in the container with index @id
    *
-   * @param id position number
-   * @param refout reference to user scoped pointer var
-   * @return true @refout points to instance
-   * @return false @refout points to nullptr
+   * @param id index of request object
+   * @param refout reference on pointer for saving address of requested object
+   * @return true if the object in the container is not nullptr
    */
   bool Item(size_t id, T*& refout) const {
     refout = id < Max ? vect[id] : nullptr;
     return ((refout != nullptr) ? (true) : (false));
   }
 
-  /** --------------------------------------------------------------------------
-   * @retval number of previously added items to the collection
-   * */
+
+  /**
+   * @brief Returns number of objects in the container
+   */
   size_t Count() const {
     return count;
   }
 
+  /**
+   * @brief Returns internal container capacity
+   */
   size_t Capacity() const {
     return Max;
   }
-
-// --------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------
 
  private:
   T** const vect{nullptr};
@@ -145,5 +142,5 @@ class MemKeeper : public IKeeper<T> {
   MemKeeper() : IKeeper<T>(__raw__, N) {}
 
  private:
-  T* __raw__[N] = {0};
+  T* __raw__[N] = {nullptr};
 };
