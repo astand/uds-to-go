@@ -8,9 +8,17 @@
 
 #include <uds/session/uds-service-handler.h>
 
+#ifndef HWREGH
 #define HWREGH(x) (*(uint16_t*)(x))
+#endif
+
+#ifndef V16_TO_BE
 #define V16_TO_BE(x)  (( ((x) >> 8) & 0xffu ) | ( ((x) & 0xffu) << 8u ))
+#endif
+
+#ifndef V16_FROM_BE
 #define V16_FROM_BE(x) (V16_TO_BE(x))
+#endif
 
 // SID + SF + RoutineID + routineInfo
 static constexpr size_t RoutineHeadSize = 5;
@@ -24,13 +32,49 @@ typedef struct
   uint8_t info;
 } RoutineContext_t;
 
+class RoutineRouter;
+
+/**
+ * @brief Interface class for Routine Control clients
+ *
+ */
+class RoutineHandler {
+ public:
+
+  /**
+   * @brief Main client callback function. Routine manager will call client
+   * via this method. Client must check @rid handle request if rid is its responsibility
+   *
+   * @param rid code of routine
+   * @param rtype rtype one of 3 possible values (1 - start, 2 - stop, 3 - get result)
+   * @param data pointer to data with params for routine execution
+   * @param size size of data
+   * @return ProcessResult
+   */
+  virtual ProcessResult OnRoutine(routine_id_t rid, uint8_t rtype, const uint8_t* data, size_t size) = 0;
+
+ protected:
+  void LoadRoutineContext(routine_id_t rid, uint8_t reqtype) {
+    rcontext.id = rid;
+    rcontext.type = reqtype;
+    rcontext.info = 0;
+  }
+
+  /**
+   * @brief client routine info
+   */
+  RoutineContext_t rcontext;
+};
+
+
 /**
  * @brief Interface class for providing to clients API
  * to response on routine requests and SiClient for routine
  * control UDS service
  */
-class BaseRctrlRouter : public UdsServiceHandler {
+class RoutineRouter : public UdsServiceHandler {
  public:
+  RoutineRouter(UdsServerBase& bserver, RoutineHandler& r) : UdsServiceHandler(bserver), rhandler(r) {}
 
   /**
    * @brief Main response function for clients
@@ -42,7 +86,7 @@ class BaseRctrlRouter : public UdsServiceHandler {
    * @return SendResult
    */
   SendResult SendRoutineResponse(routine_id_t rid, uint8_t rtype, uint8_t rinfo, const uint8_t* data, size_t size) {
-    if (size + RoutineHeadSize >= MAX_RESP_SIZE) {
+    if (size + RoutineHeadSize >= rtr1.TX_SIZE) {
       return SendResult::OVRF;
     }
 
@@ -88,71 +132,12 @@ class BaseRctrlRouter : public UdsServiceHandler {
     return SendResult::OK;
   }
 
- protected:
-  // protected constructor to prevent instance
-  BaseRctrlRouter(UdsServerBase& r, size_t maxlen) : UdsServiceHandler(r), MAX_RESP_SIZE(maxlen) {}
-
-  const size_t MAX_RESP_SIZE;
-};
-
-/**
- * @brief Interface class for Routine Control clients
- *
- */
-class RoutineHandler {
- public:
-
-  /**
-   * @brief Main client callback function. Routine manager will call client
-   * via this method. Client must check @rid handle request if rid is its responsibility
-   *
-   * @param rid code of routine
-   * @param rtype rtype one of 3 possible values (1 - start, 2 - stop, 3 - get result)
-   * @param data pointer to data with params for routine execution
-   * @param size size of data
-   * @return ProcessResult
-   */
-  virtual ProcessResult OnRoutine(routine_id_t rid, uint8_t rtype, const uint8_t* data, size_t size) = 0;
-
- protected:
-  RoutineHandler(BaseRctrlRouter& routiner) : routman(routiner) {}
-
-  void LoadRoutineContext(routine_id_t rid, uint8_t reqtype) {
-    rcontext.id = rid;
-    rcontext.type = reqtype;
-    rcontext.info = 0;
-  }
-
-  /**
-   * @brief Routine control manager. Provide API to client for sending responses
-   */
-  BaseRctrlRouter& routman;
-
-  /**
-   * @brief client routine info
-   */
-  RoutineContext_t rcontext;
-};
-
-/**
- * @brief Final class for BaseRctrlRouter, can keep up to T clients (based on IKeeper)
- * Must be instantiate single per programm
- *
- * @tparam T number of clients available for keeping in IKeeper
- * @tparam M maximum UDS transmit packet size
- */
-template<size_t T, size_t M>
-class Routiner : public IKeeper<RoutineHandler>, public BaseRctrlRouter {
- public:
-  Routiner(UdsServerBase& router_) : IKeeper<RoutineHandler>(list, T), BaseRctrlRouter(router_, M)  {}
-
-  /* SiClient */
   ProcessResult OnIndication(const IndicationInfo& inf) {
     // Minimal service length (4) is tested on the initial service check
-    if (rtr1.data_info.head.SI != PUDS_SI_RoutineControl) {
+    if (inf.head.SI != PUDS_SI_RoutineControl) {
       return ProcessResult::NOT_HANDLED;
     }
-    else if (rtr1.data_info.head.SF == 0 || rtr1.data_info.head.SF > 3) {
+    else if (inf.head.SF == 0 || inf.head.SF > 3) {
       rtr1.SendNegResponse(NRC_SFNS);
       return ProcessResult::HANDLED_RESP_NO;
     }
@@ -164,23 +149,13 @@ class Routiner : public IKeeper<RoutineHandler>, public BaseRctrlRouter {
     ProcessResult pres = ProcessResult::NOT_HANDLED;
     routine_id_t routine_id = V16_FROM_BE(HWREGH(inf.data + 2));
 
-    for (size_t i = 0; i < Count(); i++) {
-      pres = list[i]->OnRoutine(routine_id, rtr1.data_info.head.SF, inf.data + 4, inf.size - 4);
-
-      if (pres != ProcessResult::NOT_HANDLED) {
-        break;
-      }
-    }
+    pres = rhandler.OnRoutine(routine_id, inf.head.SF, inf.data + 4, inf.size - 4);
 
     if (pres == ProcessResult::NOT_HANDLED) {
       // send ROOR to client, no one routine handler has been found
       rtr1.SendNegResponse(NRC_ROOR);
     }
 
-    // Routiner will never return state for positive response by
-    // UdsServerBase to avoid response duplications. Clients of routiner
-    // have to only use API of BaseRctrlRouter for sending responses,
-    // which uses direct UdsServerBase reponse sending
     return ProcessResult::HANDLED_RESP_NO;
   }
 
@@ -190,7 +165,33 @@ class Routiner : public IKeeper<RoutineHandler>, public BaseRctrlRouter {
     return ProcessResult::NOT_HANDLED;
   }
 
+ protected:
+
+  RoutineHandler& rhandler;
+
+};
+
+template<size_t N>
+class MultiRoutineHandler : public AsKeeper<RoutineHandler> {
+ public:
+  MultiRoutineHandler() : AsKeeper<RoutineHandler>(rarray, N) {}
+  virtual ProcessResult OnRoutine(routine_id_t rid, uint8_t rtype, const uint8_t* data, size_t size) {
+    auto ret = ProcessResult::NOT_HANDLED;
+    RoutineHandler* handler {nullptr};
+
+    for (size_t i = 0; i < Count(); i++) {
+      Item(i, handler);
+      ret = handler->OnRoutine(rid, rtype, data, size);
+
+      if (ret != ProcessResult::NOT_HANDLED) {
+        break;
+      }
+    }
+
+    return ret;
+  }
+
  private:
 
-  RoutineHandler* list[T];
+  RoutineHandler* rarray[N] {nullptr};
 };
