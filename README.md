@@ -104,4 +104,5 @@ This processing aproach is optional. You can use any other way to make periodic 
 
 From this point you are ready to send and receive ISO TP packets, as it is main in udstogo-test app.
 Don't forget to set DoCAN_TP parameters (addresses, timeouts etc).
-
+## Class Diagram
+![image](docs/class-diagram.png)
