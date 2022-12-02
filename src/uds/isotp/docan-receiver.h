@@ -11,7 +11,7 @@ class DoCAN_Receiver {
   DoCAN_Receiver(uint8_t* mem, const size_t length, DoCAN_TP& isotp) : rxbuff(mem), RXLEN(length), itp(isotp) {}
   void ProcessRx();
   void Receive(const uint8_t* data, datasize_t candl);
-  ParChangeResult SetParameter(ParName name, uint32_t v);
+  SetParamResult SetParameter(ParName name, uint32_t v);
 
   bool IsBusy() const {
     return rxds.state != RxState::IDLE;

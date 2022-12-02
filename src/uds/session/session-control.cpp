@@ -4,14 +4,11 @@
 
 void SessionControl::SendRequest(const uint8_t* data, uint32_t len)
 {
-  // resetart timer and may be some session state here
-  // check availability / restart timers
-  // any response should stop p2 timer
-  if (host != nullptr)
-  {
-    p2.Stop();
-    host->Request(data, len);
-  }
+  // stop p2 timer on response sending
+  p2.Stop();
+
+  // send response to iso-tp
+  host->Request(data, len);
 }
 
 void SessionControl::Process()
@@ -20,13 +17,13 @@ void SessionControl::Process()
   ProcessSessionMode();
 }
 
-void SessionControl::OnIsoEvent(N_Type event, N_Result res, const IsoTpInfo& info)
+void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& info)
 {
   ta_addr = (info.address == N_TarAddress::TAtype_1_Physical) ? (TargetAddressType::PHYS) : (TargetAddressType::FUNC);
 
   switch (event)
   {
-    case (N_Type::Data):
+    case (N_Event::Data):
       if (res == N_Result::OK_r)
       {
         // data indication from Transport layer
@@ -34,8 +31,7 @@ void SessionControl::OnIsoEvent(N_Type event, N_Result res, const IsoTpInfo& inf
 
         if (ss_state == SessionType::NONDEFAULT)
         {
-          // when non default session is active S3 timer must be stopped to
-          // complete req/repsond transfer
+          // stop s3 here (to be restart on response conf)
           S3.Stop();
         }
 
@@ -43,46 +39,42 @@ void SessionControl::OnIsoEvent(N_Type event, N_Result res, const IsoTpInfo& inf
       }
       else
       {
-        // the data was corrupted of something else happened
+        // unexpected result
         NotifyConf(S_Result::NOK);
       }
 
       break;
 
-    case (N_Type::DataFF):
+    case (N_Event::DataFF):
       if (res == N_Result::OK_r)
       {
-        // SOM indication is not sending to Diag app.
-        // TODO: restart timings?
         if (ss_state == SessionType::NONDEFAULT)
         {
-          // when non default session is active S3 timer must be stopped to
-          // complete req/repsond transfer
+          // stop s3 here to be aviod session stop during long receiving
           S3.Stop();
         }
       }
       else
       {
-        // what happend?
+        // should never get here
         SetSessionMode(ss_state);
         assert(false);
       }
 
       break;
 
-    case (N_Type::Conf):
-
-      // confirmation about timeout error and data transferring ending like this
+    case (N_Event::Conf):
       if (res == N_Result::OK_s)
       {
         // response send OK, check what was that
         if ((GetNRC() == NRC_RCRRP) && (ss_state == SessionType::NONDEFAULT))
         {
-          // response was NRC_RCRRP - set p2 enhanced timeout
+          // p2 enhanced here because of RCRRP
           p2.Start(tims.p2_enhanced);
         }
         else
         {
+          // update current session type (restart s3)
           SetSessionMode(ss_state);
         }
       }

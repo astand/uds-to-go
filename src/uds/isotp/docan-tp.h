@@ -31,9 +31,9 @@ class DoCAN_TP : public ICAN_Listener, public IsoTpImpl, public IProcessable {
     return can_sender.SendFrame(data, docan_config.candl, docan_config.resp_id);
   }
 
-  void OnIsoRxEvent(N_Type event, N_Result result, const uint8_t* data = nullptr, size_t length = 0);
-  void OnIsoTxEvent(N_Type event, N_Result result);
-  ParChangeResult SetParameter(ParName name, uint32_t value);
+  void OnIsoRxEvent(N_Event event, N_Result result, const uint8_t* data = nullptr, size_t length = 0);
+  void OnIsoTxEvent(N_Event event, N_Result result);
+  SetParamResult SetParameter(ParName name, uint32_t value);
 
   typedef struct
   {

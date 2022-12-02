@@ -13,7 +13,7 @@ class DoCAN_Sender {
   void ProcessTx();
   void OnFlowControl(uint8_t flow_statue, uint8_t blks, uint8_t stm);
   IsoTpResult Send(const uint8_t* data, datasize_t len);
-  ParChangeResult SetParameter(ParName name, uint32_t v);
+  SetParamResult SetParameter(ParName name, uint32_t v);
 
   bool IsBusy() const {
     return (txds.state != DtState::IDLE);

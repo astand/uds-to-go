@@ -5,6 +5,7 @@
 
 #include "typedefs.h"
 
+/// @brief Network event result
 enum class N_Result : enumbase_t
 {
   // This value means that the service execution has been completed successfully; it can be issued to a
@@ -48,10 +49,8 @@ enum class N_Result : enumbase_t
   ERROR_r
 };
 
-// Type: enumeration.
-// Range: N_OK, N_RX_ON, N_WRONG_PARAMETER, N_WRONG_VALUE
-// Description: This parameter contains the status relating to the outcome of a service execution.
-enum class ParChangeResult : enumbase_t
+/// @brief Result of attempt to change parameter
+enum class SetParamResult : enumbase_t
 {
   // This value means that the service execution has been completed successfully; it can be issued to a
   // service user on both the sender and receiver sides.
@@ -68,6 +67,7 @@ enum class ParChangeResult : enumbase_t
   WRONG_VALUE
 };
 
+/// @brief List of parameters
 enum class ParName : enumbase_t
 {
   ST_MIN,
@@ -84,13 +84,15 @@ enum class ParName : enumbase_t
 };
 
 
-enum class N_Type : enumbase_t
+/// @brief Network event type
+enum class N_Event : enumbase_t
 {
   Conf,
   Data,
   DataFF,
 };
 
+/// @brief Result of request ot iso-tp
 enum class IsoTpResult : enumbase_t
 {
   OK,
@@ -99,6 +101,7 @@ enum class IsoTpResult : enumbase_t
   OVERFLOW
 };
 
+/// @brief List of possible CAN datalength
 enum class CanDl : enumbase_t
 {
   CANDL_8 = 8,
@@ -111,6 +114,7 @@ enum class CanDl : enumbase_t
   CANDL_64 = 64
 };
 
+/// @brief ISO-TP target address
 enum class N_TarAddress
 {
   TAtype_Invalid = 0,
@@ -127,4 +131,3 @@ enum class N_TarAddress
   TAtype_7_Physical,
   TAtype_8_Functional
 };
-

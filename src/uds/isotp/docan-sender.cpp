@@ -49,7 +49,7 @@ IsoTpResult DoCAN_Sender::Send(const uint8_t* data, datasize_t length)
           // this call should be removed and CAN HW sending provider
           // must call it by itself after successful frame acceptance by BUS
           // that means that CAN HW sender has to have reference to DoCAN_TP
-          itp.OnIsoTxEvent(N_Type::Conf, N_Result::OK_s);
+          itp.OnIsoTxEvent(N_Event::Conf, N_Result::OK_s);
         }
       }
     }
@@ -85,7 +85,7 @@ void DoCAN_Sender::ProcessTx()
       {
         // check BS timer while wait next FC, timeout leads to stop transmittion
         txds.state = DtState::IDLE;
-        itp.OnIsoTxEvent(N_Type::Conf, N_Result::TIMEOUT_Bs);
+        itp.OnIsoTxEvent(N_Event::Conf, N_Result::TIMEOUT_Bs);
       }
 
       break;
@@ -132,7 +132,7 @@ void DoCAN_Sender::ProcessTx()
             // this call should be removed and CAN HW sending provider
             // must call it by itself after successful frame acceptance by BUS
             // that means that CAN HW sender has to have reference to DoCAN_TP
-            itp.OnIsoTxEvent(N_Type::Conf, N_Result::OK_s);
+            itp.OnIsoTxEvent(N_Event::Conf, N_Result::OK_s);
             break;
           }
           else
@@ -163,7 +163,7 @@ void DoCAN_Sender::ProcessTx()
       if (N_As_tim.Elapsed())
       {
         txds.state = DtState::IDLE;
-        itp.OnIsoTxEvent(N_Type::Conf, N_Result::TIMEOUT_As);
+        itp.OnIsoTxEvent(N_Event::Conf, N_Result::TIMEOUT_As);
       }
 
       break;
@@ -187,7 +187,7 @@ void DoCAN_Sender::OnFlowControl(uint8_t flow_status, uint8_t blks, uint8_t stm)
   {
     // Unexpected PDU has came
     txds.state = DtState::IDLE;
-    itp.OnIsoTxEvent(N_Type::Conf, N_Result::UNEXP_PDU);
+    itp.OnIsoTxEvent(N_Event::Conf, N_Result::UNEXP_PDU);
     return;
   }
 
@@ -231,19 +231,19 @@ void DoCAN_Sender::OnFlowControl(uint8_t flow_status, uint8_t blks, uint8_t stm)
 
     case (FlowState::OVERFLOW):
       txds.state = DtState::IDLE;
-      itp.OnIsoTxEvent(N_Type::Conf, N_Result::BUFFER_OVFLW);
+      itp.OnIsoTxEvent(N_Event::Conf, N_Result::BUFFER_OVFLW);
       break;
 
     default:
       txds.state = DtState::IDLE;
-      itp.OnIsoTxEvent(N_Type::Conf, N_Result::INVALID_FS);
+      itp.OnIsoTxEvent(N_Event::Conf, N_Result::INVALID_FS);
       break;
   }
 }
 
-ParChangeResult DoCAN_Sender::SetParameter(ParName name, uint32_t v)
+SetParamResult DoCAN_Sender::SetParameter(ParName name, uint32_t v)
 {
-  auto ret = ParChangeResult::OK;
+  auto ret = SetParamResult::OK;
 
   switch (name)
   {
@@ -258,7 +258,7 @@ ParChangeResult DoCAN_Sender::SetParameter(ParName name, uint32_t v)
       break;
 
     default:
-      ret = ParChangeResult::WRONG_PARAMETER;
+      ret = SetParamResult::WRONG_PARAMETER;
       break;
   }
 

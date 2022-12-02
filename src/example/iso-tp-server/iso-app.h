@@ -7,12 +7,12 @@
 /* ---------------------------------------------------------------------------- */
 class IsoApp : public IsoTpClient {
  public:
-  void OnIsoEvent(N_Type t, N_Result res, const IsoTpInfo& inf) {
+  void OnIsoEvent(N_Event t, N_Result res, const IsoTpInfo& inf) {
     assert((uint8_t)t < 3 && (uint8_t)res < 13);
 
     std::cout << "Event [" << type_names[(uint8_t)t] << "] Status [" << res_names[(uint8_t)res] << "]";
 
-    if (t == N_Type::Data && res == N_Result::OK_r) {
+    if (t == N_Event::Data && res == N_Result::OK_r) {
       // print data
       std::cout << std::endl << "------------------------------------------------" << std::endl;
       //                        "00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff ";
@@ -35,7 +35,7 @@ class IsoApp : public IsoTpClient {
       std::cout << std::endl << "------------------------------------------------" << std::dec;
       std::cout << std::endl << " <--- RECV OK: " << inf.length << " bytes.";
     }
-    else if (t == N_Type::DataFF && res == N_Result::OK_r) {
+    else if (t == N_Event::DataFF && res == N_Result::OK_r) {
       std::cout << " Expected size = " << inf.length << " bytes.";
     }
 

@@ -34,7 +34,7 @@ void DoCAN_TP::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
     }
 
     // notify upper layer
-    iso_client.OnIsoEvent(N_Type::Data, N_Result::OK_r, paydsc);
+    iso_client.OnIsoEvent(N_Event::Data, N_Result::OK_r, paydsc);
   }
   else if (is_phys)
   {
@@ -57,14 +57,14 @@ IsoTpResult DoCAN_TP::Request(const uint8_t* data, size_t length)
   return iso_sender.Send(data, length);
 }
 
-ParChangeResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
+SetParamResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
 {
-  auto ret = ParChangeResult::OK;
+  auto ret = SetParamResult::OK;
 
   if (iso_sender.IsBusy() || iso_receiver.IsBusy())
   {
     // TODO: make this return more clear (for the case when Tx is busy)
-    return ParChangeResult::RX_ON;
+    return SetParamResult::RX_ON;
   }
 
   switch (name)
@@ -108,7 +108,7 @@ ParChangeResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
   return ret;
 }
 
-void DoCAN_TP::OnIsoRxEvent(N_Type event, N_Result result, const uint8_t* data, size_t length)
+void DoCAN_TP::OnIsoRxEvent(N_Event event, N_Result result, const uint8_t* data, size_t length)
 {
   paydsc.data = data;
   paydsc.length = length;
@@ -117,7 +117,7 @@ void DoCAN_TP::OnIsoRxEvent(N_Type event, N_Result result, const uint8_t* data, 
   iso_client.OnIsoEvent(event, result, paydsc);
 }
 
-void DoCAN_TP::OnIsoTxEvent(N_Type event, N_Result result)
+void DoCAN_TP::OnIsoTxEvent(N_Event event, N_Result result)
 {
   iso_client.OnIsoEvent(event, result, paydsc);
 }

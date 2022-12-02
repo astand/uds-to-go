@@ -14,7 +14,7 @@ void DoCAN_Receiver::ProcessRx()
       rxds.state = RxState::IDLE;
       rxds.passed = 0;
       rxds.rxsize = 0;
-      itp.OnIsoRxEvent(N_Type::Conf, N_Result::TIMEOUT_Cr);
+      itp.OnIsoRxEvent(N_Event::Conf, N_Result::TIMEOUT_Cr);
     }
   }
 }
@@ -36,7 +36,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
         if (rxds.state == RxState::ACTIVE)
         {
           // reception is in progress (ISO 15765-2 tab 23 (p 38))
-          itp.OnIsoRxEvent(N_Type::Data, N_Result::UNEXP_PDU);
+          itp.OnIsoRxEvent(N_Event::Data, N_Result::UNEXP_PDU);
         }
 
         // start new multi reception (cannot be less than 7 bytes)
@@ -63,7 +63,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
           memcpy(rxbuff + rxds.passed, data + pcioffset, cpylen);
           rxds.passed = cpylen;
           rxds.expectsn = 1;
-          itp.OnIsoRxEvent(N_Type::DataFF, N_Result::OK_r, nullptr, rxds.rxsize);
+          itp.OnIsoRxEvent(N_Event::DataFF, N_Result::OK_r, nullptr, rxds.rxsize);
           // start timer
           rxds.state = RxState::ACTIVE;
           Cr_tim.Restart();
@@ -75,7 +75,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
         if (rxds.state != RxState::ACTIVE || pcioffset != 1)
         {
           rxds.state = RxState::IDLE;
-          itp.OnIsoRxEvent(N_Type::Data, N_Result::UNEXP_PDU);
+          itp.OnIsoRxEvent(N_Event::Data, N_Result::UNEXP_PDU);
         }
         else
         {
@@ -83,7 +83,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
           {
             // Abort (ISO 15765 9.6.4.4 (p.30))
             rxds.state = RxState::IDLE;
-            itp.OnIsoRxEvent(N_Type::Data, N_Result::UNEXP_PDU);
+            itp.OnIsoRxEvent(N_Event::Data, N_Result::UNEXP_PDU);
           }
           else
           {
@@ -106,7 +106,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
             {
               // reception ended, notify client
               rxds.state = RxState::IDLE;
-              itp.OnIsoRxEvent(N_Type::Data, N_Result::OK_r, rxbuff, rxds.rxsize);
+              itp.OnIsoRxEvent(N_Event::Data, N_Result::OK_r, rxbuff, rxds.rxsize);
             }
             else if (rxds.currblkn >= rxds.blksize)
             {
@@ -126,10 +126,10 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
           // ISO 15765-2 tab 23 (p 38) Notify unexpected pdu, abort multi reception
           // and process SF payload
           rxds.state = RxState::IDLE;
-          itp.OnIsoRxEvent(N_Type::Data, N_Result::UNEXP_PDU);
+          itp.OnIsoRxEvent(N_Event::Data, N_Result::UNEXP_PDU);
         }
 
-        itp.OnIsoRxEvent(N_Type::Data, N_Result::OK_r, data + pcioffset, inf.dlen);
+        itp.OnIsoRxEvent(N_Event::Data, N_Result::OK_r, data + pcioffset, inf.dlen);
 
         break;
 
@@ -138,7 +138,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
         {
           // unexpected PDU during active reception
           rxds.state = RxState::IDLE;
-          itp.OnIsoRxEvent(N_Type::Conf, N_Result::UNEXP_PDU);
+          itp.OnIsoRxEvent(N_Event::Conf, N_Result::UNEXP_PDU);
         }
 
         break;
@@ -146,9 +146,9 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
   }
 }
 
-ParChangeResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v)
+SetParamResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v)
 {
-  auto ret = ParChangeResult::OK;
+  auto ret = SetParamResult::OK;
 
   switch (name)
   {
@@ -166,7 +166,7 @@ ParChangeResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v)
       break;
 
     default:
-      ret = ParChangeResult::WRONG_PARAMETER;
+      ret = SetParamResult::WRONG_PARAMETER;
       break;
   }
 

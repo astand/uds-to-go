@@ -11,7 +11,7 @@ class IsoTpClient {
     N_TarAddress address;
   } IsoTpInfo;
 
-  virtual void OnIsoEvent(N_Type t, N_Result res, const IsoTpInfo& info) = 0;
+  virtual void OnIsoEvent(N_Event t, N_Result res, const IsoTpInfo& info) = 0;
 };
 
 /**

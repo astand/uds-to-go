@@ -6,31 +6,62 @@
 #include <uds/inc/iso-tp-if.h>
 #include <uds/inc/diag/uds-session.h>
 
+/// @brief UDS session layer abstraction
+/// Abstract class, must be expand but actual implementation
 class SessionControl : public IsoTpClient, public IProcessable {
  public:
+  /// @brief sets new TP sender
+  /// @param sender pointer to TP sender instance
   void SetIsoTp(IsoTpImpl* sender) {
-    host = sender;
+    if (sender != nullptr) {
+      host = sender;
+    }
   }
 
- public:
-  // Session state processing API
+  /// @brief General processing handler
   virtual void Process();
-  // IsoTpClient API implementation
-  virtual void OnIsoEvent(N_Type t, N_Result res, const IsoTpInfo& info) override;
+
+  /// @brief ISO-TP event callback
+  /// @param event iso-tp event type
+  /// @param res iso-tp processing result
+  virtual void OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& info) override;
 
  protected:
-  void SendRequest(const uint8_t* data, uint32_t len);
+  /// @brief Payload sender
+  /// @param data data pointer
+  /// @param size data size
+  void SendRequest(const uint8_t* data, uint32_t size);
 
-  // For heritance classes to react on session events
-  virtual void NotifyInd(const uint8_t* data, uint32_t length, TargetAddressType addr) = 0;
+  /// @brief Indication callback for implementaion
+  /// @param data received data pointer
+  /// @param size received data size
+  /// @param addr target address
+  virtual void NotifyInd(const uint8_t* data, uint32_t size, TargetAddressType addr) = 0;
+
+  /// @brief Confirmation callback for implementation
+  /// @param res result
   virtual void NotifyConf(S_Result res) = 0;
-  // one of the upper inheritor must consume this event
-  virtual void On_s3_Timeout() = 0;
-  virtual uint8_t GetNRC() = 0;
-  void SetSessionMode(bool is_default);
-  void ProcessSessionMode();
-  SessResult SetSessionParam(SessParam par, uint32_t v);
 
+  /// @brief S3 timeout callback for implemention
+  virtual void On_s3_Timeout() = 0;
+
+  /// @brief Checks if the last send response is NRC
+  /// @return code of last response
+  virtual uint8_t GetNRC() = 0;
+
+  /// @brief Updates session type
+  /// @param is_default true if default session is requested
+  void SetSessionMode(bool is_default);
+
+  /// @brief Session state processing
+  void ProcessSessionMode();
+
+  /// @brief Session parameters setter
+  /// @param par parameter type
+  /// @param val parameter value
+  SessResult SetSessionParam(SessParam par, uint32_t val);
+
+  /// @brief Timeout values descriptor
   typedef struct
   {
     uint32_t S3_max{5000};
@@ -38,14 +69,30 @@ class SessionControl : public IsoTpClient, public IProcessable {
     uint32_t p2_enhanced{5000};
   } SessionTimings_t;
 
+  /// @brief Timeouts
   SessionTimings_t tims;
 
  private:
+
+  /// @brief Updates session state
+  /// @param state session type to be set
   void SetSessionMode(SessionType state) {
     SetSessionMode((state == SessionType::DEFAULT) ? true : false);
   }
 
-  IsoTpImpl* host;
+  /// @brief stub class to avoid host nullptr value
+  class EmptyTpSender : public IsoTpImpl {
+   public:
+    virtual IsoTpResult Request(const uint8_t* data, size_t length) override {
+      return IsoTpResult::BUSY;
+    }
+  };
+
+  /// @brief stub tp sender. does nothing
+  EmptyTpSender plushtp;
+
+  /// @brief pointer to tp implementation
+  IsoTpImpl* host{&plushtp};
 
   DTimers::Timer p2;
   DTimers::Timer S3;
