@@ -8,8 +8,6 @@
 
 class SessionControl : public IsoTpClient, public IProcessable {
  public:
-  SessionControl();
-
   void SetIsoTp(IsoTpImpl* sender) {
     host = sender;
   }
@@ -21,17 +19,10 @@ class SessionControl : public IsoTpClient, public IProcessable {
   virtual void OnIsoEvent(N_Type t, N_Result res, const IsoTpInfo& info) override;
 
  protected:
-
-  typedef struct
-  {
-    SessionState session;
-    UdsAddress atype;
-  } S_PDU_t;
-
   void SendRequest(const uint8_t* data, uint32_t len);
 
   // For heritance classes to react on session events
-  virtual void NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr) = 0;
+  virtual void NotifyInd(const uint8_t* data, uint32_t length, TargetAddressType addr) = 0;
   virtual void NotifyConf(S_Result res) = 0;
   // one of the upper inheritor must consume this event
   virtual void On_s3_Timeout() = 0;
@@ -50,17 +41,17 @@ class SessionControl : public IsoTpClient, public IProcessable {
   SessionTimings_t tims;
 
  private:
-  void SetSessionMode(SessionState state) {
-    SetSessionMode((state == SessionState::DEFAULT) ? true : false);
+  void SetSessionMode(SessionType state) {
+    SetSessionMode((state == SessionType::DEFAULT) ? true : false);
   }
 
   IsoTpImpl* host;
 
-  using Timer = DTimers::Timer;
+  DTimers::Timer p2;
+  DTimers::Timer S3;
 
-  Timer p2;
-  Timer S3;
-
-  S_PDU_t sState;
-
+  /// @brief current session state
+  SessionType ss_state{SessionType::DEFAULT};
+  /// @brief target address type
+  TargetAddressType ta_addr{TargetAddressType::UNKNOWN};
 };

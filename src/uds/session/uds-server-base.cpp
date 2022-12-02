@@ -99,7 +99,7 @@ void UdsServerBase::SessionChangeEvent(uint8_t s)
   }
 }
 
-void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr)
+void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddressType addr)
 {
   nrc_code = NRC_PR;
   nrc_bad_param = false;
@@ -151,7 +151,7 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, UdsAddress a
   {
     // there was no service to answer. so if the address is physycal
     // NRC NRC_SNS must be sent (ISO 14229-1 table 4 (i))
-    if (req_addr == UdsAddress::PHYS)
+    if (req_addr == TargetAddressType::PHYS)
     {
       SendNegResponse(NRC_SNS);
     }
@@ -179,7 +179,7 @@ void UdsServerBase::NotifyConf(S_Result res)
 
   data_info.data = nullptr;
   data_info.size = 0;
-  data_info.addr = UdsAddress::UNKNOWN;
+  data_info.addr = TargetAddressType::UNKNOWN;
   data_info.head = data_info.head;
 
   UdsServiceHandler* client = nullptr;
@@ -233,12 +233,12 @@ void UdsServerBase::NotifyDSCSessionChanged(bool s3timer)
 
 bool UdsServerBase::ResponseAllowed()
 {
-  if (req_addr == UdsAddress::FUNC)
+  if (req_addr == TargetAddressType::FUNC)
   {
     // ISO 14229-1 Table 5
     return (nrc_bad_param || (data_info.head.NoResponse == false && nrc_code == NRC_PR));
   }
-  else if (req_addr == UdsAddress::PHYS)
+  else if (req_addr == TargetAddressType::PHYS)
   {
     if (nrc_code != NRC_RCRRP)
     {
@@ -333,7 +333,7 @@ bool UdsServerBase::MakeBaseSIDChecks()
     // service not supported
     SendNegResponse(NRC_SNS);
   }
-  else if (((flags & SID_Phyaddr) != 0) && (req_addr != UdsAddress::PHYS))
+  else if (((flags & SID_Phyaddr) != 0) && (req_addr != TargetAddressType::PHYS))
   {
     // do nothing here,the true will be returned and no further actions will be made
   }

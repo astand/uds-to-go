@@ -2,16 +2,19 @@
 
 #include <stdint.h>
 
-enum class UdsAddress
+/// @brief Target address type (physical, functional)
+enum class TargetAddressType
 {
   PHYS, FUNC, UNKNOWN
 };
 
-enum class SessionState
+/// @brief Session type (default, non-default)
+enum class SessionType
 {
   DEFAULT, NONDEFAULT
 };
 
+/// @brief Session processing result (OK, notOK)
 enum class S_Result
 {
   OK, NOK
@@ -49,7 +52,7 @@ typedef struct
 {
   const uint8_t* data;
   uint32_t size;
-  UdsAddress addr;
+  TargetAddressType addr;
   SI_Head_t head;
 } IndicationInfo;
 

@@ -47,7 +47,7 @@ class UdsServerBase : public SessionControl {
   IndicationInfo data_info{0};
   SessionInfo sess_info{};
 
-  virtual void NotifyInd(const uint8_t* data, uint32_t length, UdsAddress addr) override;
+  virtual void NotifyInd(const uint8_t* data, uint32_t length, TargetAddressType addr) override;
   virtual void NotifyConf(S_Result res) override;
 
   // This method is used by session layer to get information about negative response at the end of transmitting
@@ -82,7 +82,7 @@ class UdsServerBase : public SessionControl {
   bool router_is_disabled;
   ProcessResult clientHandRes;
   NRCs_t nrc_code;
-  UdsAddress req_addr{UdsAddress::UNKNOWN};
+  TargetAddressType req_addr{TargetAddressType::UNKNOWN};
 
   /**
    * @brief this value indicates response module if

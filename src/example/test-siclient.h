@@ -8,7 +8,7 @@ class TestUdsServiceHandler : public UdsServiceHandler {
   TestUdsServiceHandler(UdsServerBase& router) : UdsServiceHandler(router) {}
 
   virtual ProcessResult OnIndication(const IndicationInfo& inf) override {
-    std::cout << "SC : On Ind  -> " << "Addr: " << ((inf.addr == UdsAddress::PHYS) ? ("PHYS ") : ("FUNC "));
+    std::cout << "SC : On Ind  -> " << "Addr: " << ((inf.addr == TargetAddressType::PHYS) ? ("PHYS ") : ("FUNC "));
     std::cout << " -> SI [" << (int)inf.head.SI << "] SF [" << (int)inf.head.SF << "]";
     std::cout << "Data size = " << inf.size << " b." << std::endl;
     std::cout << std::endl;

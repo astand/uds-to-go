@@ -2,14 +2,6 @@
 #include "session-control.h"
 #include <uds/inc/diag/nrcnames.h>
 
-SessionControl::SessionControl()
-{
-  sState.session = SessionState::DEFAULT;
-  tims.S3_max = tims.S3_max;
-  tims.p2_max = tims.p2_max;
-  tims.p2_enhanced = tims.p2_enhanced;
-}
-
 void SessionControl::SendRequest(const uint8_t* data, uint32_t len)
 {
   // resetart timer and may be some session state here
@@ -30,7 +22,7 @@ void SessionControl::Process()
 
 void SessionControl::OnIsoEvent(N_Type event, N_Result res, const IsoTpInfo& info)
 {
-  sState.atype = (info.address == N_TarAddress::TAtype_1_Physical) ? (UdsAddress::PHYS) : (UdsAddress::FUNC);
+  ta_addr = (info.address == N_TarAddress::TAtype_1_Physical) ? (TargetAddressType::PHYS) : (TargetAddressType::FUNC);
 
   switch (event)
   {
@@ -40,14 +32,14 @@ void SessionControl::OnIsoEvent(N_Type event, N_Result res, const IsoTpInfo& inf
         // data indication from Transport layer
         p2.Start(tims.p2_max);
 
-        if (sState.session == SessionState::NONDEFAULT)
+        if (ss_state == SessionType::NONDEFAULT)
         {
           // when non default session is active S3 timer must be stopped to
           // complete req/repsond transfer
           S3.Stop();
         }
 
-        NotifyInd(info.data, info.length, sState.atype);
+        NotifyInd(info.data, info.length, ta_addr);
       }
       else
       {
@@ -62,7 +54,7 @@ void SessionControl::OnIsoEvent(N_Type event, N_Result res, const IsoTpInfo& inf
       {
         // SOM indication is not sending to Diag app.
         // TODO: restart timings?
-        if (sState.session == SessionState::NONDEFAULT)
+        if (ss_state == SessionType::NONDEFAULT)
         {
           // when non default session is active S3 timer must be stopped to
           // complete req/repsond transfer
@@ -72,7 +64,7 @@ void SessionControl::OnIsoEvent(N_Type event, N_Result res, const IsoTpInfo& inf
       else
       {
         // what happend?
-        SetSessionMode(sState.session);
+        SetSessionMode(ss_state);
         assert(false);
       }
 
@@ -84,20 +76,20 @@ void SessionControl::OnIsoEvent(N_Type event, N_Result res, const IsoTpInfo& inf
       if (res == N_Result::OK_s)
       {
         // response send OK, check what was that
-        if ((GetNRC() == NRC_RCRRP) && (sState.session == SessionState::NONDEFAULT))
+        if ((GetNRC() == NRC_RCRRP) && (ss_state == SessionType::NONDEFAULT))
         {
           // response was NRC_RCRRP - set p2 enhanced timeout
           p2.Start(tims.p2_enhanced);
         }
         else
         {
-          SetSessionMode(sState.session);
+          SetSessionMode(ss_state);
         }
       }
       else if (res == N_Result::TIMEOUT_Cr)
       {
         // segmented receptions is broken
-        SetSessionMode(sState.session);
+        SetSessionMode(ss_state);
       }
       else
       {
@@ -115,15 +107,15 @@ void SessionControl::SetSessionMode(bool is_default)
   {
     // default session doesn't use s3 timer, so stop it
     S3.Stop();
-    sState.session = SessionState::DEFAULT;
+    ss_state = SessionType::DEFAULT;
   }
   else
   {
-    if (sState.session == SessionState::DEFAULT)
+    if (ss_state == SessionType::DEFAULT)
     {
       // initial start of S3 timer
       S3.Start(tims.S3_max);
-      sState.session = SessionState::NONDEFAULT;
+      ss_state = SessionType::NONDEFAULT;
     }
     else
     {
@@ -136,7 +128,7 @@ void SessionControl::SetSessionMode(bool is_default)
 
 void SessionControl::ProcessSessionMode()
 {
-  if (sState.session != SessionState::DEFAULT)
+  if (ss_state != SessionType::DEFAULT)
   {
     if (S3.Elapsed())
     {
