@@ -141,10 +141,10 @@ class RoutineRouter : public UdsServiceHandler {
       rtr1.SendNegResponse(NRC_SFNS);
       return ProcessResult::HANDLED_RESP_NO;
     }
-    else if (!rtr1.GetSession().sec_level) {
-      rtr1.SendNegResponse(NRC_SAD);
-      return ProcessResult::HANDLED_RESP_NO;
-    }
+    // else if (!rtr1.GetSession().sec_level) {
+    //   rtr1.SendNegResponse(NRC_SAD);
+    //   return ProcessResult::HANDLED_RESP_NO;
+    // }
 
     ProcessResult pres = ProcessResult::NOT_HANDLED;
     routine_id_t routine_id = V16_FROM_BE(HWREGH(inf.data + 2));
@@ -156,7 +156,7 @@ class RoutineRouter : public UdsServiceHandler {
       rtr1.SendNegResponse(NRC_ROOR);
     }
 
-    return ProcessResult::HANDLED_RESP_NO;
+    return pres;
   }
 
   /* SiClient */

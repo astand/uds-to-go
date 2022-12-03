@@ -73,6 +73,7 @@ void BuildApp()
   GetProcRunner().Add(&ticker);
   GetProcRunner().Add(&GetDoCAN());
   GetProcRunner().Add(&GetBaseUdsServer());
+  GetProcRunner().Add(&r1);
   GetBaseUdsServer().SetIsoTp(&GetDoCAN());
 
   didkeeper.Add(&didreader);
