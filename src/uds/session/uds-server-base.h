@@ -24,7 +24,7 @@ class UdsServerBase : public SessionControl {
  public:
   UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* txptr, datasize_t txsize);
   // this function exports for clients
-  void SendResponse(const uint8_t* data, uint32_t len);
+  void SendResponse(const uint8_t* data, uint32_t len, bool enhanced = false);
   void SendNegResponse(NRCs_t nrc);
   void SendNegResponse(uint8_t sid, NRCs_t nrc);
 
@@ -50,8 +50,6 @@ class UdsServerBase : public SessionControl {
   virtual void NotifyInd(const uint8_t* data, uint32_t length, TargetAddressType addr) override;
   virtual void NotifyConf(S_Result res) override;
 
-  // This method is used by session layer to get information about negative response at the end of transmitting
-  virtual uint8_t GetNRC() override;
   // Handlers for base common services,
   // it not necessary to implement them in inheritors
   virtual bool SelfIndHandler();

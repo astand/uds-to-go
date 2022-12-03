@@ -35,7 +35,7 @@ UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasi
 }
 
 
-void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len)
+void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len, bool enhanced)
 {
   if (len == 0)
   {
@@ -45,7 +45,7 @@ void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len)
   // check address and NRC code
   if (ResponseAllowed())
   {
-    SendRequest(data, len);
+    SendRequest(data, len, enhanced);
   }
   else
   {
@@ -63,7 +63,7 @@ void UdsServerBase::SendNegResponse(uint8_t sid, NRCs_t nrc)
   nrc_bad_param = (nrc == NRC_IMLOIF);
   nrc_code = nrc;
 
-  SendResponse(tData, 3);
+  SendResponse(tData, 3, nrc == NRCs_t::NRC_RCRRP);
 }
 
 void UdsServerBase::SendNegResponse(NRCs_t nrc)
@@ -194,12 +194,6 @@ void UdsServerBase::NotifyConf(S_Result res)
       break;
     }
   }
-}
-
-
-uint8_t UdsServerBase::GetNRC()
-{
-  return nrc_code;
 }
 
 

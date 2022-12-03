@@ -2,13 +2,22 @@
 #include "session-control.h"
 #include <uds/inc/diag/nrcnames.h>
 
-void SessionControl::SendRequest(const uint8_t* data, uint32_t len)
+void SessionControl::SendRequest(const uint8_t* data, uint32_t size, bool enhanced)
 {
-  // stop p2 timer on response sending
-  p2.Stop();
+  etm_active = enhanced;
+
+  if (etm_active)
+  {
+    p2.Start(tims.p2_enhanced);
+  }
+  else
+  {
+    // stop p2 timer on response sending
+    p2.Stop();
+  }
 
   // send response to iso-tp
-  host->Request(data, len);
+  host->Request(data, size);
 }
 
 void SessionControl::Process()
@@ -66,15 +75,9 @@ void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& in
     case (N_Event::Conf):
       if (res == N_Result::OK_s)
       {
-        // response send OK, check what was that
-        if ((GetNRC() == NRC_RCRRP) && (ss_state == SessionType::NONDEFAULT))
+        if (!etm_active)
         {
-          // p2 enhanced here because of RCRRP
-          p2.Start(tims.p2_enhanced);
-        }
-        else
-        {
-          // update current session type (restart s3)
+          // update current session state
           SetSessionMode(ss_state);
         }
       }
@@ -132,6 +135,7 @@ void SessionControl::ProcessSessionMode()
     {
       // Restart S3 timer!
       S3.Restart();
+      etm_active = false;
     }
   }
 }
@@ -161,3 +165,4 @@ SessResult SessionControl::SetSessionParam(SessParam par, uint32_t v)
 
   return ret;
 }
+

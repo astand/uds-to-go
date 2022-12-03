@@ -30,7 +30,8 @@ class SessionControl : public IsoTpClient, public IProcessable {
   /// @brief Payload sender
   /// @param data data pointer
   /// @param size data size
-  void SendRequest(const uint8_t* data, uint32_t size);
+  /// @param enhanced enhanced session requested (p2 enhanced)
+  void SendRequest(const uint8_t* data, uint32_t size, bool enhanced = false);
 
   /// @brief Indication callback for implementaion
   /// @param data received data pointer
@@ -44,10 +45,6 @@ class SessionControl : public IsoTpClient, public IProcessable {
 
   /// @brief S3 timeout callback for implemention
   virtual void On_s3_Timeout() = 0;
-
-  /// @brief Checks if the last send response is NRC
-  /// @return code of last response
-  virtual uint8_t GetNRC() = 0;
 
   /// @brief Updates session type
   /// @param is_default true if default session is requested
@@ -73,14 +70,13 @@ class SessionControl : public IsoTpClient, public IProcessable {
   SessionTimings_t tims;
 
  private:
-
   /// @brief Updates session state
   /// @param state session type to be set
   void SetSessionMode(SessionType state) {
     SetSessionMode((state == SessionType::DEFAULT) ? true : false);
   }
 
-  /// @brief stub class to avoid host nullptr value
+  /// @brief Stub class to avoid host nullptr value
   class EmptyTpSender : public IsoTpImpl {
    public:
     virtual IsoTpResult Request(const uint8_t* data, size_t length) override {
@@ -88,17 +84,20 @@ class SessionControl : public IsoTpClient, public IProcessable {
     }
   };
 
-  /// @brief stub tp sender. does nothing
+  /// @brief Stub tp sender. does nothing
   EmptyTpSender plushtp;
 
-  /// @brief pointer to tp implementation
+  /// @brief Pointer to tp implementation
   IsoTpImpl* host{&plushtp};
 
   DTimers::Timer p2;
   DTimers::Timer S3;
 
-  /// @brief current session state
+  /// @brief Current session state
   SessionType ss_state{SessionType::DEFAULT};
-  /// @brief target address type
+  /// @brief Target address type of the current req/resp session
   TargetAddressType ta_addr{TargetAddressType::UNKNOWN};
+
+  /// @brief Enhanced timing mode active status
+  bool etm_active{false};
 };
