@@ -21,9 +21,10 @@ bool out_of_range(uint8_t v)
   return (v < low || v > high);
 }
 
-UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasize_t s) : cls(vec), tData(d), TX_SIZE(s)
+UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasize_t s) : cls(vec), pubBuff(d),
+  TX_SIZE(s)
 {
-  assert(tData != nullptr);
+  assert(pubBuff != nullptr);
   assert(TX_SIZE != 0);
 
   SID_Flag[PUDS_SI_TesterPresent] = SI_Flags_TP;
@@ -57,13 +58,13 @@ void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len, bool enhance
 
 void UdsServerBase::SendNegResponse(uint8_t sid, NRCs_t nrc)
 {
-  tData[0] = PUDS_NR_SI;
-  tData[1] = sid;
-  tData[2] = static_cast<uint8_t>(nrc);
+  pubBuff[0] = PUDS_NR_SI;
+  pubBuff[1] = sid;
+  pubBuff[2] = static_cast<uint8_t>(nrc);
   nrc_bad_param = (nrc == NRC_IMLOIF);
   nrc_code = nrc;
 
-  SendResponse(tData, 3, nrc == NRCs_t::NRC_RCRRP);
+  SendResponse(pubBuff, 3, nrc == NRCs_t::NRC_RCRRP);
 }
 
 void UdsServerBase::SendNegResponse(NRCs_t nrc)
@@ -118,9 +119,9 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
   // services without subfunctions must set NoResponse bit to 0 by themself!!!
   data_info.head.NoResponse = data_info.data[1] & 0x80U ? 1 : 0;
   // set most frequent case
-  tData[0] = data_info.head.respSI;
-  tData[1] = data_info.data[1];
-  tLength = 0;
+  pubBuff[0] = data_info.head.respSI;
+  pubBuff[1] = data_info.data[1];
+  pubSize = 0;
 
   if (router_is_disabled || bad_sid)
   {
@@ -130,7 +131,7 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
   // Handle base service functions
   if (SelfIndHandler())
   {
-    SendResponse(tData, tLength);
+    SendResponse(pubBuff, pubSize);
     return;
   }
 
@@ -158,7 +159,7 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
   }
   else if (clientHandRes == ProcessResult::HANDLED_RESP_OK)
   {
-    SendResponse(tData, tLength);
+    SendResponse(pubBuff, pubSize);
   }
   else if (clientHandRes == ProcessResult::HANDLED_RESP_NO)
   {
@@ -308,7 +309,7 @@ void UdsServerBase::SID_TesterPresent()
   }
   else
   {
-    tLength = 2;
+    pubSize = 2;
   }
 }
 

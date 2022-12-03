@@ -36,8 +36,8 @@ class UdsServerBase : public SessionControl {
  public:
 
   const datasize_t TX_SIZE;
-  uint8_t* const tData;
-  datasize_t tLength;
+  uint8_t* const pubBuff;
+  datasize_t pubSize;
 
   const SessionInfo& GetSession() const {
     return sess_info;
@@ -45,7 +45,7 @@ class UdsServerBase : public SessionControl {
 
  protected:
   IndicationInfo data_info{0};
-  SessionInfo sess_info{};
+  SessionInfo sess_info;
 
   virtual void NotifyInd(const uint8_t* data, uint32_t length, TargetAddressType addr) override;
   virtual void NotifyConf(S_Result res) override;

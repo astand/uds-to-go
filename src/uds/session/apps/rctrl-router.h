@@ -91,17 +91,17 @@ class RoutineRouter : public UdsServiceHandler {
     }
 
     // Setup head of routine response
-    rtr1.tData[0] = RESPONSE_ON_SID(PUDS_SI_RoutineControl);
-    rtr1.tData[1] = rtype;
-    HWREGH(rtr1.tData + 2) = V16_TO_BE(rid);
-    rtr1.tData[4] = rinfo;
+    rtr1.pubBuff[0] = RESPONSE_ON_SID(PUDS_SI_RoutineControl);
+    rtr1.pubBuff[1] = rtype;
+    HWREGH(rtr1.pubBuff + 2) = V16_TO_BE(rid);
+    rtr1.pubBuff[4] = rinfo;
 
     // Copy response data
-    memcpy(rtr1.tData + RoutineHeadSize, data, size);
+    memcpy(rtr1.pubBuff + RoutineHeadSize, data, size);
 
     // Sending response
-    rtr1.tLength = RoutineHeadSize + size;
-    rtr1.SendResponse(rtr1.tData, rtr1.tLength);
+    rtr1.pubSize = RoutineHeadSize + size;
+    rtr1.SendResponse(rtr1.pubBuff, rtr1.pubSize);
 
     return SendResult::OK;
   }

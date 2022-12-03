@@ -49,12 +49,12 @@ void DidRouter::ReadDataByIdentifierHandler()
   uint16_t dataid = data_[SI_SIZE_BYTES] << 8 | data_[SI_SIZE_BYTES + 1];
 
   // Place the next DID into res
-  rtr1.tData[idx++] = dataid >> 8;
-  rtr1.tData[idx++] = dataid & 0xFF;
+  rtr1.pubBuff[idx++] = dataid >> 8;
+  rtr1.pubBuff[idx++] = dataid & 0xFF;
 
   size_t len_out = 0;
   NRCs_t nrc_out = NRC_ROOR;
-  DidResult ret = dider.ReadDID(dataid, rtr1.tData + idx, 64u, len_out, nrc_out);
+  DidResult ret = dider.ReadDID(dataid, rtr1.pubBuff + idx, 64u, len_out, nrc_out);
 
   // In case of positive handling and zero len_out - response with ROOR
   // In case of ignored request - response with ROOR
@@ -65,15 +65,15 @@ void DidRouter::ReadDataByIdentifierHandler()
   }
 
   // Send positive response
-  rtr1.tLength = len_out + SI_SIZE_BYTES + DID_SIZE_BYTES;
+  rtr1.pubSize = len_out + SI_SIZE_BYTES + DID_SIZE_BYTES;
 }
 
 void DidRouter::WriteDataByIdentifierHandler()
 {
   // Only one DID can be written at once
   uint16_t dataid = data_[1] << 8 | data_[2];
-  rtr1.tData[1] = data_[1];
-  rtr1.tData[2] = data_[2];
+  rtr1.pubBuff[1] = data_[1];
+  rtr1.pubBuff[2] = data_[2];
 
   // Every WDBI must have len >= 3 bytes
   if (len_ <= SI_SIZE_BYTES + DID_SIZE_BYTES)
@@ -97,7 +97,7 @@ void DidRouter::WriteDataByIdentifierHandler()
     if (ret == DidResult::Positive)
     {
       // Success - DID is handled and data is copied into buffer
-      rtr1.tLength = 3;
+      rtr1.pubSize = 3;
     }
     else
     {

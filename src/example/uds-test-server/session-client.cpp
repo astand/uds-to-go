@@ -15,11 +15,11 @@ ProcessResult DSCClient::OnIndication(const IndicationInfo& inf)
       std::cout << "Session ok (" << (int)inf.head.SF << ")" << std::endl;
       // session change request ok
       rtr1.SetServiceSession((uint8_t)inf.head.SF);
-      rtr1.tData[2] = ((250 >> 8) & 0xFF);
-      rtr1.tData[3] = (250 & 0xFF);
-      rtr1.tData[4] = (((5000 / 10) >> 8) & 0xFF);
-      rtr1.tData[5] = ((5000 / 10) & 0xFF);
-      rtr1.SendResponse(rtr1.tData, 6);
+      rtr1.pubBuff[2] = ((250 >> 8) & 0xFF);
+      rtr1.pubBuff[3] = (250 & 0xFF);
+      rtr1.pubBuff[4] = (((5000 / 10) >> 8) & 0xFF);
+      rtr1.pubBuff[5] = ((5000 / 10) & 0xFF);
+      rtr1.SendResponse(rtr1.pubBuff, 6);
     }
     else
     {
