@@ -140,26 +140,26 @@ void SessionControl::ProcessSessionMode()
   }
 }
 
-SessResult SessionControl::SetSessionParam(SessParam par, uint32_t v)
+SessParamResult SessionControl::SetSessionParam(SessParamType par, uint32_t v)
 {
-  auto ret = SessResult::OK;
+  auto ret = SessParamResult::OK;
 
   switch (par)
   {
-    case (SessParam::S3_TIM):
+    case (SessParamType::S3_TIM):
       tims.S3_max = v;
       break;
 
-    case (SessParam::P2_TIM):
+    case (SessParamType::P2_TIM):
       tims.p2_max = v;
       break;
 
-    case (SessParam::P2_ENHC):
+    case (SessParamType::P2_ENHC):
       tims.p2_enhanced = v;
       break;
 
     default:
-      ret = SessResult::ERR;
+      ret = SessParamResult::ERR;
       break;
   }
 

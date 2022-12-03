@@ -13,8 +13,8 @@ TestUdsServer::TestUdsServer(IKeeper<UdsServiceHandler>& vec, uint8_t* txptr, da
   SID_Flag[PUDS_SI_ReadDataByIdentifier] = SI_Flags_RDBI;
   SID_Flag[PUDS_SI_RoutineControl] = SI_Flags_RC;
 
-  SetSessionParam(SessParam::S3_TIM, 5000);
-  SetSessionParam(SessParam::P2_TIM, 250);
-  SetSessionParam(SessParam::P2_ENHC, 5000);
+  SetSessionParam(SessParamType::S3_TIM, 5000);
+  SetSessionParam(SessParamType::P2_TIM, 250);
+  SetSessionParam(SessParamType::P2_ENHC, 5000);
 }
 

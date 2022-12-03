@@ -56,7 +56,7 @@ class SessionControl : public IsoTpClient, public IProcessable {
   /// @brief Session parameters setter
   /// @param par parameter type
   /// @param val parameter value
-  SessResult SetSessionParam(SessParam par, uint32_t val);
+  SessParamResult SetSessionParam(SessParamType par, uint32_t val);
 
   /// @brief Timeout values descriptor
   typedef struct
