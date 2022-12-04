@@ -33,6 +33,14 @@ class SessionControl : public IsoTpClient, public IProcessable {
   /// @param enhanced enhanced session requested (p2 enhanced)
   void SendRequest(const uint8_t* data, uint32_t size, bool enhanced = false);
 
+  /// @brief Sets session enhanced timing mode. During this mode NRC 0x78
+  /// will be periodically sent with interval (ms) during duration (ms)
+  /// While ETM is active all Data OK_r events will be ignored
+  /// @param duration duration of etm
+  /// @param interval interval to send keep-alive
+  /// @param si service ID
+  void SetPending(uint32_t duration, uint32_t interval, uint8_t si);
+
   /// @brief Indication callback for implementaion
   /// @param data received data pointer
   /// @param size received data size
@@ -100,4 +108,16 @@ class SessionControl : public IsoTpClient, public IProcessable {
 
   /// @brief Enhanced timing mode active status
   bool etm_active{false};
+
+  /// @brief ETM pending message
+  uint8_t etm_buff[3] = { 0x7fu, 0u, 0x78u };
+
+  /// @brief ETM left duration (ms)
+  uint32_t left_duration{0u};
+
+  /// @brief ETM pending message sending interval (ms)
+  uint32_t etm_interval;
+
+  /// @brief ETM interval timer
+  DTimers::Timer etm_timer{0u};
 };

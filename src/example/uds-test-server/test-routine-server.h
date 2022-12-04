@@ -14,46 +14,40 @@ class RotineServ1 : public ClientRoutineBase, public IProcessable {
  public:
   RotineServ1(RoutineRouter& routiner) : ClientRoutineBase(routiner) {}
   ProcessResult OnRoutine(routine_id_t rid, uint8_t rtype, const uint8_t* data, size_t size) {
+    auto ret = ProcessResult::NOT_HANDLED;
+
     if (rid == 0x0102) {
       if (true) {
         pending = true;
-        sendtime.Restart();
+        // restart routing execution timer
         timeout.Restart();
-        routman.SendRoutineNegResponse(NRCs_t::NRC_RCRRP);
-        // Ok
-        return ProcessResult::HANDLED_RESP_OK;
+        // return HANDLED_PENDING status to inform host that final response will be sent later
+        ret = ProcessResult::HANDLED_PENDING;
       }
       else {
         routman.SendRoutineNegResponse(NRC_IMLOIF);
       }
     }
 
-    return ProcessResult::NOT_HANDLED;
+    return ret;
   }
 
   virtual void Process() override {
-    if (pending) {
-      if (sendtime.Elapsed()) {
-        routman.SendRoutineNegResponse(NRCs_t::NRC_RCRRP);
-      }
+    if (pending && timeout.Elapsed()) {
+      pending = false;
+      timeout.Stop();
 
-      if (timeout.Elapsed()) {
-        pending = false;
-        sendtime.Stop();
-        timeout.Stop();
-
-        rcontext.id = 0x0111;
-        rcontext.info = 1;
-        rcontext.type = 2;
-        routman.SendRoutineResponse(rcontext);
-      }
+      rcontext.id = 0x0111;
+      rcontext.info = 1;
+      rcontext.type = 2;
+      routman.SendRoutineResponse(rcontext);
     }
   }
 
  private:
 
-  DTimers::Timer sendtime{2000u};
-  DTimers::Timer timeout{30000u};
+  /// @brief timer for simulating 15s routine execution
+  DTimers::Timer timeout{15000u};
   bool pending{false};
 };
 

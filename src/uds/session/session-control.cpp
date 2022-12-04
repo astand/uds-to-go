@@ -20,10 +20,39 @@ void SessionControl::SendRequest(const uint8_t* data, uint32_t size, bool enhanc
   host->Request(data, size);
 }
 
+void SessionControl::SetPending(uint32_t duration, uint32_t interval, uint8_t si)
+{
+  if ((duration >= interval) && (interval > 999u))
+  {
+    etm_buff[1] = si;
+    SendRequest(etm_buff, 3u, true);
+    etm_timer.Start(interval);
+    etm_interval = interval;
+    left_duration = duration - interval;
+  }
+}
+
 void SessionControl::Process()
 {
   // process timers here and notify Diag in case of timeout
   ProcessSessionMode();
+
+  if (etm_active)
+  {
+    // left duration not zero, continue periodic send
+    if ((left_duration != 0u) && etm_timer.Elapsed())
+    {
+      // etm pending message has to be sent
+      left_duration = (left_duration > etm_interval) ? (left_duration - etm_interval) : 0u;
+      SendRequest(etm_buff, 3, true);
+
+      if (left_duration == 0)
+      {
+        // after this p2 timer will handled by general session processing
+        etm_timer.Stop();
+      }
+    }
+  }
 }
 
 void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& info)
@@ -35,16 +64,23 @@ void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& in
     case (N_Event::Data):
       if (res == N_Result::OK_r)
       {
-        // data indication from Transport layer
-        p2.Start(tims.p2_max);
-
-        if (ss_state == SessionType::NONDEFAULT)
+        if (!etm_active)
         {
-          // stop s3 here (to be restart on response conf)
-          S3.Stop();
-        }
+          // data indication from Transport layer
+          p2.Start(tims.p2_max);
 
-        NotifyInd(info.data, info.length, ta_addr);
+          if (ss_state == SessionType::NONDEFAULT)
+          {
+            // stop s3 here (to be restart on response conf)
+            S3.Stop();
+          }
+
+          NotifyInd(info.data, info.length, ta_addr);
+        }
+        else
+        {
+          // do not process any request while etm is active
+        }
       }
       else
       {
@@ -130,12 +166,25 @@ void SessionControl::ProcessSessionMode()
       SetSessionMode(true);
       On_s3_Timeout();
     }
+  }
 
-    if (p2.Elapsed())
+  if (p2.Elapsed())
+  {
+    if (ss_state != SessionType::DEFAULT)
     {
       // Restart S3 timer!
       S3.Restart();
+    }
+
+    if (etm_active)
+    {
+      // no response from handler was sent
       etm_active = false;
+      // send common NRC (protocol requirement)
+      etm_buff[2] = NRCs_t::NRC_ENOA;
+      SendRequest(etm_buff, 3u);
+      // restore original NRC value in etm buffer
+      etm_buff[2] = NRCs_t::NRC_RCRRP;
     }
   }
 }

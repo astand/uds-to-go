@@ -168,6 +168,11 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
     // session must be re-init in this case
     SessionChangeEvent(sess_info.sess);
   }
+  else if (clientHandRes == ProcessResult::HANDLED_PENDING)
+  {
+    // handler in pending state, wait for reposne
+    SetPending(60000u, 2000u, data_info.head.SI);
+  }
 }
 
 void UdsServerBase::NotifyConf(S_Result res)

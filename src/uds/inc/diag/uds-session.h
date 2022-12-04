@@ -35,7 +35,17 @@ enum class SessParamType
 /// @brief Service processing result
 enum class ProcessResult
 {
-  NOT_HANDLED, HANDLED_RESP_OK, HANDLED_RESP_NO
+  /// @brief Request not handled
+  NOT_HANDLED,
+
+  /// @brief Request handled, response must be sent
+  HANDLED_RESP_OK,
+
+  /// @brief Request handled, response must not be sent
+  HANDLED_RESP_NO,
+
+  /// @brief Request handled, session pending mode must be invoked
+  HANDLED_PENDING
 };
 
 /// @brief Send request result
