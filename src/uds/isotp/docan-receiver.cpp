@@ -32,7 +32,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
   {
     switch (inf.type)
     {
-      case (PciType::FF):
+      case (DC_FrameType::FF):
         if (rxds.state == RxState::ACTIVE)
         {
           // reception is in progress (ISO 15765-2 tab 23 (p 38))
@@ -48,13 +48,13 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
         {
           rxds.state = RxState::IDLE;
           // send FC with overflow status
-          auto ret = helper.PackFlowControl(can_message, FlowState::OVERFLOW, 0, 0);
+          auto ret = helper.PackFlowControl(can_message, DC_FlowState::OVERFLOW, 0, 0);
           itp.PduToCan(can_message, ret);
         }
         else
         {
           // fine, reception can be processed
-          auto ret = helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
+          auto ret = helper.PackFlowControl(can_message, DC_FlowState::CTS, rxds.blksize, rxds.stmin);
           itp.PduToCan(can_message, ret);
 
           rxds.currblkn = 0;
@@ -71,7 +71,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
 
         break;
 
-      case (PciType::CF):
+      case (DC_FrameType::CF):
         if (rxds.state != RxState::ACTIVE || pcioffset != 1)
         {
           rxds.state = RxState::IDLE;
@@ -111,7 +111,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
             else if (rxds.currblkn >= rxds.blksize)
             {
               // block ended, send FC
-              auto ret = helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
+              auto ret = helper.PackFlowControl(can_message, DC_FlowState::CTS, rxds.blksize, rxds.stmin);
               itp.PduToCan(can_message, ret);
               rxds.currblkn = 0;
             }
@@ -120,7 +120,7 @@ void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl)
 
         break;
 
-      case (PciType::SF):
+      case (DC_FrameType::SF):
         if (rxds.state == RxState::ACTIVE)
         {
           // ISO 15765-2 tab 23 (p 38) Notify unexpected pdu, abort multi reception

@@ -4,7 +4,7 @@
 datasize_t PciHelper::UnpackPciInfo(const uint8_t* data, datasize_t candl, PciMeta& pci)
 {
   datasize_t ret = 0;
-  pci.type = PciType::ERROR;
+  pci.type = DC_FrameType::ERROR;
   pci.pcilen = ret;
 
   if (candl == 0)
@@ -12,11 +12,11 @@ datasize_t PciHelper::UnpackPciInfo(const uint8_t* data, datasize_t candl, PciMe
     return ret;
   }
 
-  pci.type = from_byte<PciType>(data[0] & 0xf0u);
+  pci.type = from_byte<DC_FrameType>(data[0] & 0xf0u);
 
   switch (pci.type)
   {
-    case (PciType::SF):
+    case (DC_FrameType::SF):
       if (candl <= CLASSICCAN_DL_MAX)
       {
         // classic SF
@@ -26,7 +26,7 @@ datasize_t PciHelper::UnpackPciInfo(const uint8_t* data, datasize_t candl, PciMe
         if ((pci.dlen + ret) > candl)
         {
           ret = 0;
-          pci.type = PciType::ERROR;
+          pci.type = DC_FrameType::ERROR;
         }
       }
       else if (candl <= CANFD_DL_MAX)
@@ -38,22 +38,22 @@ datasize_t PciHelper::UnpackPciInfo(const uint8_t* data, datasize_t candl, PciMe
         if (pci.dlen + ret > candl)
         {
           ret = 0;
-          pci.type = PciType::ERROR;
+          pci.type = DC_FrameType::ERROR;
         }
       }
       else
       {
         ret = 0;
-        pci.type = PciType::ERROR;
+        pci.type = DC_FrameType::ERROR;
       }
 
       break;
 
-    case (PciType::FF):
+    case (DC_FrameType::FF):
       if (candl < MIN_FF_CANDL)
       {
         ret = 0;
-        pci.type = PciType::ERROR;
+        pci.type = DC_FrameType::ERROR;
       }
       else
       {
@@ -72,7 +72,7 @@ datasize_t PciHelper::UnpackPciInfo(const uint8_t* data, datasize_t candl, PciMe
           if (pci.dlen <= 0xfffu)
           {
             // error dlen value, reset it zero to ignore handling
-            pci.type = PciType::ERROR;
+            pci.type = DC_FrameType::ERROR;
             pci.dlen = 0;
             ret = 0;
           }
@@ -80,7 +80,7 @@ datasize_t PciHelper::UnpackPciInfo(const uint8_t* data, datasize_t candl, PciMe
         else if (pci.dlen < MIN_FF_PAYLOAD_SIZE)
         {
           // error, FF min possible length is 8
-          pci.type = PciType::ERROR;
+          pci.type = DC_FrameType::ERROR;
           pci.dlen = 0;
           ret = 0;
         }
@@ -88,26 +88,26 @@ datasize_t PciHelper::UnpackPciInfo(const uint8_t* data, datasize_t candl, PciMe
 
       break;
 
-    case (PciType::FC):
+    case (DC_FrameType::FC):
     {
       uint8_t fs = (data[0] & 0x0fu);
 
       if (fs > 2 || candl < 3)
       {
         ret = 0;
-        pci.type = PciType::ERROR;
+        pci.type = DC_FrameType::ERROR;
       }
       else
       {
         ret = 3;
-        pci.flowstate = from_byte<FlowState>(fs);
+        pci.flowstate = from_byte<DC_FlowState>(fs);
         pci.bs = data[1];
         pci.stmin = data[2];
 
         if (((pci.stmin > 0x7f) && (pci.stmin <= 0xf0)) || pci.stmin > 0xf9)
         {
           ret = 0;
-          pci.type = PciType::ERROR;
+          pci.type = DC_FrameType::ERROR;
         }
         else if (pci.stmin > 0x7f)
         {
@@ -119,16 +119,16 @@ datasize_t PciHelper::UnpackPciInfo(const uint8_t* data, datasize_t candl, PciMe
 
     break;
 
-    case (PciType::CF):
+    case (DC_FrameType::CF):
       ret = 1;
       pci.sn = data[0] & 0x0f;
 
       break;
 
-    case (PciType::ERROR):
+    case (DC_FrameType::ERROR):
     default:
       ret = 0;
-      pci.type = PciType::ERROR;
+      pci.type = DC_FrameType::ERROR;
       break;
   }
 
@@ -136,7 +136,7 @@ datasize_t PciHelper::UnpackPciInfo(const uint8_t* data, datasize_t candl, PciMe
   return ret;
 }
 
-datasize_t PciHelper::PackPciForData(uint8_t* data, datasize_t length, datasize_t candl, PciType& reftype)
+datasize_t PciHelper::PackPciForData(uint8_t* data, datasize_t length, datasize_t candl, DC_FrameType& reftype)
 {
   datasize_t pci_len = 0;
 
@@ -148,7 +148,7 @@ datasize_t PciHelper::PackPciForData(uint8_t* data, datasize_t length, datasize_
     if ((pci_len + length) <= candl)
     {
       // SF: full length is less or equal to candl
-      reftype = PciType::SF;
+      reftype = DC_FrameType::SF;
       data[0] = to_byte(reftype);
 
       if (is_can_fd)
@@ -167,7 +167,7 @@ datasize_t PciHelper::PackPciForData(uint8_t* data, datasize_t length, datasize_
     else
     {
       // FF
-      reftype = PciType::FF;
+      reftype = DC_FrameType::FF;
       data[0] = to_byte(reftype);
 
       if (length <= 0xfff)
@@ -192,9 +192,9 @@ datasize_t PciHelper::PackPciForData(uint8_t* data, datasize_t length, datasize_
   return pci_len;
 }
 
-datasize_t PciHelper::PackFlowControl(uint8_t* data, FlowState state, uint8_t bs, uint8_t stmin)
+datasize_t PciHelper::PackFlowControl(uint8_t* data, DC_FlowState state, uint8_t bs, uint8_t stmin)
 {
-  data[0] = to_byte(PciType::FC) | to_byte(state);
+  data[0] = to_byte(DC_FrameType::FC) | to_byte(state);
   data[1] = bs;
   data[2] = stmin;
   return 3;
@@ -202,6 +202,6 @@ datasize_t PciHelper::PackFlowControl(uint8_t* data, FlowState state, uint8_t bs
 
 datasize_t PciHelper::PackConseqFrame(uint8_t* data, uint8_t sn)
 {
-  data[0] = static_cast<uint8_t>(PciType::CF) | (sn & 0x0fu);
+  data[0] = static_cast<uint8_t>(DC_FrameType::CF) | (sn & 0x0fu);
   return 1;
 }

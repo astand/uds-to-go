@@ -6,22 +6,42 @@
 
 class DoCAN_TP;
 
+/// @brief DoCAN receiver class
 class DoCAN_Receiver {
  public:
-  DoCAN_Receiver(uint8_t* mem, const size_t length, DoCAN_TP& isotp) : rxbuff(mem), RXLEN(length), itp(isotp) {}
+  /// @brief DoCAN receiver constructor
+  /// @param mem pointer to buffer for income paylaod
+  /// @param bufcap buffer maximum
+  /// @param isotp reference to iso-tp host object
+  DoCAN_Receiver(uint8_t* mem, const size_t bufcap, DoCAN_TP& isotp) : rxbuff(mem), RXLEN(bufcap), itp(isotp) {}
+
+  /// @brief General receiver handler
   void ProcessRx();
+
+  /// @brief DoCAN single payload receiver
+  /// @param data pointer to data from CAN
+  /// @param candl length of CAN data
   void Receive(const uint8_t* data, datasize_t candl);
+
+  /// @brief Sets receiver params
+  /// @param name name of parameter to set
+  /// @param v parameter value
+  /// @return status of setting parameter
   SetParamResult SetParameter(ParName name, uint32_t v);
 
+  /// @brief Checks if receiver is busy
+  /// @return busy status
   bool IsBusy() const {
     return rxds.state != RxState::IDLE;
   }
 
  private:
+  /// @brief internal pointer to rx buffer
   uint8_t* const rxbuff;
+  /// @brief rx buffer capacity
   const size_t RXLEN;
 
-  // reference to HOST DoCAN (DoCAN_TP)
+  /// @brief DoCAN host reference
   DoCAN_TP& itp;
 
   enum class RxState
@@ -29,7 +49,7 @@ class DoCAN_Receiver {
     IDLE, ACTIVE
   };
 
-  typedef struct
+  struct RxDescriptor
   {
     RxState state{RxState::IDLE};
 
@@ -40,14 +60,15 @@ class DoCAN_Receiver {
     uint8_t currblkn{0};
     uint8_t blksize{16};
     uint8_t stmin{0};
-  } RxDescriptor;
+  };
 
+  /// @brief internal state descriptor
   RxDescriptor rxds{};
 
-  // DoCAN will put padding byte, so the size
-  // of this array must be minimum 64 bytes (MAX_CANDL)
+  /// @brief can message buffer
   uint8_t can_message[MAX_CANDL];
 
+  /// @brief Cr timer
   DTimers::Timer Cr_tim{1000, false, false};
 
 };

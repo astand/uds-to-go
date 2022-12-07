@@ -14,10 +14,10 @@ void DoCAN_TP::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
   bool is_phys = (msgid == docan_config.phys_id);
   bool is_func = (msgid == docan_config.func_id);
 
-  PciType ptype = static_cast<PciType>(data[0] & 0xf0u);
+  DC_FrameType ptype = static_cast<DC_FrameType>(data[0] & 0xf0u);
 
   // request with functional address can be only SF
-  if ((is_func) && (ptype == PciType::SF))
+  if ((is_func) && (ptype == DC_FrameType::SF))
   {
     // request with functional address can be only SF
     paydsc.address = N_TarAddress::TAtype_2_Functional;
@@ -40,7 +40,7 @@ void DoCAN_TP::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
   {
     switch (ptype)
     {
-      case (PciType::FC):
+      case (DC_FrameType::FC):
         // flow control message for ICAN_Sender
         iso_sender.OnFlowControl(data[0] & 0x0fu, data[1], data[2]);
         break;
