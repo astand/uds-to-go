@@ -14,12 +14,12 @@ IsoTpResult DoCAN_Sender::Send(const uint8_t* data, datasize_t length)
   {
     assert(data != nullptr);
     PciHelper helper;
-    PciType pci{PciType::ERROR};
+    DC_FrameType pci{DC_FrameType::ERROR};
 
     auto pci_len = helper.PackPciForData(can_message, length, candl, pci);
     assert(pci_len < candl);
 
-    if (pci != PciType::ERROR)
+    if (pci != DC_FrameType::ERROR)
     {
       txds.size = length;
       txds.passed = ((pci_len + length) > candl) ? (candl - pci_len) : length;
@@ -34,7 +34,7 @@ IsoTpResult DoCAN_Sender::Send(const uint8_t* data, datasize_t length)
 
       if (itp.PduToCan(can_message, pci_len + txds.passed))
       {
-        if (pci == PciType::FF)
+        if (pci == DC_FrameType::FF)
         {
           // FF transmition begins, wait for FC
           N_Bs_tim.Restart();
@@ -42,7 +42,7 @@ IsoTpResult DoCAN_Sender::Send(const uint8_t* data, datasize_t length)
           txds.sn = 0u;
           memcpy(txbuff, data, length);
         }
-        else if (pci == PciType::SF)
+        else if (pci == DC_FrameType::SF)
         {
           // TODO: this is simplification. when it is necessary
           // to get true HW CAN node confirmation of sending
@@ -99,13 +99,11 @@ void DoCAN_Sender::ProcessTx()
         // get the length of data for putting in frame payload
         const datasize_t cpylen = ((txds.passed + candlen) < txds.size) ? candlen : (txds.size - txds.passed);
 
-        if (txds.passed == 0 || last_send_ok)
+        if (txds.passed == 0 || prev_data_sent)
         {
-          // set pci part of data
+          // if previous sending finished or the frist chunk -> copy to CAN message
           memcpy(can_message + pci_len, txbuff + txds.passed, cpylen);
         }
-
-        last_send_ok = false;
 
         // Start As timer just before attempt to send CAN frame
         if (!N_As_tim.IsActive())
@@ -118,7 +116,7 @@ void DoCAN_Sender::ProcessTx()
         {
           // CAN sending result it OK, stop As timer
           N_As_tim.Stop();
-          last_send_ok = true;
+          prev_data_sent = true;
 
           txds.passed += cpylen;
 
@@ -137,9 +135,8 @@ void DoCAN_Sender::ProcessTx()
           }
           else
           {
-            if (++txds.currblksize >= txds.blksize)
+            if (++txds.currblknum >= txds.segblkcount)
             {
-              //
               txds.state = DtState::WAIT;
               break;
             }
@@ -155,7 +152,8 @@ void DoCAN_Sender::ProcessTx()
         }
         else
         {
-          // impossible to send, quit and try next time
+          // senging attempt failed, quit and try next time
+          prev_data_sent = false;
           break;
         }
       }
@@ -191,13 +189,13 @@ void DoCAN_Sender::OnFlowControl(uint8_t flow_status, uint8_t blks, uint8_t stm)
     return;
   }
 
-  switch (from_byte<FlowState>(flow_status))
+  switch (from_byte<DC_FlowState>(flow_status))
   {
     // CTS - client ready to receive BS messages
-    case (FlowState::CTS):
+    case (DC_FlowState::CTS):
       N_Bs_tim.Stop();
-      txds.currblksize = 0;
-      txds.blksize = blks;
+      txds.currblknum = 0;
+      txds.segblkcount = blks;
 
       if (stm < 0x80)
       {
@@ -225,11 +223,11 @@ void DoCAN_Sender::OnFlowControl(uint8_t flow_status, uint8_t blks, uint8_t stm)
       STmin_tim.Start(txds.stmin, true);
       break;
 
-    case (FlowState::WAIT):
+    case (DC_FlowState::WAIT):
       N_Bs_tim.Restart();
       break;
 
-    case (FlowState::OVERFLOW):
+    case (DC_FlowState::OVERFLOW):
       txds.state = DtState::IDLE;
       itp.OnIsoTxEvent(N_Event::Conf, N_Result::BUFFER_OVFLW);
       break;
