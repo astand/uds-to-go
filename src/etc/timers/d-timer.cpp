@@ -4,12 +4,12 @@ namespace DTimers
 {
 
 Timer::Timer(interval_t intv, bool start, bool repeat)
-  : freeze_ticks_(0), is_active_(start), repeat_(repeat)
+  : tick_start(0), is_active(start), is_endless(repeat)
 {
   // First: set interval (with check on 0 value)
   SetIntv(intv);
 
-  if (is_active_)
+  if (is_active)
   {
     // if is active try to Restart immediately
     Restart();
@@ -18,22 +18,22 @@ Timer::Timer(interval_t intv, bool start, bool repeat)
 
 bool Timer::Start(interval_t interval)
 {
-  is_active_ = false;
+  is_active = false;
 
   if (SetIntv(interval))
   {
     FixCurrentTicks();
-    is_active_ = true;
+    is_active = true;
   }
 
-  return is_active_;
+  return is_active;
 }
 
 bool Timer::Start(interval_t interval, bool repeat)
 {
   if (Start(interval))
   {
-    repeat_ = repeat;
+    is_endless = repeat;
     return true;
   }
 
@@ -42,7 +42,7 @@ bool Timer::Start(interval_t interval, bool repeat)
 
 bool Timer::Restart()
 {
-  return Start(interval_);
+  return Start(tick_period);
 }
 
 bool Timer::Elapsed()
@@ -51,8 +51,8 @@ bool Timer::Elapsed()
 
   if (IsActive() && (GetTicksToNextElapse(liveticks) == 0))
   {
-    is_active_ = repeat_;
-    AdjustInterval(liveticks);
+    is_active = is_endless;
+    SetStartTick(liveticks);
     return true;
 
   }

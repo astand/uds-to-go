@@ -2,7 +2,7 @@
 
 #include "tickerup.h"
 
-typedef Timers::TickerCounter::systick_t interval_t;
+using interval_t = Timers::TickerCounter::systick_t;
 
 namespace DTimers
 {
@@ -42,7 +42,7 @@ class Timer : private TickerUp<void*> {
   /// @brief Checks if timer is run (active)
   /// @return is timer active
   bool IsActive() const {
-    return (is_active_);
+    return (is_active);
   }
 
   /// @brief Number of ticks to next elapsing
@@ -51,43 +51,57 @@ class Timer : private TickerUp<void*> {
 
   /// @brief Set elapsed forcibly
   void ForceElapse() {
-    AdjustInterval(now() - interval_);
+    SetStartTick(now() - tick_period);
   }
 
   /// @brief Stop timer
   void Stop() {
-    is_active_ = false;
+    is_active = false;
   }
 
  private:
+  /// @brief Sets current sys tick as start point (restarts timer)
   void FixCurrentTicks() {
-    AdjustInterval(now());
+    SetStartTick(now());
   }
 
+  /// @brief Sets new interval
+  /// @param interval new interval duration
+  /// @return
   bool SetIntv(interval_t interval) {
     if (interval > 0) {
-      interval_ = interval;
+      tick_period = interval;
       return true;
     }
 
     return false;
   }
 
+  /// @brief Returns number of ticks to the next elapse event
+  /// @param liveticks current sys tick
+  /// @return number of ticks
   interval_t GetTicksToNextElapse(systick_t liveticks) const {
     // check if current tick (@liveticks) is not further than inteval_
-    systick_t passed_ticks = liveticks - freeze_ticks_;
-    return (interval_ > passed_ticks) ? (interval_ - passed_ticks) : (0);
+    systick_t passed_ticks = liveticks - tick_start;
+    return (tick_period > passed_ticks) ? (tick_period - passed_ticks) : (0);
   }
 
-  void AdjustInterval(Timers::TickerCounter::systick_t now_ticks) {
-    freeze_ticks_ = now_ticks;
+  /// @brief Sets start tick point to new value
+  /// @param ticks ticks to set
+  void SetStartTick(Timers::TickerCounter::systick_t ticks) {
+    tick_start = ticks;
   }
 
-  interval_t interval_ = 0;
-  systick_t freeze_ticks_ = 0;
+  /// @brief period value
+  interval_t tick_period = 0;
+  /// @brief current period start tick
+  systick_t tick_start = 0;
 
-  bool is_active_ = false;
-  bool repeat_ = false;
+  /// @brief is timer active
+  bool is_active = false;
+
+  /// @brief is timer is_endless
+  bool is_endless = false;
 
  public:
   /// @brief Non copyable

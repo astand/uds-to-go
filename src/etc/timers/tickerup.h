@@ -8,16 +8,20 @@ namespace Timers
 class TickerCounter {
  public:
   /// @brief tick counter type
-  typedef volatile uint32_t systick_t;
+  using systick_t = volatile uint32_t;
 
   /// @brief Tick counter increment call
   static void ProcessTick() {
-    ++systick__;
+    ++root_tick_counter;
   }
 
- protected:
+  static systick_t RootTickNow() {
+    return root_tick_counter;
+  }
+
+ private:
   /// @brief counter
-  static systick_t systick__;
+  static systick_t root_tick_counter;
 };
 
 /// @brief Intermediate wrapper for all users of TickerCounter with
@@ -30,9 +34,8 @@ class TickerUp : public TickerCounter {
  protected:
   static systick_t now() {
     Atomic guard;
-    (void)guard;
 
-    return systick__;
+    return RootTickNow();
   }
 
   TickerUp() = default;
