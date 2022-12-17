@@ -4,11 +4,8 @@ namespace DTimers
 {
 
 Timer::Timer(interval_t intv, bool start, bool repeat)
-  : tick_start(0), is_active(start), is_endless(repeat)
+  : tick_period(intv), tick_start(0), is_active(start), is_endless(repeat)
 {
-  // First: set interval (with check on 0 value)
-  SetIntv(intv);
-
   if (is_active)
   {
     // if is active try to Restart immediately
@@ -16,45 +13,44 @@ Timer::Timer(interval_t intv, bool start, bool repeat)
   }
 }
 
-bool Timer::Start(interval_t interval)
+void Timer::Start(interval_t interval)
 {
-  is_active = false;
-
-  if (SetIntv(interval))
-  {
-    FixCurrentTicks();
-    is_active = true;
-  }
-
-  return is_active;
+  tick_period = interval;
+  SetStartTick(now());
+  is_active = true;
 }
 
-bool Timer::Start(interval_t interval, bool repeat)
+void Timer::Start(interval_t interval, bool repeat)
 {
-  if (Start(interval))
-  {
-    is_endless = repeat;
-    return true;
-  }
-
-  return false;
+  Start(interval);
+  is_endless = repeat;
 }
 
-bool Timer::Restart()
+void Timer::Restart()
 {
-  return Start(tick_period);
+  Start(tick_period);
 }
 
 bool Timer::Elapsed()
 {
-  systick_t liveticks = now();
-
-  if (IsActive() && (GetTicksToNextElapse(liveticks) == 0))
+  if (IsActive())
   {
-    is_active = is_endless;
-    SetStartTick(liveticks);
-    return true;
+    if (tick_period == 0)
+    {
+      is_active = is_endless;
+      return true;
+    }
+    else
+    {
+      systick_t liveticks = now();
 
+      if (GetTicksToNextElapse(liveticks) == 0)
+      {
+        is_active = is_endless;
+        SetStartTick(liveticks);
+        return true;
+      }
+    }
   }
 
   return false;

@@ -22,18 +22,15 @@ class Timer : private TickerUp<void*> {
 
   /// @brief Start timer with new interval
   /// @param interval new timer's interval
-  /// @return is timer started
-  bool Start(interval_t interval);
+  void Start(interval_t interval);
 
   /// @brief Start timer with new interval and repeat setup
   /// @param interval new timer's interval
   /// @param repeat repeat setup
-  /// @return is timer started
-  bool Start(interval_t interval, bool repeat);
+  void Start(interval_t interval, bool repeat);
 
   /// @brief Restart timer with current configuration
-  /// @return is timer started
-  bool Restart();
+  void Restart();
 
   /// @brief Checks if the timer elapsed
   /// @return is timer elapsed
@@ -60,22 +57,6 @@ class Timer : private TickerUp<void*> {
   }
 
  private:
-  /// @brief Sets current sys tick as start point (restarts timer)
-  void FixCurrentTicks() {
-    SetStartTick(now());
-  }
-
-  /// @brief Sets new interval
-  /// @param interval new interval duration
-  /// @return
-  bool SetIntv(interval_t interval) {
-    if (interval > 0) {
-      tick_period = interval;
-      return true;
-    }
-
-    return false;
-  }
 
   /// @brief Returns number of ticks to the next elapse event
   /// @param liveticks current sys tick

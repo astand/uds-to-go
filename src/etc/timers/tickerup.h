@@ -15,7 +15,9 @@ class TickerCounter {
     ++root_tick_counter;
   }
 
-  static systick_t RootTickNow() {
+  /// @brief Read root ticker counter
+  /// @return root ticker counter value
+  static systick_t ReadRootTick() {
     return root_tick_counter;
   }
 
@@ -35,7 +37,7 @@ class TickerUp : public TickerCounter {
   static systick_t now() {
     Atomic guard;
 
-    return RootTickNow();
+    return ReadRootTick();
   }
 
   TickerUp() = default;
