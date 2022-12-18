@@ -25,7 +25,7 @@ class RotineServ1 : public ClientRoutineBase, public IProcessable {
         ret = ProcessResult::HANDLED_PENDING;
       }
       else {
-        routman.SendRoutineNegResponse(NRC_IMLOIF);
+        routman.SendRoutineNegResponse(NRCs::IMLOIF);
       }
     }
 
@@ -65,7 +65,7 @@ class RotineServ2 : public ClientRoutineBase {
         return ProcessResult::HANDLED_RESP_NO;
       }
       else {
-        routman.SendRoutineNegResponse(NRC_IMLOIF);
+        routman.SendRoutineNegResponse(NRCs::IMLOIF);
         return ProcessResult::HANDLED_RESP_NO;
       }
     }

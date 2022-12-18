@@ -3,7 +3,7 @@
 #include <uds/session/apps/did-handler.h>
 
 class TestDidReader : public DidHandler {
-  virtual DidResult ReadDID(uint32_t did, uint8_t* data, size_t capacity, size_t& len_out, NRCs_t& nrc_out) override {
+  virtual DidResult ReadDID(uint32_t did, uint8_t* data, size_t capacity, size_t& len_out, NRCs& nrc_out) override {
     data[0] = 1;
     data[1] = 2;
     data[2] = 3;
@@ -15,7 +15,7 @@ class TestDidReader : public DidHandler {
     return DidResult::Positive;
   }
 
-  virtual DidResult WriteDID(uint32_t did, const uint8_t* data, size_t len, NRCs_t& nrc_out) override {
+  virtual DidResult WriteDID(uint32_t did, const uint8_t* data, size_t len, NRCs& nrc_out) override {
     return DidResult::Ignored;
   }
 

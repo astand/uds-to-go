@@ -24,7 +24,7 @@ ProcessResult DSCClient::OnIndication(const IndicationInfo& inf)
     else
     {
       std::cout << "SF bad (" << (int)inf.head.SF << ")" << std::endl;
-      rtr1.SendNegResponse(NRC_SFNS);
+      rtr1.SendNegResponse(NRCs::SFNS);
     }
 
     return ProcessResult::HANDLED_RESP_OK;

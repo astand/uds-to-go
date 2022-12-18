@@ -3,13 +3,8 @@
 
 constexpr uint8_t DSC_SF_DS = 0x01u;
 
-#define IS_NRC_PASSED(x) ((x == NRC_SNS) ||\
-  (x == NRC_SNSIAS) ||\
-  (x == NRC_SFNS) ||\
-  (x == NRC_SFNSIAS) ||\
-  (x == NRC_ROOR))
 
-#define IS_NRC_PHYS_NOPOS(x) ((x) == NRC_ROOR || (x) == NRC_SNS || (x) == NRC_SFNS)
+#define IS_NRC_PHYS_NOPOS(x) ((x) == NRCs::ROOR || (x) == NRCs::SNS || (x) == NRCs::SFNS)
 
 /* ------------------- SID_Phyaddr   SID_Support   SID_NoInDef   SID_NoSubFu   SID_HasMinL */
 #define SI_Flags_TP    SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
@@ -56,18 +51,18 @@ void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len, bool enhance
   }
 }
 
-void UdsServerBase::SendNegResponse(uint8_t sid, NRCs_t nrc)
+void UdsServerBase::SendNegResponse(uint8_t sid, NRCs nrc)
 {
   pubBuff[0] = PUDS_NR_SI;
   pubBuff[1] = sid;
-  pubBuff[2] = static_cast<uint8_t>(nrc);
-  nrc_bad_param = (nrc == NRC_IMLOIF);
+  pubBuff[2] = NRC_to_byte(nrc);
+  nrc_bad_param = (nrc == NRCs::IMLOIF);
   nrc_code = nrc;
 
-  SendResponse(pubBuff, 3, nrc == NRCs_t::NRC_RCRRP);
+  SendResponse(pubBuff, 3, nrc == NRCs::RCRRP);
 }
 
-void UdsServerBase::SendNegResponse(NRCs_t nrc)
+void UdsServerBase::SendNegResponse(NRCs nrc)
 {
   SendNegResponse(data_info.head.SI, nrc);
 }
@@ -102,7 +97,7 @@ void UdsServerBase::SessionChangeEvent(uint8_t s)
 
 void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddressType addr)
 {
-  nrc_code = NRC_PR;
+  nrc_code = NRCs::PR;
   nrc_bad_param = false;
 
   req_addr = addr;
@@ -151,10 +146,10 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
   if (clientHandRes == ProcessResult::NOT_HANDLED)
   {
     // there was no service to answer. so if the address is physycal
-    // NRC NRC_SNS must be sent (ISO 14229-1 table 4 (i))
+    // NRC NRCs::SNS must be sent (ISO 14229-1 table 4 (i))
     if (req_addr == TargetAddressType::PHYS)
     {
-      SendNegResponse(NRC_SNS);
+      SendNegResponse(NRCs::SNS);
     }
   }
   else if (clientHandRes == ProcessResult::HANDLED_RESP_OK)
@@ -236,11 +231,11 @@ bool UdsServerBase::ResponseAllowed()
   if (req_addr == TargetAddressType::FUNC)
   {
     // ISO 14229-1 Table 5
-    return (nrc_bad_param || (data_info.head.NoResponse == false && nrc_code == NRC_PR));
+    return (nrc_bad_param || (data_info.head.NoResponse == false && nrc_code == NRCs::PR));
   }
   else if (req_addr == TargetAddressType::PHYS)
   {
-    if (nrc_code != NRC_RCRRP)
+    if (nrc_code != NRCs::RCRRP)
     {
       /* ISO 14229-1 7.5.3.2 tab 4 (p 30)                               h, i, j                  */
       return (data_info.head.NoResponse == false || (IS_NRC_PHYS_NOPOS(nrc_code) ||  nrc_bad_param));
@@ -305,12 +300,12 @@ void UdsServerBase::SID_TesterPresent()
   if (data_info.head.SF != 0)
   {
     // invalid SF
-    SendNegResponse(NRC_SFNS);
+    SendNegResponse(NRCs::SFNS);
   }
   else if (data_info.size != 2)
   {
     // TesterPresent : total length check
-    SendNegResponse(NRC_IMLOIF);
+    SendNegResponse(NRCs::IMLOIF);
   }
   else
   {
@@ -331,7 +326,7 @@ bool UdsServerBase::MakeBaseSIDChecks()
   if (flags == 0)
   {
     // service not supported
-    SendNegResponse(NRC_SNS);
+    SendNegResponse(NRCs::SNS);
   }
   else if (((flags & SID_Phyaddr) != 0) && (req_addr != TargetAddressType::PHYS))
   {
@@ -339,11 +334,11 @@ bool UdsServerBase::MakeBaseSIDChecks()
   }
   else if (((flags & SID_NoInDef) != 0) && (sess_info.sess == DSC_SF_DS))
   {
-    SendNegResponse(NRC_SNSIAS);
+    SendNegResponse(NRCs::SNSIAS);
   }
   else if ((flags & SID_HasMinL) && (data_info.size  < (flags & 0x0FU)))
   {
-    SendNegResponse(NRC_IMLOIF);
+    SendNegResponse(NRCs::IMLOIF);
   }
   else
   {

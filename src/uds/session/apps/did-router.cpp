@@ -38,7 +38,7 @@ void DidRouter::ReadDataByIdentifierHandler()
 {
   if (len_ != (SI_SIZE_BYTES + DID_SIZE_BYTES))
   {
-    rtr1.SendNegResponse(NRC_IMLOIF);
+    rtr1.SendNegResponse(NRCs::IMLOIF);
     return;
   }
 
@@ -53,7 +53,7 @@ void DidRouter::ReadDataByIdentifierHandler()
   rtr1.pubBuff[idx++] = dataid & 0xFF;
 
   size_t len_out = 0;
-  NRCs_t nrc_out = NRC_ROOR;
+  NRCs nrc_out = NRCs::ROOR;
   DidResult ret = dider.ReadDID(dataid, rtr1.pubBuff + idx, 64u, len_out, nrc_out);
 
   // In case of positive handling and zero len_out - response with ROOR
@@ -61,7 +61,7 @@ void DidRouter::ReadDataByIdentifierHandler()
   if (((ret == DidResult::Positive) && (len_out == 0)) || (ret == DidResult::Ignored))
   {
     ret = DidResult::Negative;
-    nrc_out = NRC_ROOR;
+    nrc_out = NRCs::ROOR;
   }
 
   // Send positive response
@@ -78,11 +78,11 @@ void DidRouter::WriteDataByIdentifierHandler()
   // Every WDBI must have len >= 3 bytes
   if (len_ <= SI_SIZE_BYTES + DID_SIZE_BYTES)
   {
-    rtr1.SendNegResponse(NRC_IMLOIF);
+    rtr1.SendNegResponse(NRCs::IMLOIF);
   }
   else
   {
-    NRCs_t nrc_out = NRC_ROOR;
+    NRCs nrc_out = NRCs::ROOR;
     DidResult ret = dider.WriteDID(dataid, data_ + SI_SIZE_BYTES + DID_SIZE_BYTES, len_ - SI_SIZE_BYTES - DID_SIZE_BYTES,
         nrc_out);
 
@@ -90,7 +90,7 @@ void DidRouter::WriteDataByIdentifierHandler()
     if (ret == DidResult::Ignored)
     {
       ret = DidResult::Negative;
-      nrc_out = NRC_ROOR;
+      nrc_out = NRCs::ROOR;
     }
 
     // Prepare answer
@@ -102,7 +102,7 @@ void DidRouter::WriteDataByIdentifierHandler()
     else
     {
       // Error - DID is handled with error
-      rtr1.SendNegResponse(static_cast<NRCs_t>(nrc_out));
+      rtr1.SendNegResponse(nrc_out);
     }
   }
 }

@@ -25,8 +25,8 @@ class UdsServerBase : public SessionControl {
   UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* txptr, datasize_t txsize);
   // this function exports for clients
   void SendResponse(const uint8_t* data, uint32_t len, bool enhanced = false);
-  void SendNegResponse(NRCs_t nrc);
-  void SendNegResponse(uint8_t sid, NRCs_t nrc);
+  void SendNegResponse(NRCs nrc);
+  void SendNegResponse(uint8_t sid, NRCs nrc);
 
   void RegisterClient(UdsServiceHandler* client);
   void RouterDisable();
@@ -79,7 +79,7 @@ class UdsServerBase : public SessionControl {
   IKeeper<UdsServiceHandler>& cls;
   bool router_is_disabled;
   ProcessResult clientHandRes;
-  NRCs_t nrc_code;
+  NRCs nrc_code;
   TargetAddressType req_addr{TargetAddressType::UNKNOWN};
 
   /**

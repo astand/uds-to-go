@@ -9,7 +9,7 @@ class DidKeeper : public AsKeeper<DidHandler> {
  public:
   DidKeeper() : AsKeeper<DidHandler>(dids, N) {}
 
-  virtual DidResult ReadDID(uint32_t did, uint8_t* data, size_t capacity, size_t& len_out, NRCs_t& nrc_out) override {
+  virtual DidResult ReadDID(uint32_t did, uint8_t* data, size_t capacity, size_t& len_out, NRCs& nrc_out) override {
     DidResult ret = DidResult::Ignored;
 
     uint32_t i = 0u;
@@ -26,7 +26,7 @@ class DidKeeper : public AsKeeper<DidHandler> {
     return ret;
   }
 
-  virtual DidResult WriteDID(uint32_t did, const uint8_t* data, size_t len, NRCs_t& nrc_out) override {
+  virtual DidResult WriteDID(uint32_t did, const uint8_t* data, size_t len, NRCs& nrc_out) override {
     DidResult ret = DidResult::Ignored;
     uint32_t i = 0u;
     DidHandler* refdid {nullptr};

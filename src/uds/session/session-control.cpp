@@ -181,10 +181,10 @@ void SessionControl::ProcessSessionMode()
       // no response from handler was sent
       etm_active = false;
       // send common NRC (protocol requirement)
-      etm_buff[2] = NRCs_t::NRC_ENOA;
+      etm_buff[2] = NRC_to_byte(NRCs::ENOA);
       SendRequest(etm_buff, 3u);
       // restore original NRC value in etm buffer
-      etm_buff[2] = NRCs_t::NRC_RCRRP;
+      etm_buff[2] = NRC_to_byte(NRCs::RCRRP);
     }
   }
 }

@@ -124,8 +124,8 @@ class RoutineRouter : public UdsServiceHandler {
    * @param n Negative response code value, cannot be PositiveResponse
    * @return SendResult
    */
-  SendResult SendRoutineNegResponse(NRCs_t n) {
-    if (n != NRC_PR) {
+  SendResult SendRoutineNegResponse(NRCs n) {
+    if (n != NRCs::PR) {
       rtr1.SendNegResponse(PUDS_SI_RoutineControl, n);
     }
 
@@ -138,11 +138,11 @@ class RoutineRouter : public UdsServiceHandler {
       return ProcessResult::NOT_HANDLED;
     }
     else if (inf.head.SF == 0 || inf.head.SF > 3) {
-      rtr1.SendNegResponse(NRC_SFNS);
+      rtr1.SendNegResponse(NRCs::SFNS);
       return ProcessResult::HANDLED_RESP_NO;
     }
     // else if (!rtr1.GetSession().sec_level) {
-    //   rtr1.SendNegResponse(NRC_SAD);
+    //   rtr1.SendNegResponse(NRCs::SAD);
     //   return ProcessResult::HANDLED_RESP_NO;
     // }
 
@@ -153,7 +153,7 @@ class RoutineRouter : public UdsServiceHandler {
 
     if (pres == ProcessResult::NOT_HANDLED) {
       // send ROOR to client, no one routine handler has been found
-      rtr1.SendNegResponse(NRC_ROOR);
+      rtr1.SendNegResponse(NRCs::ROOR);
     }
 
     return pres;
