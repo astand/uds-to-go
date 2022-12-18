@@ -22,7 +22,7 @@ UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasi
   assert(pubBuff != nullptr);
   assert(TX_SIZE != 0);
 
-  SID_Flag[PUDS_SI_TesterPresent] = SI_Flags_TP;
+  SID_Flag[SID_to_byte(SIDs::PUDS_SI_TesterPresent)] = SI_Flags_TP;
 
   sess_info.sec_level = 0;
   sess_info.sess = DSC_SF_DS;
@@ -51,10 +51,10 @@ void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len, bool enhance
   }
 }
 
-void UdsServerBase::SendNegResponse(uint8_t sid, NRCs nrc)
+void UdsServerBase::SendNegResponse(SIDs sid, NRCs nrc)
 {
-  pubBuff[0] = PUDS_NR_SI;
-  pubBuff[1] = sid;
+  pubBuff[0] = SID_to_byte(SIDs::PUDS_NR_SI);
+  pubBuff[1] = SID_to_byte(sid);
   pubBuff[2] = NRC_to_byte(nrc);
   nrc_bad_param = (nrc == NRCs::IMLOIF);
   nrc_code = nrc;
@@ -104,24 +104,26 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
 
   data_info.data = data;
   data_info.size = length;
-  data_info.head.SI = data_info.data[0];
 
   // ISO 14229-1 7.3.2 table 2 (p. 25)
-  bool bad_sid = out_of_range<0x10, 0x3e>(data_info.head.SI) && out_of_range<0x83, 0x88>(data_info.head.SI);
+  bool bad_sid = out_of_range<0x10, 0x3e>(data_info.data[0]) &&
+    out_of_range<0x83, 0x88>(data_info.data[0]);
+
+  if (router_is_disabled || bad_sid)
+  {
+    return;
+  }
+
+  data_info.head.SI = static_cast<SIDs>(data_info.data[0]);
 
   data_info.head.SF = (data_info.data[1] & 0x7FU);
-  data_info.head.respSI = RESPONSE_ON_SID(data_info.head.SI);
+  data_info.head.respSI = SID_response(data_info.head.SI);
   // services without subfunctions must set NoResponse bit to 0 by themself!!!
   data_info.head.NoResponse = data_info.data[1] & 0x80U ? 1 : 0;
   // set most frequent case
   pubBuff[0] = data_info.head.respSI;
   pubBuff[1] = data_info.data[1];
   pubSize = 0;
-
-  if (router_is_disabled || bad_sid)
-  {
-    return;
-  }
 
   // Handle base service functions
   if (SelfIndHandler())
@@ -274,7 +276,7 @@ bool UdsServerBase::SelfIndHandler()
     return ret;
   }
 
-  if (data_info.head.SI == PUDS_SI_TesterPresent)
+  if (data_info.head.SI == SIDs::PUDS_SI_TesterPresent)
   {
     SID_TesterPresent();
   }
@@ -320,7 +322,7 @@ bool UdsServerBase::MakeBaseSIDChecks()
 {
   //service is available
   bool ret = true;
-  uint8_t flags = SID_Flag[data_info.head.SI];
+  uint8_t flags = SID_Flag[SID_to_byte(data_info.head.SI)];
 
   // negResponse handling
   if (flags == 0)

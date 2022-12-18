@@ -20,11 +20,11 @@ void SessionControl::SendRequest(const uint8_t* data, uint32_t size, bool enhanc
   host->Request(data, size);
 }
 
-void SessionControl::SetPending(uint32_t duration, uint32_t interval, uint8_t si)
+void SessionControl::SetPending(uint32_t duration, uint32_t interval, SIDs si)
 {
   if ((duration >= interval) && (interval > 999u))
   {
-    etm_buff[1] = si;
+    etm_buff[1] = SID_to_byte(si);
     SendRequest(etm_buff, 3u, true);
     etm_timer.Start(interval);
     etm_interval = interval;

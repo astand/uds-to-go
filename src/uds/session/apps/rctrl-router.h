@@ -91,7 +91,7 @@ class RoutineRouter : public UdsServiceHandler {
     }
 
     // Setup head of routine response
-    rtr1.pubBuff[0] = RESPONSE_ON_SID(PUDS_SI_RoutineControl);
+    rtr1.pubBuff[0] = SID_response(SIDs::PUDS_SI_RoutineControl);
     rtr1.pubBuff[1] = rtype;
     HWREGH(rtr1.pubBuff + 2) = V16_TO_BE(rid);
     rtr1.pubBuff[4] = rinfo;
@@ -126,7 +126,7 @@ class RoutineRouter : public UdsServiceHandler {
    */
   SendResult SendRoutineNegResponse(NRCs n) {
     if (n != NRCs::PR) {
-      rtr1.SendNegResponse(PUDS_SI_RoutineControl, n);
+      rtr1.SendNegResponse(SIDs::PUDS_SI_RoutineControl, n);
     }
 
     return SendResult::OK;
@@ -134,7 +134,7 @@ class RoutineRouter : public UdsServiceHandler {
 
   ProcessResult OnIndication(const IndicationInfo& inf) {
     // Minimal service length (4) is tested on the initial service check
-    if (inf.head.SI != PUDS_SI_RoutineControl) {
+    if (inf.head.SI != SIDs::PUDS_SI_RoutineControl) {
       return ProcessResult::NOT_HANDLED;
     }
     else if (inf.head.SF == 0 || inf.head.SF > 3) {

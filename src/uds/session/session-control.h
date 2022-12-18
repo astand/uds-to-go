@@ -39,7 +39,7 @@ class SessionControl : public IsoTpClient, public IProcessable {
   /// @param duration duration of etm
   /// @param interval interval to send keep-alive
   /// @param si service ID
-  void SetPending(uint32_t duration, uint32_t interval, uint8_t si);
+  void SetPending(uint32_t duration, uint32_t interval, SIDs si);
 
   /// @brief Indication callback for implementaion
   /// @param data received data pointer

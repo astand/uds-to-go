@@ -26,7 +26,7 @@ class UdsServerBase : public SessionControl {
   // this function exports for clients
   void SendResponse(const uint8_t* data, uint32_t len, bool enhanced = false);
   void SendNegResponse(NRCs nrc);
-  void SendNegResponse(uint8_t sid, NRCs nrc);
+  void SendNegResponse(SIDs sid, NRCs nrc);
 
   void RegisterClient(UdsServiceHandler* client);
   void RouterDisable();

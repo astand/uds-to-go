@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "sidnames.h"
 
 /// @brief Target address type (physical, functional)
 enum class TargetAddressType
@@ -57,7 +58,7 @@ enum class SendResult
 typedef struct
 {
   /// @brief Service identifie6r6
-  uint8_t SI;
+  SIDs SI;
   /// @brief Sub-function code
   uint8_t SF;
   /// @brief No response

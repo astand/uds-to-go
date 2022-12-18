@@ -12,11 +12,11 @@ ProcessResult DidRouter::OnIndication(const IndicationInfo& inf)
 
   switch (inf.head.SI)
   {
-    case PUDS_SI_ReadDataByIdentifier:
+    case SIDs::PUDS_SI_ReadDataByIdentifier:
       ReadDataByIdentifierHandler();
       break;
 
-    case PUDS_SI_WriteDataByIdentifier:
+    case SIDs::PUDS_SI_WriteDataByIdentifier:
       WriteDataByIdentifierHandler();
       break;
 

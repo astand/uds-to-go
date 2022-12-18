@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-typedef enum
+enum class SIDs : uint8_t
 {
   PUDS_SI_DiagnosticSessionControl = 0x10,
   PUDS_SI_ECUReset = 0x11,
@@ -31,7 +31,15 @@ typedef enum
   PUDS_SI_RequestTransferExit = 0x37,
 
   PUDS_NR_SI = 0x7f,
-} SIDs_t;
+};
 
-#define RESPONSE_ON_SID(x)    ((uint8_t)(x | ( 1 << 6 )))
+constexpr uint8_t SID_to_byte(SIDs sid)
+{
+  return static_cast<uint8_t>(sid);
+}
+
+constexpr uint8_t SID_response(SIDs sid)
+{
+  return SID_to_byte(sid) | (1u << 6u);
+}
 
