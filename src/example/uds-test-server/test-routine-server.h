@@ -62,11 +62,11 @@ class RotineServ2 : public ClientRoutineBase {
         rcontext.info = 99;
         rcontext.type = 64;
         routman.SendRoutineResponse(rcontext);
-        return ProcessResult::HANDLED_RESP_OK;
+        return ProcessResult::HANDLED_RESP_NO;
       }
       else {
         routman.SendRoutineNegResponse(NRC_IMLOIF);
-        return ProcessResult::HANDLED_RESP_OK;
+        return ProcessResult::HANDLED_RESP_NO;
       }
     }
 
