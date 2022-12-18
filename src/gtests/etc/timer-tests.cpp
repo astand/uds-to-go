@@ -4,7 +4,7 @@
 
 using namespace DTimers;
 
-void TickRootCounter(uint32_t ticks)
+void RollRootCounter(uint32_t ticks)
 {
   while (ticks--)
   {
@@ -23,35 +23,35 @@ TEST(DTimerTests, GeneralTests)
   t0.Start(10);
   EXPECT_EQ(t0.Elapsed(), false);
 
-  TickRootCounter(9);
+  RollRootCounter(9);
   EXPECT_EQ(t0.Elapsed(), false);
 
   // 10th tick should cause elapsed event
-  TickRootCounter(1);
+  RollRootCounter(1);
   EXPECT_EQ(t0.Elapsed(), true);
   // next elapsed after true must be false
   EXPECT_EQ(t0.Elapsed(), false);
 
   // not repeatable timer, no elapsed event
-  TickRootCounter(10);
+  RollRootCounter(10);
   EXPECT_EQ(t0.Elapsed(), false);
 
   t0.Start(10, true);
-  TickRootCounter(10);
+  RollRootCounter(10);
   EXPECT_EQ(t0.Elapsed(), true);
 
-  TickRootCounter(9);
+  RollRootCounter(9);
   EXPECT_EQ(t0.Elapsed(), false);
 
-  TickRootCounter(1);
+  RollRootCounter(1);
   EXPECT_EQ(t0.Elapsed(), true);
 
-  TickRootCounter(9);
+  RollRootCounter(9);
   t0.Stop();
   EXPECT_EQ(t0.Elapsed(), false);
-  TickRootCounter(1);
+  RollRootCounter(1);
   EXPECT_EQ(t0.Elapsed(), false);
-  TickRootCounter(5);
+  RollRootCounter(5);
   EXPECT_EQ(t0.Elapsed(), false);
 
 }
@@ -80,4 +80,25 @@ TEST(DTimerTests, ZeroInterval)
   EXPECT_EQ(t1.Elapsed(), true);
   EXPECT_EQ(t1.Elapsed(), true);
   EXPECT_EQ(t1.Elapsed(), true);
+}
+
+TEST(DTimersTests, Restart)
+{
+  Timer t2{10};
+
+  EXPECT_EQ(t2.IsActive(), true);
+
+  RollRootCounter(9);
+  EXPECT_EQ(t2.Elapsed(), false);
+  EXPECT_EQ(t2.Ticks(), 1);
+
+  t2.Restart();
+
+  EXPECT_EQ(t2.Ticks(), 10);
+
+  RollRootCounter(2);
+  EXPECT_FALSE(t2.Elapsed());
+
+  RollRootCounter(8);
+  EXPECT_TRUE(t2.Elapsed());
 }

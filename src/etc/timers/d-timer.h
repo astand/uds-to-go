@@ -51,7 +51,7 @@ class Timer : private TickerUp<void*> {
     SetStartTick(now() - tick_period);
   }
 
-  /// @brief Stop timer
+  /// @brief Deactivates timer (elapse is not possible)
   void Stop() {
     is_active = false;
   }
