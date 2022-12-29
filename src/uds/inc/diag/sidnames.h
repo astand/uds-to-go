@@ -2,35 +2,86 @@
 
 #include <stdint.h>
 
+/// @brief All UDS services
 enum class SIDs : uint8_t
 {
-  PUDS_SI_DiagnosticSessionControl = 0x10,
-  PUDS_SI_ECUReset = 0x11,
-  PUDS_SI_SecurityAccess = 0x27,
-  PUDS_SI_CommunicationControl = 0x28,
-  PUDS_SI_TesterPresent = 0x3E,
-  PUDS_SI_AccessTimingParameter = 0x83,
-  PUDS_SI_SecuredDataTransmission = 0x84,
-  PUDS_SI_ControlDTCSetting = 0x85,
-  PUDS_SI_ResponseOnEvent = 0x86,
-  PUDS_SI_LinkControl = 0x87,
-  PUDS_SI_ReadDataByIdentifier = 0x22,
-  PUDS_SI_ReadMemoryByAddress = 0x23,
-  PUDS_SI_ReadScalingDataByIdentifier = 0x24,
-  PUDS_SI_ReadDataByPeriodicIdentifier = 0x2A,
-  PUDS_SI_DynamicallyDefineDataIdentifier = 0x2C,
-  PUDS_SI_WriteDataByIdentifier = 0x2E,
-  PUDS_SI_WriteMemoryByAddress = 0x3D,
-  PUDS_SI_ClearDiagnosticInformation = 0x14,
-  PUDS_SI_ReadDTCInformation = 0x19,
-  PUDS_SI_InputOutputControlByIdentifier = 0x2F,
-  PUDS_SI_RoutineControl = 0x31,
-  PUDS_SI_RequestDownload = 0x34,
-  PUDS_SI_RequestUpload = 0x35,
-  PUDS_SI_TransferData = 0x36,
-  PUDS_SI_RequestTransferExit = 0x37,
+  /// @brief Diagnostic session control
+  DSC = 0x10,
 
-  PUDS_NR_SI = 0x7f,
+  /// @brief ECU reset
+  ERES = 0x11,
+
+  /// @brief Security Access
+  SA = 0x27,
+
+  /// @brief Communication control
+  COMC = 0x28,
+
+  /// @brief Tester present
+  TP = 0x3E,
+
+  /// @brief Access timing parameter
+  ATP = 0x83,
+
+  /// @brief Secured data transmission
+  SDT = 0x84,
+
+  /// @brief Control DTC settings
+  CDTC = 0x85,
+
+  /// @brief Response on event
+  ROE = 0x86,
+
+  /// @brief Link control
+  LC = 0x87,
+
+  /// @brief Read data by identifier
+  RDBI = 0x22,
+
+  /// @brief Read memory by address
+  RMBA = 0x23,
+
+  /// @brief Read scaling data by identifier
+  RSDBI = 0x24,
+
+  /// @brief Read data by periodic identifier
+  RDBPI = 0x2A,
+
+  /// @brief Dynamically define data identifier
+  DDDI = 0x2C,
+
+  /// @brief Write data by identifier
+  WDBI = 0x2E,
+
+  /// @brief Write memory by address
+  WMBA = 0x3D,
+
+  /// @brief Clear diagnostic information
+  CDI = 0x14,
+
+  /// @brief Read DTC information
+  RDTC = 0x19,
+
+  /// @brief Input output control by identifier
+  IOCBI = 0x2F,
+
+  /// @brief Routine control
+  RC = 0x31,
+
+  /// @brief Request download
+  RD = 0x34,
+
+  /// @brief Request upload
+  RU = 0x35,
+
+  /// @brief Transfer data
+  TD = 0x36,
+
+  /// @brief Request transfer exit
+  RTE = 0x37,
+
+  /// @brief Negative response
+  NR_SI = 0x7f,
 };
 
 constexpr uint8_t SID_to_byte(SIDs sid)

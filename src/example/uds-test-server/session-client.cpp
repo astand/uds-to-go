@@ -6,7 +6,7 @@ ProcessResult DSCClient::OnIndication(const IndicationInfo& inf)
 {
   std::cout << "DSC handler : ";
 
-  if (inf.head.SI == SIDs::PUDS_SI_DiagnosticSessionControl)
+  if (inf.head.SI == SIDs::DSC)
   {
     std::cout << "SI ok, ";
 

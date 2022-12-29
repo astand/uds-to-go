@@ -22,7 +22,7 @@ UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasi
   assert(pubBuff != nullptr);
   assert(TX_SIZE != 0);
 
-  SID_Flag[SID_to_byte(SIDs::PUDS_SI_TesterPresent)] = SI_Flags_TP;
+  SID_Flag[SID_to_byte(SIDs::TP)] = SI_Flags_TP;
 
   sess_info.sec_level = 0;
   sess_info.sess = DSC_SF_DS;
@@ -53,7 +53,7 @@ void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len, bool enhance
 
 void UdsServerBase::SendNegResponse(SIDs sid, NRCs nrc)
 {
-  pubBuff[0] = SID_to_byte(SIDs::PUDS_NR_SI);
+  pubBuff[0] = SID_to_byte(SIDs::NR_SI);
   pubBuff[1] = SID_to_byte(sid);
   pubBuff[2] = NRC_to_byte(nrc);
   nrc_bad_param = (nrc == NRCs::IMLOIF);
@@ -276,7 +276,7 @@ bool UdsServerBase::SelfIndHandler()
     return ret;
   }
 
-  if (data_info.head.SI == SIDs::PUDS_SI_TesterPresent)
+  if (data_info.head.SI == SIDs::TP)
   {
     SID_TesterPresent();
   }
