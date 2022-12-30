@@ -1,13 +1,24 @@
 #include "uds-server-base.h"
 #include "uds-service-handler.h"
 
-constexpr uint8_t DSC_SF_DS = 0x01u;
+static constexpr uint8_t DSC_SF_DS = 0x01u;
 
+static constexpr UdsServerBase::flag_t BIT_PHYSADDR = (1u << 4u);
+static constexpr UdsServerBase::flag_t BIT_SUPPORT = (1u << 5u);
+static constexpr UdsServerBase::flag_t BIT_NOINDEF = (1u << 6u);
+static constexpr UdsServerBase::flag_t BIT_NOSUBF = (1u << 7u);
+
+constexpr bool IsActive(const UdsServerBase::flag_t flag, const UdsServerBase::flag_t bits)
+{
+  return ((flag & bits) != 0u);
+}
+
+constexpr uint8_t MinLength(const UdsServerBase::flag_t flag)
+{
+  return (flag & 0b111);
+}
 
 #define IS_NRC_PHYS_NOPOS(x) ((x) == NRCs::ROOR || (x) == NRCs::SNS || (x) == NRCs::SFNS)
-
-/* ------------------- SID_Phyaddr   SID_Support   SID_NoInDef   SID_NoSubFu   SID_HasMinL */
-#define SI_Flags_TP    SID_Support | SID________ | SID________ | SID________ | SID_MinLen(2)
 
 template<uint8_t low, uint8_t high>
 bool out_of_range(uint8_t v)
@@ -22,7 +33,7 @@ UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasi
   assert(pubBuff != nullptr);
   assert(TX_SIZE != 0);
 
-  SID_Flag[SID_to_byte(SIDs::TP)] = SI_Flags_TP;
+  EnableSID(SIDs::TP, false, true, false, 2);
 
   sess_info.sec_level = 0;
   sess_info.sess = DSC_SF_DS;
@@ -93,6 +104,17 @@ void UdsServerBase::SessionChangeEvent(uint8_t s)
     // current session will be changed. notify every client about it
     sess_info.sess = s;
   }
+}
+
+bool UdsServerBase::EnableSID(SIDs sid, bool noindef, bool nosubf, bool onlyphys, uint8_t minlen)
+{
+  SID_Flag[SID_to_byte(sid)] = BIT_SUPPORT |
+    (noindef ? BIT_NOINDEF : 0u) |
+    (nosubf ? BIT_NOSUBF : 0u) |
+    (onlyphys ? BIT_PHYSADDR : 0u) |
+    (minlen > 0xFu ? 0xFu : minlen);
+
+  return true;
 }
 
 void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddressType addr)
@@ -325,20 +347,20 @@ bool UdsServerBase::MakeBaseSIDChecks()
   uint8_t flags = SID_Flag[SID_to_byte(data_info.head.SI)];
 
   // negResponse handling
-  if (flags == 0)
+  if (IsActive(flags, BIT_SUPPORT) == false)
   {
     // service not supported
     SendNegResponse(NRCs::SNS);
   }
-  else if (((flags & SID_Phyaddr) != 0) && (req_addr != TargetAddressType::PHYS))
+  else if (IsActive(flags, BIT_PHYSADDR) && (req_addr != TargetAddressType::PHYS))
   {
     // do nothing here,the true will be returned and no further actions will be made
   }
-  else if (((flags & SID_NoInDef) != 0) && (sess_info.sess == DSC_SF_DS))
+  else if (IsActive(flags, BIT_NOINDEF) && (sess_info.sess == DSC_SF_DS))
   {
     SendNegResponse(NRCs::SNSIAS);
   }
-  else if ((flags & SID_HasMinL) && (data_info.size  < (flags & 0x0FU)))
+  else if (MinLength(flags) != 0u && (data_info.size < MinLength(flags)))
   {
     SendNegResponse(NRCs::IMLOIF);
   }
@@ -348,7 +370,7 @@ bool UdsServerBase::MakeBaseSIDChecks()
   }
 
   // noResponse bit handling
-  if (flags & SID_NoSubFu)
+  if (IsActive(flags, BIT_NOSUBF))
   {
     data_info.head.NoResponse = 0;
   }
