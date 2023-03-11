@@ -36,7 +36,7 @@ class UdsServerBase : public SessionControl {
   }
 
  protected:
-  IndicationInfo data_info{0};
+  IndicationInfo data_info{};
   SessionInfo sess_info;
 
   /// @brief Sets UDS service for handling by uds server base router

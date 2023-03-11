@@ -87,7 +87,7 @@ class SessionControl : public IsoTpClient, public IProcessable {
   /// @brief Stub class to avoid host nullptr value
   class EmptyTpSender : public IsoTpImpl {
    public:
-    virtual IsoTpResult Request(const uint8_t* data, size_t length) override {
+    virtual IsoTpResult Request(const uint8_t*, size_t) override {
       return IsoTpResult::BUSY;
     }
   };

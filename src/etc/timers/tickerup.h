@@ -36,6 +36,7 @@ class TickerUp : public TickerCounter {
  protected:
   static systick_t now() {
     Atomic guard;
+    (void) guard;
 
     return ReadRootTick();
   }

@@ -57,7 +57,7 @@ class DoCAN_TP : public ICAN_Listener, public IsoTpImpl, public IProcessable {
 
   IsoTpClient::IsoTpInfo paydsc{};
 
-  DoCAN_Config_t docan_config{0};
+  DoCAN_Config_t docan_config{};
 
   IsoTpResult state {IsoTpResult::WRONG_STATE};
 };

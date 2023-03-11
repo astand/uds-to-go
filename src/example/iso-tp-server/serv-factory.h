@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 
 #include <uds/session/uds-server-base.h>
 #include <uds/isotp/docan-tp.h>

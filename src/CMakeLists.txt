@@ -52,6 +52,22 @@ find_package(Threads REQUIRED)
 target_link_libraries(udstogo-test PRIVATE Threads::Threads)
 target_link_libraries(ecu-server-test PRIVATE Threads::Threads)
 
+target_compile_options(ecu-server-test PRIVATE
+    -fanalyzer
+    -Wall 
+    -Wextra 
+    -Wpedantic
+    -Wno-ignored-qualifiers 
+)
+
+target_compile_options(udstogo-test PRIVATE
+    -fanalyzer
+    -Wall 
+    -Wextra 
+    -Wpedantic
+    -Wno-ignored-qualifiers 
+)
+
 
 # GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 14)

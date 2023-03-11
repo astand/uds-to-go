@@ -15,7 +15,7 @@ constexpr bool IsActive(const UdsServerBase::flag_t flag, const UdsServerBase::f
 
 constexpr uint8_t MinLength(const UdsServerBase::flag_t flag)
 {
-  return (flag & 0b111);
+  return (flag & 7u);
 }
 
 #define IS_NRC_PHYS_NOPOS(x) ((x) == NRCs::ROOR || (x) == NRCs::SNS || (x) == NRCs::SFNS)
@@ -24,11 +24,10 @@ template<uint8_t low, uint8_t high>
 bool out_of_range(uint8_t v)
 {
   assert(low < high);
-  return (v < low || v > high);
+  return ((v < low) || (v > high));
 }
 
-UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasize_t s) : cls(vec), pubBuff(d),
-  TX_SIZE(s)
+UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasize_t s) : TX_SIZE(s), pubBuff(d), cls(vec)
 {
   assert(pubBuff != nullptr);
   assert(TX_SIZE != 0);
@@ -194,7 +193,7 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
   }
 }
 
-void UdsServerBase::NotifyConf(S_Result res)
+void UdsServerBase::NotifyConf(S_Result)
 {
   if (SelfConfHandler())
   {
