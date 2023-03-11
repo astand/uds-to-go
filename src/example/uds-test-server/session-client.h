@@ -8,7 +8,7 @@ class DSCClient : public UdsServiceHandler {
 
   virtual ProcessResult OnIndication(const IndicationInfo& inf) override;
 
-  virtual ProcessResult OnConfirmation(S_Result res) override {
+  virtual ProcessResult OnConfirmation(S_Result) override {
     return ProcessResult::NOT_HANDLED;
   }
 };

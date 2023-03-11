@@ -29,9 +29,8 @@ static std::string ifname = "vcan0";
 static DoCAN_TP& iso_tp = GetDoCAN();
 static SocketCanReader listener(iso_tp);
 
-static void set_do_can_parameters(DoCAN_TP& isotp, argsret& params)
+static void set_do_can_parameters(DoCAN_TP&, argsret& params)
 {
-  int scaned = 0;
   uint32_t phys_id = 0x700u;
   uint32_t resp_id = 0x701u;
   uint32_t func_id = 0x7dfu;

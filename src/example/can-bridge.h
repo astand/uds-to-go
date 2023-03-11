@@ -21,7 +21,7 @@ class SocketCanSender : public ICAN_Sender {
     frame.can_id = msgid;
     frame.can_dlc = 8;
     memcpy(frame.data, data, length);
-    assert(write(txsocket, &frame, sizeof(struct can_frame)) != sizeof(struct can_frame) > 0);
+    assert(write(txsocket, &frame, sizeof(struct can_frame)) != (sizeof(struct can_frame) > 0u));
     return length;
   }
 
