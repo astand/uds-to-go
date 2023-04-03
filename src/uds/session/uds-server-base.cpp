@@ -359,7 +359,7 @@ bool UdsServerBase::MakeBaseSIDChecks()
   {
     SendNegResponse(NRCs::SNSIAS);
   }
-  else if (MinLength(flags) != 0u && (data_info.size < MinLength(flags)))
+  else if ((MinLength(flags) != 0u) && (data_info.size < MinLength(flags)))
   {
     SendNegResponse(NRCs::IMLOIF);
   }

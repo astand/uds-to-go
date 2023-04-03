@@ -9,11 +9,11 @@
 #include <uds/session/uds-service-handler.h>
 
 #ifndef HWREGH
-#define HWREGH(x) (*(uint16_t*)(x))
+#define HWREGH(x) (*(uint16_t*) (x))
 #endif
 
 #ifndef V16_TO_BE
-#define V16_TO_BE(x)  (( ((x) >> 8) & 0xffu ) | ( ((x) & 0xffu) << 8u ))
+#define V16_TO_BE(x)  ( ( ( (x) >> 8u ) & 0xffu ) | ( ( (x) & 0xffu ) << 8u ) )
 #endif
 
 #ifndef V16_FROM_BE
@@ -141,10 +141,6 @@ class RoutineRouter : public UdsServiceHandler {
       rtr1.SendNegResponse(NRCs::SFNS);
       return ProcessResult::HANDLED_RESP_NO;
     }
-    // else if (!rtr1.GetSession().sec_level) {
-    //   rtr1.SendNegResponse(NRCs::SAD);
-    //   return ProcessResult::HANDLED_RESP_NO;
-    // }
 
     ProcessResult pres = ProcessResult::NOT_HANDLED;
     routine_id_t routine_id = V16_FROM_BE(HWREGH(inf.data + 2));
@@ -161,7 +157,7 @@ class RoutineRouter : public UdsServiceHandler {
 
   /* SiClient */
   ProcessResult OnConfirmation(S_Result res) {
-    (void)res;
+    (void) res;
     return ProcessResult::NOT_HANDLED;
   }
 
@@ -175,16 +171,18 @@ template<size_t N>
 class MultiRoutineHandler : public AsKeeper<RoutineHandler> {
  public:
   MultiRoutineHandler() : AsKeeper<RoutineHandler>(rarray, N) {}
+
   virtual ProcessResult OnRoutine(routine_id_t rid, uint8_t rtype, const uint8_t* data, size_t size) {
     auto ret = ProcessResult::NOT_HANDLED;
     RoutineHandler* handler {nullptr};
 
     for (size_t i = 0; i < Count(); i++) {
-      Item(i, handler);
-      ret = handler->OnRoutine(rid, rtype, data, size);
+      if (Item(i, handler)) {
+        ret = handler->OnRoutine(rid, rtype, data, size);
 
-      if (ret != ProcessResult::NOT_HANDLED) {
-        break;
+        if (ret != ProcessResult::NOT_HANDLED) {
+          break;
+        }
       }
     }
 

@@ -28,7 +28,7 @@ ProcessResult DidRouter::OnIndication(const IndicationInfo& inf)
   return pres;
 }
 
-ProcessResult DidRouter::OnConfirmation(S_Result res)
+ProcessResult DidRouter::OnConfirmation(S_Result)
 {
   return ProcessResult::NOT_HANDLED;
 }

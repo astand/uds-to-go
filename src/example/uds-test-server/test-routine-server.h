@@ -13,7 +13,8 @@ class ClientRoutineBase : public RoutineHandler {
 class RotineServ1 : public ClientRoutineBase, public IProcessable {
  public:
   RotineServ1(RoutineRouter& routiner) : ClientRoutineBase(routiner) {}
-  ProcessResult OnRoutine(routine_id_t rid, uint8_t rtype, const uint8_t* data, size_t size) {
+
+  ProcessResult OnRoutine(routine_id_t rid, uint8_t, const uint8_t*, size_t) {
     auto ret = ProcessResult::NOT_HANDLED;
 
     if (rid == 0x0102) {
@@ -54,7 +55,8 @@ class RotineServ1 : public ClientRoutineBase, public IProcessable {
 class RotineServ2 : public ClientRoutineBase {
  public:
   RotineServ2(RoutineRouter& routiner) : ClientRoutineBase(routiner) {}
-  ProcessResult OnRoutine(routine_id_t rid, uint8_t rtype, const uint8_t* data, size_t size) {
+
+  ProcessResult OnRoutine(routine_id_t rid, uint8_t, const uint8_t*, size_t) {
     if (rid == 0xff00) {
       if (true) {
         // Ok
