@@ -156,7 +156,7 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
   UdsServiceHandler* client = nullptr;
   uint32_t i = 0u;
 
-  while (cls.Item(i++, client))
+  while (cls.TryReadElem(i++, client))
   {
     clientHandRes = client->OnIndication(data_info);
 
@@ -209,7 +209,7 @@ void UdsServerBase::NotifyConf(S_Result)
   UdsServiceHandler* client = nullptr;
   uint32_t i = 0u;
 
-  while (cls.Item(i++, client))
+  while (cls.TryReadElem(i++, client))
   {
     clientHandRes = client->OnIndication(data_info);
 
@@ -242,7 +242,7 @@ void UdsServerBase::NotifyDSCSessionChanged(bool s3timer)
   UdsServiceHandler* client = nullptr;
   uint32_t i = 0u;
 
-  while (cls.Item(i++, client))
+  while (cls.TryReadElem(i++, client))
   {
     client->DSCSessionEvent(s3timer);
   }

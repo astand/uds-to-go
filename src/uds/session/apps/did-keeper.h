@@ -15,7 +15,7 @@ class DidKeeper : public AsKeeper<DidHandler> {
     uint32_t i = 0u;
     DidHandler* refdid {nullptr};
 
-    while (Item(i, refdid)) {
+    while (TryReadElem(i, refdid)) {
       ret = refdid->ReadDID(did, data, capacity, len_out, nrc_out);
 
       if (ret != DidResult::Ignored) {
@@ -31,7 +31,7 @@ class DidKeeper : public AsKeeper<DidHandler> {
     uint32_t i = 0u;
     DidHandler* refdid {nullptr};
 
-    while (Item(i, refdid)) {
+    while (TryReadElem(i, refdid)) {
       ret = refdid->WriteDID(did, data, len, nrc_out);
 
       if (ret != DidResult::Ignored) {

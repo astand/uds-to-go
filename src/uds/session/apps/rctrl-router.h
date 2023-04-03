@@ -177,7 +177,7 @@ class MultiRoutineHandler : public AsKeeper<RoutineHandler> {
     RoutineHandler* handler {nullptr};
 
     for (size_t i = 0; i < Count(); i++) {
-      if (Item(i, handler)) {
+      if (TryReadElem(i, handler)) {
         ret = handler->OnRoutine(rid, rtype, data, size);
 
         if (ret != ProcessResult::NOT_HANDLED) {

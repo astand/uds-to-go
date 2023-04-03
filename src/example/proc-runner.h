@@ -14,7 +14,7 @@ class ProcRunner : public AsKeeper<IProcessable> {
     IProcessable* proc{nullptr};
 
     for (size_t i = 0; i < Count(); i++) {
-      if (Item(i, proc)) {
+      if (TryReadElem(i, proc)) {
         proc->Process();
       }
     }

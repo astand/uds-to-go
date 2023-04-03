@@ -4,91 +4,74 @@
 #include <stddef.h>
 #include <assert.h>
 
+/// @brief Class container to keep array of pointers to T
+/// @tparam T Type of keeping elements
 template<class T>
 class IKeeper {
  public:
+  /// @brief Result of any keeper opearion
   enum class KeeperResult
   {
     ERROR,
     OK,
   };
 
-  /**
-   * @brief Construct a new IKeeper object
-   *
-   * @param mem pointer to the array memory for holding items
-   * @param capacity array capacity
-   */
-  IKeeper(T** mem, size_t capacity) : vect(mem), Max(capacity) {}
+  /// @brief Constructor
+  /// @param mem Pointer to array in memory allocated for keeping elements
+  /// @param capacity Number of elements in the element array
+  IKeeper(T** mem, size_t capacity) : elemArray(mem), ElemMaxNumber(capacity) {}
 
-  /**
-   * @brief Attempts to add new item to the next free container space
-   *
-   * @param c pointer to object to add to the container
-   * @param allowduplicate if it is allowed to have more than one instance
-   * of the object in container
-   * @return KeeperResult: OK if the object was added to the container
-   *                       ERROR if the object wasn't added
-   */
-  KeeperResult Add(T* c, bool allowduplicate = true) {
-    size_t addedid = Max;
+  /// @brief Adds new element to the next empty position in the array
+  /// @param elem Pointer to the instance to be adde to the container
+  /// @param multi Flag to permit adding more than one pointer on the same element
+  /// @return Result of adding operation
+  KeeperResult Add(T* elem, bool multi = true) {
+    size_t addedPosition = ElemMaxNumber;
 
-    // if count = Max the collection full, no one loop iteration will be run
-    for (size_t i = 0; (i < Max) && (count < Max); i++) {
-      if ((vect[i] == c) && (allowduplicate == false)) {
-        // client already in collection, break loop and return fail
+    for (size_t i = 0; (i < ElemMaxNumber) && (currElemNumber < ElemMaxNumber); i++) {
+      if ((elemArray[i] == elem) && (multi == false)) {
+        // element is already in collection, break the loop and return error
         break;
       }
-      else if (vect[i] == nullptr) {
-        // add new client
-        vect[i] = c;
-        count++;
-        addedid = i;
+      else if (elemArray[i] == nullptr) {
+        // add new element
+        elemArray[i] = elem;
+        currElemNumber++;
+        addedPosition = i;
         break;
       }
     }
 
-    return (addedid == Max) ? (KeeperResult::ERROR) : (KeeperResult::OK);
+    return (addedPosition == ElemMaxNumber) ? (KeeperResult::ERROR) : (KeeperResult::OK);
   }
 
-  /**
-   * @brief Removes the object from the container
-   *
-   * @param c pointer to the object to be removed from the container
-   * @return KeeperResult: OK object was removed from the container
-   *                       ERROR object wasn't removed
-   */
-  KeeperResult Remove(T* c) {
-    // For now removing prohibited
+  /// @brief Removes requested element from the container
+  /// @param elemToRemove Pointer to the element to remove
+  /// @return Result of the remove operation
+  KeeperResult Remove(T* elemToRemove) {
+    // Removing is not allowed yet
     return KeeperResult::ERROR;
   }
 
-  /**
-   * @brief Resets internal iterator index to zero (it is not thread safe API)
-   *
-   */
-  void Start() {
-    iter_id = 0;
+  /// @brief Resets internal iteration index
+  void StartIteration() {
+    iterId = 0;
   }
 
-  /**
-   * @brief Tests if the current index is on the last object of the container
-   */
-  bool Last() {
-    return (iter_id >= count);
+  /// @brief Checks iteration status
+  /// @return true if the current iteration index is the last one, otherwise false
+  bool IsLastIteration() {
+    return (iterId >= currElemNumber);
   }
 
-  /**
-   * @brief returns pointer to the object from container (container[internal_index])
-   *
-   * @return T* pointer to object or NULLPTR
-   */
-  T* Next() {
+  /// @brief Shifts iteration poisition to the next element
+  /// @return Pointer to the current iteration element
+  T* IterNextElem() {
     T* ret = nullptr;
 
-    if (iter_id < count) {
-      ret = vect[iter_id];
-      iter_id++;
+    if (iterId < currElemNumber) {
+      ret = elemArray[iterId];
+      iterId++;
     }
 
     assert(ret != nullptr);
@@ -96,51 +79,59 @@ class IKeeper {
     return ret;
   }
 
-  /**
-   * @brief Reads pointer to the object in the container with index @id
-   *
-   * @param id index of request object
-   * @param refout reference on pointer for saving address of requested object
-   * @return true if the object in the container is not nullptr
-   */
-  bool Item(size_t id, T*& refout) const {
-    refout = id < Max ? vect[id] : nullptr;
-    return ((refout != nullptr) ? (true) : (false));
+  /// @brief Tries to read element address from the container
+  /// @param id Element index
+  /// @param refout Reference to the pointer on element type
+  /// @return true if the @refout is set to some element, false when it is set to nullptr
+  bool TryReadElem(size_t id, T*& refout) const {
+    refout = ((id < ElemMaxNumber) ? elemArray[id] : nullptr);
+    return (refout != nullptr) ? true : false;
   }
 
-
-  /**
-   * @brief Returns number of objects in the container
-   */
+  /// @brief Gets current number of the elements in the container
+  /// @return Number of elements
   size_t Count() const {
-    return count;
+    return currElemNumber;
   }
 
-  /**
-   * @brief Returns internal container capacity
-   */
+  /// @brief Gets maximum capacity of the container
+  /// @return Container capacity in number of elements
   size_t Capacity() const {
-    return Max;
+    return ElemMaxNumber;
   }
 
  private:
-  T** const vect{nullptr};
-  const size_t Max;
-  size_t count{};
-  size_t iter_id{};
+  T** const elemArray{nullptr};
+  const size_t ElemMaxNumber;
+  size_t currElemNumber{};
+  size_t iterId{};
 };
 
+/// @brief Template class which combines IKeeper<C> and C functionality itself
+/// @details The AsKeeper is a proxy template class for the cases when
+/// the type shall provide some interface but needs to keep multiple
+/// instances of the type C and perform interfaces calls to these instances
+/// @tparam C Type which must be wrapped by AsKeeper
 template<typename C>
 class AsKeeper : public IKeeper<C>, public C {
  protected:
-  AsKeeper(C** array, size_t SIZE) : IKeeper<C>(array, SIZE) {}
+  /// @brief Constructor
+  /// @param array Pointer to the array allocated for this container memory
+  /// @param capacity Number of elements in the allocated array
+  AsKeeper(C** array, size_t capacity) : IKeeper<C>(array, capacity) {}
 };
 
+/// @brief Extension class.
+/// Statically allocates memory for IKeeper container
+/// @tparam T Container element type
+/// @tparam N Container array capacity
 template<typename T, size_t N>
 class MemKeeper : public IKeeper<T> {
  public:
-  MemKeeper() : IKeeper<T>(__raw__, N) {}
+
+  MemKeeper() : IKeeper<T>(keeperArray, N) {}
 
  private:
-  T* __raw__[N] = {nullptr};
+  /// @brief Memory for the container
+  T* keeperArray[N] = {nullptr};
 };
