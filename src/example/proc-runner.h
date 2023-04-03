@@ -4,22 +4,19 @@
 #include <helpers/IKeeper.h>
 
 template<size_t N>
-class ProcRunner : public AsKeeper<IProcessable> {
+class ProcRunner : public MemAsKeeper<IProcessable, N> {
  public:
-  ProcRunner() : AsKeeper<IProcessable>(__raw__, N) {
+  ProcRunner() : MemAsKeeper<IProcessable, N>() {
     assert(N != 0);
   }
 
   virtual void Process() override {
     IProcessable* proc{nullptr};
 
-    for (size_t i = 0; i < Count(); i++) {
-      if (TryReadElem(i, proc)) {
+    for (size_t i = 0; i < this->Count(); i++) {
+      if (this->TryReadElem(i, proc)) {
         proc->Process();
       }
     }
   }
-
- private:
-  IProcessable* __raw__[N] {nullptr};
 };

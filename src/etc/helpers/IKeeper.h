@@ -3,12 +3,21 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <assert.h>
+#include "static-allocator.h"
+
+/// @brief Type pointer redefinition
+/// @tparam T target type
+template<class T>
+using Tptr_t = T*;
 
 /// @brief Class container to keep array of pointers to T
 /// @tparam T Type of keeping elements
 template<class T>
 class IKeeper {
  public:
+  /// @brief Private container pointer-type redifinition
+  using ElemPtr_t = Tptr_t<T>;
+
   /// @brief Result of any keeper opearion
   enum class KeeperResult
   {
@@ -19,13 +28,13 @@ class IKeeper {
   /// @brief Constructor
   /// @param mem Pointer to array in memory allocated for keeping elements
   /// @param capacity Number of elements in the element array
-  IKeeper(T** mem, size_t capacity) : elemArray(mem), ElemMaxNumber(capacity) {}
+  IKeeper(ElemPtr_t mem[], size_t capacity) : elemArray(mem), ElemMaxNumber(capacity) {}
 
   /// @brief Adds new element to the next empty position in the array
   /// @param elem Pointer to the instance to be adde to the container
   /// @param multi Flag to permit adding more than one pointer on the same element
   /// @return Result of adding operation
-  KeeperResult Add(T* elem, bool multi = true) {
+  KeeperResult Add(ElemPtr_t elem, bool multi = true) {
     size_t addedPosition = ElemMaxNumber;
 
     for (size_t i = 0; (i < ElemMaxNumber) && (currElemNumber < ElemMaxNumber); i++) {
@@ -48,7 +57,7 @@ class IKeeper {
   /// @brief Removes requested element from the container
   /// @param elemToRemove Pointer to the element to remove
   /// @return Result of the remove operation
-  KeeperResult Remove(T* elemToRemove) {
+  KeeperResult Remove(ElemPtr_t elemToRemove) {
     // Removing is not allowed yet
     return KeeperResult::ERROR;
   }
@@ -66,8 +75,8 @@ class IKeeper {
 
   /// @brief Shifts iteration poisition to the next element
   /// @return Pointer to the current iteration element
-  T* IterNextElem() {
-    T* ret = nullptr;
+  ElemPtr_t IterNextElem() {
+    ElemPtr_t ret = nullptr;
 
     if (iterId < currElemNumber) {
       ret = elemArray[iterId];
@@ -83,7 +92,7 @@ class IKeeper {
   /// @param id Element index
   /// @param refout Reference to the pointer on element type
   /// @return true if the @refout is set to some element, false when it is set to nullptr
-  bool TryReadElem(size_t id, T*& refout) const {
+  bool TryReadElem(size_t id, ElemPtr_t& refout) const {
     refout = ((id < ElemMaxNumber) ? elemArray[id] : nullptr);
     return (refout != nullptr) ? true : false;
   }
@@ -101,7 +110,7 @@ class IKeeper {
   }
 
  private:
-  T** const elemArray{nullptr};
+  ElemPtr_t* const elemArray{nullptr};
   const size_t ElemMaxNumber;
   size_t currElemNumber{};
   size_t iterId{};
@@ -121,17 +130,34 @@ class AsKeeper : public IKeeper<C>, public C {
   AsKeeper(C** array, size_t capacity) : IKeeper<C>(array, capacity) {}
 };
 
-/// @brief Extension class.
-/// Statically allocates memory for IKeeper container
+/// @brief IKeeper extension with internal memory allocation
 /// @tparam T Container element type
 /// @tparam N Container array capacity
 template<typename T, size_t N>
 class MemKeeper : public IKeeper<T> {
  public:
-
-  MemKeeper() : IKeeper<T>(keeperArray, N) {}
+  /// @brief Constructor
+  /// @tparam T Type of container element
+  /// @tparam N Container capacity
+  MemKeeper() : IKeeper<T>(reinterpret_cast<Tptr_t<T>*>(statAllocator.ptr()), N) {}
 
  private:
   /// @brief Memory for the container
-  T* keeperArray[N] = {nullptr};
+  StaticMemAllocator<Tptr_t<T>, N> statAllocator;
+};
+
+/// @brief AsKeeper extension with internal memory allocation
+/// @tparam T Type of container element
+/// @tparam N Container capacity
+template<typename T, size_t N>
+class MemAsKeeper : public AsKeeper<T> {
+ public:
+  /// @brief Constructor
+  /// @tparam T Type of container element
+  /// @tparam N Container capacity
+  MemAsKeeper() : AsKeeper<T>(reinterpret_cast<Tptr_t<T>*>(statAllocator.ptr()), N) {}
+
+ private:
+  /// @brief Memory for the container
+  StaticMemAllocator<Tptr_t<T>, N> statAllocator;
 };

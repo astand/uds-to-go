@@ -168,16 +168,16 @@ class RoutineRouter : public UdsServiceHandler {
 };
 
 template<size_t N>
-class MultiRoutineHandler : public AsKeeper<RoutineHandler> {
+class MultiRoutineHandler : public MemAsKeeper<RoutineHandler, N> {
  public:
-  MultiRoutineHandler() : AsKeeper<RoutineHandler>(rarray, N) {}
+  MultiRoutineHandler() : MemAsKeeper<RoutineHandler, N>() {}
 
   virtual ProcessResult OnRoutine(routine_id_t rid, uint8_t rtype, const uint8_t* data, size_t size) {
     auto ret = ProcessResult::NOT_HANDLED;
     RoutineHandler* handler {nullptr};
 
-    for (size_t i = 0; i < Count(); i++) {
-      if (TryReadElem(i, handler)) {
+    for (size_t i = 0; i < this->Count(); i++) {
+      if (this->TryReadElem(i, handler)) {
         ret = handler->OnRoutine(rid, rtype, data, size);
 
         if (ret != ProcessResult::NOT_HANDLED) {
@@ -188,8 +188,4 @@ class MultiRoutineHandler : public AsKeeper<RoutineHandler> {
 
     return ret;
   }
-
- private:
-
-  RoutineHandler* rarray[N] {nullptr};
 };

@@ -5,9 +5,9 @@
 #include "did-handler.h"
 
 template<size_t N>
-class DidKeeper : public AsKeeper<DidHandler> {
+class DidKeeper : public MemAsKeeper<DidHandler, N> {
  public:
-  DidKeeper() : AsKeeper<DidHandler>(dids, N) {}
+  DidKeeper() : MemAsKeeper<DidHandler, N>() {}
 
   virtual DidResult ReadDID(uint32_t did, uint8_t* data, size_t capacity, size_t& len_out, NRCs& nrc_out) override {
     DidResult ret = DidResult::Ignored;
@@ -15,7 +15,7 @@ class DidKeeper : public AsKeeper<DidHandler> {
     uint32_t i = 0u;
     DidHandler* refdid {nullptr};
 
-    while (TryReadElem(i, refdid)) {
+    while (this->TryReadElem(i, refdid)) {
       ret = refdid->ReadDID(did, data, capacity, len_out, nrc_out);
 
       if (ret != DidResult::Ignored) {
@@ -31,7 +31,7 @@ class DidKeeper : public AsKeeper<DidHandler> {
     uint32_t i = 0u;
     DidHandler* refdid {nullptr};
 
-    while (TryReadElem(i, refdid)) {
+    while (this->TryReadElem(i, refdid)) {
       ret = refdid->WriteDID(did, data, len, nrc_out);
 
       if (ret != DidResult::Ignored) {
@@ -41,8 +41,4 @@ class DidKeeper : public AsKeeper<DidHandler> {
 
     return ret;
   }
-
- private:
-  DidHandler* dids[N] {nullptr};
-
 };
