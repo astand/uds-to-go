@@ -4,9 +4,9 @@
 
 void SessionControl::SendRequest(const uint8_t* data, uint32_t size, bool enhanced)
 {
-  etm_active = enhanced;
+  isEtmActive = enhanced;
 
-  if (etm_active)
+  if (isEtmActive)
   {
     p2.Start(tims.p2_enhanced);
   }
@@ -24,11 +24,11 @@ void SessionControl::SetPending(uint32_t duration, uint32_t interval, SIDs si)
 {
   if ((duration >= interval) && (interval > 999u))
   {
-    etm_buff[1] = SID_to_byte(si);
-    SendRequest(etm_buff, 3u, true);
-    etm_timer.Start(interval);
-    etm_interval = interval;
-    left_duration = duration - interval;
+    etmWaitRespBuff[1] = SID_to_byte(si);
+    SendRequest(etmWaitRespBuff, 3u, true);
+    etmTim.Start(interval);
+    etmKeepAliveInterval = interval;
+    etmDuration = duration - interval;
   }
 }
 
@@ -37,19 +37,19 @@ void SessionControl::Process()
   // process timers here and notify Diag in case of timeout
   ProcessSessionMode();
 
-  if (etm_active)
+  if (isEtmActive)
   {
     // left duration not zero, continue periodic send
-    if ((left_duration != 0u) && etm_timer.Elapsed())
+    if ((etmDuration != 0u) && etmTim.Elapsed())
     {
       // etm pending message has to be sent
-      left_duration = (left_duration > etm_interval) ? (left_duration - etm_interval) : 0u;
-      SendRequest(etm_buff, 3, true);
+      etmDuration = (etmDuration > etmKeepAliveInterval) ? (etmDuration - etmKeepAliveInterval) : 0u;
+      SendRequest(etmWaitRespBuff, 3, true);
 
-      if (left_duration == 0)
+      if (etmDuration == 0)
       {
         // after this p2 timer will handled by general session processing
-        etm_timer.Stop();
+        etmTim.Stop();
       }
     }
   }
@@ -57,25 +57,25 @@ void SessionControl::Process()
 
 void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& info)
 {
-  ta_addr = (info.address == N_TarAddress::TAtype_1_Physical) ? (TargetAddressType::PHYS) : (TargetAddressType::FUNC);
+  targetAddress = (info.address == N_TarAddress::TAtype_1_Physical) ? (TargetAddressType::PHYS) : (TargetAddressType::FUNC);
 
   switch (event)
   {
     case (N_Event::Data):
       if (res == N_Result::OK_r)
       {
-        if (!etm_active)
+        if (!isEtmActive)
         {
           // data indication from Transport layer
           p2.Start(tims.p2_max);
 
-          if (ss_state == SessionType::NONDEFAULT)
+          if (sessType == SessionType::NONDEFAULT)
           {
             // stop s3 here (to be restart on response conf)
             S3.Stop();
           }
 
-          NotifyInd(info.data, info.length, ta_addr);
+          NotifyInd(info.data, info.length, targetAddress);
         }
         else
         {
@@ -93,7 +93,7 @@ void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& in
     case (N_Event::DataFF):
       if (res == N_Result::OK_r)
       {
-        if (ss_state == SessionType::NONDEFAULT)
+        if (sessType == SessionType::NONDEFAULT)
         {
           // stop s3 here to be aviod session stop during long receiving
           S3.Stop();
@@ -102,7 +102,7 @@ void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& in
       else
       {
         // should never get here
-        SetSessionMode(ss_state);
+        SetSessionMode(sessType);
         assert(false);
       }
 
@@ -111,16 +111,16 @@ void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& in
     case (N_Event::Conf):
       if (res == N_Result::OK_s)
       {
-        if (!etm_active)
+        if (!isEtmActive)
         {
           // update current session state
-          SetSessionMode(ss_state);
+          SetSessionMode(sessType);
         }
       }
       else if (res == N_Result::TIMEOUT_Cr)
       {
         // segmented receptions is broken
-        SetSessionMode(ss_state);
+        SetSessionMode(sessType);
       }
       else
       {
@@ -138,15 +138,15 @@ void SessionControl::SetSessionMode(bool is_default)
   {
     // default session doesn't use s3 timer, so stop it
     S3.Stop();
-    ss_state = SessionType::DEFAULT;
+    sessType = SessionType::DEFAULT;
   }
   else
   {
-    if (ss_state == SessionType::DEFAULT)
+    if (sessType == SessionType::DEFAULT)
     {
       // initial start of S3 timer
       S3.Start(tims.S3_max);
-      ss_state = SessionType::NONDEFAULT;
+      sessType = SessionType::NONDEFAULT;
     }
     else
     {
@@ -159,7 +159,7 @@ void SessionControl::SetSessionMode(bool is_default)
 
 void SessionControl::ProcessSessionMode()
 {
-  if (ss_state != SessionType::DEFAULT)
+  if (sessType != SessionType::DEFAULT)
   {
     if (S3.Elapsed())
     {
@@ -170,21 +170,21 @@ void SessionControl::ProcessSessionMode()
 
   if (p2.Elapsed())
   {
-    if (ss_state != SessionType::DEFAULT)
+    if (sessType != SessionType::DEFAULT)
     {
       // Restart S3 timer!
       S3.Restart();
     }
 
-    if (etm_active)
+    if (isEtmActive)
     {
       // no response from handler was sent
-      etm_active = false;
+      isEtmActive = false;
       // send common NRC (protocol requirement)
-      etm_buff[2] = NRC_to_byte(NRCs::ENOA);
-      SendRequest(etm_buff, 3u);
+      etmWaitRespBuff[2] = NRC_to_byte(NRCs::ENOA);
+      SendRequest(etmWaitRespBuff, 3u);
       // restore original NRC value in etm buffer
-      etm_buff[2] = NRC_to_byte(NRCs::RCRRP);
+      etmWaitRespBuff[2] = NRC_to_byte(NRCs::RCRRP);
     }
   }
 }

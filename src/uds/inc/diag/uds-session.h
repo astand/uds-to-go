@@ -57,12 +57,12 @@ enum class SendResult
 
 typedef struct
 {
-  /// @brief Service identifie6r6
+  /// @brief Service identifier
   SIDs SI;
   /// @brief Sub-function code
   uint8_t SF;
   /// @brief No response
-  uint8_t NoResponse;
+  uint8_t noResponse;
   /// @brief Response `
   uint8_t respSI;
 } RequestContext;
@@ -83,8 +83,8 @@ typedef struct
 /// @brief Session state descriptor
 typedef struct
 {
-  /// @brief Current session number
-  uint8_t sess;
-  /// @brief Current session security levle
-  uint8_t sec_level;
+  /// @brief Current session integer value
+  uint8_t currSession;
+  /// @brief Current session security level
+  uint8_t secLevel;
 } SessionInfo;

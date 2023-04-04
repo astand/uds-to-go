@@ -1,9 +1,9 @@
 #pragma once
 
-#include "IKeeper.h"
-#include <assert.h>
-
+/// @brief Processable interface
 class IProcessable {
  public:
+
+  /// @brief Run process implementation
   virtual void Process() = 0;
 };

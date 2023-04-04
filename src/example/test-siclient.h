@@ -27,7 +27,7 @@ class TestUdsServiceHandler : public UdsServiceHandler {
 
   virtual void DSCSessionEvent(bool s3timer_event) override {
     std::cout << ((s3timer_event) ? (" s3 ") : (" -- "));
-    std::cout << "Session update :" << (int)rtr1.GetSession().sess;
+    std::cout << "Session update :" << (int)rtr1.GetSession().currSession;
     std::cout << std::endl;
   }
 

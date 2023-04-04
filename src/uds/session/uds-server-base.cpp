@@ -23,7 +23,7 @@ constexpr uint8_t MinLength(const UdsServerBase::flag_t flag)
 template<uint8_t low, uint8_t high>
 bool out_of_range(uint8_t v)
 {
-  assert(low < high);
+  static_assert(low < high, "dafsd");
   return ((v < low) || (v > high));
 }
 
@@ -34,8 +34,8 @@ UdsServerBase::UdsServerBase(IKeeper<UdsServiceHandler>& vec, uint8_t* d, datasi
 
   EnableSID(SIDs::TP, false, true, false, 2);
 
-  sess_info.sec_level = 0;
-  sess_info.sess = DSC_SF_DS;
+  sess_info.secLevel = 0;
+  sess_info.currSession = DSC_SF_DS;
 
   router_is_disabled = false;
 }
@@ -57,7 +57,7 @@ void UdsServerBase::SendResponse(const uint8_t* data, uint32_t len, bool enhance
   {
     // the response is not one for response, the session timer must be
     // reset here (ISO14229-2 Table 6)
-    SessionChangeEvent(sess_info.sess);
+    SessionChangeEvent(sess_info.currSession);
   }
 }
 
@@ -90,7 +90,7 @@ void UdsServerBase::SetServiceSession(uint8_t s)
 
 void UdsServerBase::SetSecurityLevel(uint8_t sa_level)
 {
-  sess_info.sec_level = sa_level;
+  sess_info.secLevel = sa_level;
 }
 
 
@@ -98,10 +98,10 @@ void UdsServerBase::SessionChangeEvent(uint8_t s)
 {
   SetSessionMode(s == DSC_SF_DS);
 
-  if (sess_info.sess != s)
+  if (sess_info.currSession != s)
   {
     // current session will be changed. notify every client about it
-    sess_info.sess = s;
+    sess_info.currSession = s;
   }
 }
 
@@ -140,7 +140,7 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
   data_info.head.SF = (data_info.data[1] & 0x7FU);
   data_info.head.respSI = SID_response(data_info.head.SI);
   // services without subfunctions must set NoResponse bit to 0 by themself!!!
-  data_info.head.NoResponse = data_info.data[1] & 0x80U ? 1 : 0;
+  data_info.head.noResponse = data_info.data[1] & 0x80U ? 1 : 0;
   // set most frequent case
   pubBuff[0] = data_info.head.respSI;
   pubBuff[1] = data_info.data[1];
@@ -184,7 +184,7 @@ void UdsServerBase::NotifyInd(const uint8_t* data, uint32_t length, TargetAddres
     // the service handled the request but decided that
     // there is no necessity to send response, the current
     // session must be re-init in this case
-    SessionChangeEvent(sess_info.sess);
+    SessionChangeEvent(sess_info.currSession);
   }
   else if (clientHandRes == ProcessResult::HANDLED_PENDING)
   {
@@ -227,10 +227,10 @@ void UdsServerBase::On_s3_Timeout()
   // the current SSL session must be kSSL_Default
 
   // make self proccessing and notify all the clients
-  if (sess_info.sess != DSC_SF_DS)
+  if (sess_info.currSession != DSC_SF_DS)
   {
-    // appPci.dsc_state.prev = sess_info.sess;
-    sess_info.sess = DSC_SF_DS;
+    // appPci.dsc_state.prev = sess_info.currSession;
+    sess_info.currSession = DSC_SF_DS;
   }
 
   NotifyDSCSessionChanged(true);
@@ -254,19 +254,19 @@ bool UdsServerBase::ResponseAllowed()
   if (req_addr == TargetAddressType::FUNC)
   {
     // ISO 14229-1 Table 5
-    return (nrc_bad_param || (data_info.head.NoResponse == false && nrc_code == NRCs::PR));
+    return (nrc_bad_param || (data_info.head.noResponse == false && nrc_code == NRCs::PR));
   }
   else if (req_addr == TargetAddressType::PHYS)
   {
     if (nrc_code != NRCs::RCRRP)
     {
       /* ISO 14229-1 7.5.3.2 tab 4 (p 30)                               h, i, j                  */
-      return (data_info.head.NoResponse == false || (IS_NRC_PHYS_NOPOS(nrc_code) ||  nrc_bad_param));
+      return (data_info.head.noResponse == false || (IS_NRC_PHYS_NOPOS(nrc_code) ||  nrc_bad_param));
     }
     else
     {
       /* ISO 14229-1 7.5.3.2 tab 4 (p 30) - *for the case with RCRRP negative response */
-      data_info.head.NoResponse = false;
+      data_info.head.noResponse = false;
       return true;
     }
   }
@@ -355,7 +355,7 @@ bool UdsServerBase::MakeBaseSIDChecks()
   {
     // do nothing here,the true will be returned and no further actions will be made
   }
-  else if (IsActive(flags, BIT_NOINDEF) && (sess_info.sess == DSC_SF_DS))
+  else if (IsActive(flags, BIT_NOINDEF) && (sess_info.currSession == DSC_SF_DS))
   {
     SendNegResponse(NRCs::SNSIAS);
   }
@@ -371,7 +371,7 @@ bool UdsServerBase::MakeBaseSIDChecks()
   // noResponse bit handling
   if (IsActive(flags, BIT_NOSUBF))
   {
-    data_info.head.NoResponse = 0;
+    data_info.head.noResponse = 0;
   }
 
   return ret;

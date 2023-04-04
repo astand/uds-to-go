@@ -93,31 +93,31 @@ class SessionControl : public IsoTpClient, public IProcessable {
   };
 
   /// @brief Stub tp sender. does nothing
-  EmptyTpSender plushtp;
+  EmptyTpSender fakeTpSender;
 
   /// @brief Pointer to tp implementation
-  IsoTpImpl* host{&plushtp};
+  IsoTpImpl* host{&fakeTpSender};
 
   DTimers::Timer p2;
   DTimers::Timer S3;
 
   /// @brief Current session state
-  SessionType ss_state{SessionType::DEFAULT};
+  SessionType sessType{SessionType::DEFAULT};
   /// @brief Target address type of the current req/resp session
-  TargetAddressType ta_addr{TargetAddressType::UNKNOWN};
+  TargetAddressType targetAddress{TargetAddressType::UNKNOWN};
 
   /// @brief Enhanced timing mode active status
-  bool etm_active{false};
+  bool isEtmActive{false};
 
   /// @brief ETM pending message
-  uint8_t etm_buff[3] = { 0x7fu, 0u, 0x78u };
+  uint8_t etmWaitRespBuff[3] = { 0x7fu, 0u, 0x78u };
 
-  /// @brief ETM left duration (ms)
-  uint32_t left_duration{0u};
+  /// @brief ETM maximum duration, after this time etm mode will be ended (ms)
+  uint32_t etmDuration{0u};
 
   /// @brief ETM pending message sending interval (ms)
-  uint32_t etm_interval;
+  uint32_t etmKeepAliveInterval;
 
   /// @brief ETM interval timer
-  DTimers::Timer etm_timer{0u};
+  DTimers::Timer etmTim{0u};
 };
