@@ -3,8 +3,7 @@
 #include <stdint.h>
 
 /// @brief All UDS services
-enum class SIDs : uint8_t
-{
+enum class SIDs : uint8_t {
   /// @brief Diagnostic session control
   DSC = 0x10,
 
@@ -84,13 +83,28 @@ enum class SIDs : uint8_t
   NR_SI = 0x7f,
 };
 
-constexpr uint8_t SID_to_byte(SIDs sid)
-{
+constexpr uint8_t SID_to_byte(SIDs sid) {
+
   return static_cast<uint8_t>(sid);
 }
 
-constexpr uint8_t SID_response(SIDs sid)
-{
+constexpr SIDs SID_from_byte(const uint8_t byte) {
+
+  return static_cast<SIDs>(byte);
+}
+
+constexpr uint8_t SID_response(SIDs sid) {
+
   return SID_to_byte(sid) | (1u << 6u);
+}
+
+constexpr uint8_t SID_get_subfunc(const uint8_t byte) {
+
+  return (byte & 0x7fu);
+}
+
+constexpr bool SID_is_pos_response_suppress(const uint8_t secondbyte) {
+
+  return (secondbyte & 0x80u) == 0x80u;
 }
 

@@ -45,11 +45,11 @@ class SessionControl : public IsoTpClient, public IProcessable {
   /// @param data received data pointer
   /// @param size received data size
   /// @param addr target address
-  virtual void NotifyInd(const uint8_t* data, uint32_t size, TargetAddressType addr) = 0;
+  virtual void OnSessIndication(const uint8_t* data, uint32_t size, TargetAddressType addr) = 0;
 
   /// @brief Confirmation callback for implementation
   /// @param res result
-  virtual void NotifyConf(S_Result res) = 0;
+  virtual void OnSessConfirmation(S_Result res) = 0;
 
   /// @brief S3 timeout callback for implemention
   virtual void On_s3_Timeout() = 0;
@@ -67,8 +67,8 @@ class SessionControl : public IsoTpClient, public IProcessable {
   SessParamResult SetSessionParam(SessParamType par, uint32_t val);
 
   /// @brief Timeout values descriptor
-  typedef struct
-  {
+  typedef struct {
+
     uint32_t S3_max{5000};
     uint32_t p2_max{250};
     uint32_t p2_enhanced{5000};

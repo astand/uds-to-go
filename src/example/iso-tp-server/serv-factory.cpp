@@ -1,11 +1,9 @@
 #include "serv-factory.h"
-#include "../uds-test-server/test-uds-server.h"
 #include "iso-app.h"
 #include <etc/helpers/static-allocator.h>
 #include <example/proc-runner.h>
 #include <example/ticker-wrapper.h>
 #include <example/can-bridge.h>
-#include <example/uds-test-server/test-uds-server.h>
 #include <example/uds-test-server/session-client.h>
 #include <example/uds-test-server/test-did-reader.h>
 #include <example/test-siclient.h>

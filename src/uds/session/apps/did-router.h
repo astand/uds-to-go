@@ -2,17 +2,17 @@
 
 #include <stdint.h>
 
-#include "../uds-server-base.h"
-#include "../uds-service-handler.h"
+#include "../uds-app-manager.h"
+#include "../uds-app-client.h"
 
 class DidHandler;
 
-class DidRouter : public UdsServiceHandler {
+class DidRouter : public UdsAppClient {
  public:
-  DidRouter(UdsServerBase& r, DidHandler& didhandler) : UdsServiceHandler(r), dider(didhandler) {}
-
-  virtual ProcessResult OnIndication(const IndicationInfo& inf) override;
-  virtual ProcessResult OnConfirmation(S_Result res) override;
+  DidRouter(UdsAppManager& r, DidHandler& didhandler) : UdsAppClient(r), dider(didhandler) {}
+  virtual bool IsServiceSupported(SIDs sid, size_t& minlength, bool& subfunc) override;
+  virtual ProcessResult OnAppIndication(const IndicationInfo& inf) override;
+  virtual void OnAppConfirmation(S_Result res) override;
 
  protected:
   const uint8_t* data_;
