@@ -1,14 +1,24 @@
 #pragma once
 
-#include <uds/session/uds-service-handler.h>
+#include <uds/session/uds-app-client.h>
 
-class DSCClient : public UdsServiceHandler {
+class DSCClient : public UdsAppClient {
  public:
-  DSCClient(UdsServerBase& router_) : UdsServiceHandler(router_) {}
+  DSCClient(UdsAppManager& router_, SessionInfo& sessInfo) :
+    UdsAppClient(router_), sessionInfoContext(sessInfo) {
 
-  virtual ProcessResult OnIndication(const IndicationInfo& inf) override;
-
-  virtual ProcessResult OnConfirmation(S_Result) override {
-    return ProcessResult::NOT_HANDLED;
+    sessionInfoContext.currSession = 1;
+    sessionInfoContext.secLevel = 0u;
   }
+
+  virtual bool IsServiceSupported(SIDs sid, size_t& minlength, bool& subfunc) override;
+
+  virtual ProcessResult OnAppIndication(const IndicationInfo& inf) override;
+
+  virtual void OnAppConfirmation(S_Result) override {}
+
+  virtual void OnSessionChange(bool isdefault) override;
+
+ private:
+  SessionInfo& sessionInfoContext;
 };

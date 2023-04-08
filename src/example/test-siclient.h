@@ -1,34 +1,48 @@
 #pragma once
 
-#include <uds/session/uds-service-handler.h>
+#include <uds/session/uds-app-client.h>
 
-class TestUdsServiceHandler : public UdsServiceHandler {
+class ProxyUdsAppClient : public UdsAppClient {
 
  public:
-  TestUdsServiceHandler(UdsServerBase& router) : UdsServiceHandler(router) {}
+  ProxyUdsAppClient(UdsAppManager& router, UdsAppClient& handler) :
+    UdsAppClient(router), realHandler(handler) {}
 
-  virtual ProcessResult OnIndication(const IndicationInfo& inf) override {
+  virtual bool IsServiceSupported(SIDs sid, size_t& minlength, bool& subfunc) {
+
+    return realHandler.IsServiceSupported(sid, minlength, subfunc);
+  }
+
+  virtual ProcessResult OnAppIndication(const IndicationInfo& inf) override {
+
     std::cout << "SC : On Ind  -> " << "Addr: " << ((inf.addr == TargetAddressType::PHYS) ? ("PHYS ") : ("FUNC "));
-    std::cout << " -> SI [" << (int)inf.head.SI << "] SF [" << (int)inf.head.SF << "]";
+    std::cout << " -> SI [" << (int) inf.head.SI << "] SF [" << (int) inf.head.SF << "]";
     std::cout << "Data size = " << inf.size << " b." << std::endl;
     std::cout << std::endl;
 
-    return ProcessResult::NOT_HANDLED;
+    return realHandler.OnAppIndication(inf);
   }
 
 
-  virtual ProcessResult OnConfirmation(S_Result res) override {
+  virtual void OnAppConfirmation(S_Result res) override {
+
     std::cout << "SC : On Conf -> [" << ((res == S_Result::OK) ? (" OK ") : (" ! NOK ")) << "]";
     std::cout << std::endl;
 
-    return ProcessResult::NOT_HANDLED;
+    return realHandler.OnAppConfirmation(res);
   }
 
 
-  virtual void DSCSessionEvent(bool s3timer_event) override {
+  virtual void OnSessionChange(bool s3timer_event) override {
+
     std::cout << ((s3timer_event) ? (" s3 ") : (" -- "));
-    std::cout << "Session update :" << (int)rtr1.GetSession().currSession;
+    std::cout << "Session update :" << (int) udsRouter.GetSession().currSession;
     std::cout << std::endl;
+
+    realHandler.OnSessionChange(s3timer_event);
   }
+
+ private:
+  UdsAppClient& realHandler;
 
 };

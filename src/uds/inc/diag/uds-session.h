@@ -4,38 +4,38 @@
 #include "sidnames.h"
 
 /// @brief Target address type (physical, functional)
-enum class TargetAddressType
-{
+enum class TargetAddressType {
+
   PHYS, FUNC, UNKNOWN
 };
 
 /// @brief Session type (default, non-default)
-enum class SessionType
-{
+enum class SessionType {
+
   DEFAULT, NONDEFAULT
 };
 
 /// @brief Session processing result (OK, notOK)
-enum class S_Result
-{
+enum class S_Result {
+
   OK, NOK
 };
 
 /// @brief Session parameter set result
-enum class SessParamResult
-{
+enum class SessParamResult {
+
   OK, ERR
 };
 
 /// @brief Session parameter collection
-enum class SessParamType
-{
+enum class SessParamType {
+
   S3_TIM, P2_TIM, P2_ENHC
 };
 
 /// @brief Service processing result
-enum class ProcessResult
-{
+enum class ProcessResult {
+
   /// @brief Request not handled
   NOT_HANDLED,
 
@@ -50,26 +50,25 @@ enum class ProcessResult
 };
 
 /// @brief Send request result
-enum class SendResult
-{
+enum class SendResult {
   OK, OVRF, ERROR
 };
 
-typedef struct
-{
+typedef struct {
+
   /// @brief Service identifier
   SIDs SI;
   /// @brief Sub-function code
   uint8_t SF;
-  /// @brief No response
-  uint8_t noResponse;
+  /// @brief Suppress positive response indicator
+  bool suppressPosResponse;
   /// @brief Response `
   uint8_t respSI;
 } RequestContext;
 
 
-typedef struct
-{
+typedef struct {
+
   /// @brief Pointer to payload data
   const uint8_t* data;
   /// @brief Data size
@@ -81,8 +80,8 @@ typedef struct
 } IndicationInfo;
 
 /// @brief Session state descriptor
-typedef struct
-{
+typedef struct {
+
   /// @brief Current session integer value
   uint8_t currSession;
   /// @brief Current session security level

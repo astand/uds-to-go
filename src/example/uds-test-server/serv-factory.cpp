@@ -1,10 +1,8 @@
 #include "serv-factory.h"
-#include "../uds-test-server/test-uds-server.h"
 #include <etc/helpers/static-allocator.h>
 #include <example/proc-runner.h>
 #include <example/ticker-wrapper.h>
 #include <example/can-bridge.h>
-#include <example/uds-test-server/test-uds-server.h>
 #include <example/uds-test-server/session-client.h>
 #include <example/uds-test-server/test-did-reader.h>
 #include <example/uds-test-server/test-routine-server.h>
@@ -16,46 +14,49 @@
 constexpr size_t RxBufferSize = 8192;
 constexpr size_t TxBufferSize = 8192;
 
-SocketCanSender& GetCanSender()
-{
+SocketCanSender& GetCanSender() {
+
   static SocketCanSender sender;
   return sender;
 }
 
-UdsServerBase& GetBaseUdsServer()
-{
+SessionInfo& GetSessionInfoInstance() {
+
+  static SessionInfo instance;
+  return instance;
+}
+
+UdsAppManager& GetBaseUdsServer() {
+
   constexpr size_t MAX_ARRAY = 1024u;
   static uint8_t serv_array[MAX_ARRAY] {0};
-  static MemKeeper<UdsServiceHandler, 4> si_client_keeper;
-  static TestUdsServer si_router(si_client_keeper, serv_array, MAX_ARRAY);
-
+  static UdsAppManager si_router(serv_array, MAX_ARRAY, GetSessionInfoInstance());
   return si_router;
 }
 
-DoCAN_TP& GetDoCAN()
-{
+DoCAN_TP& GetDoCAN() {
+
   static DoCAN_TP_Mem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(GetCanSender(), GetBaseUdsServer());
 
   return isotpsource;
 }
 
-static ProcRunner<4>& GetProcRunner()
-{
+static ProcRunner<4>& GetProcRunner() {
+
   static ProcRunner<4> procrunner;
   return procrunner;
 }
 
-IProcessable& GetMainProcHandler()
-{
+IProcessable& GetMainProcHandler() {
+
   return GetProcRunner();
 }
 
-void BuildApp()
-{
-  static uint32_t count = 0u;
+void BuildApp() {
+
   static TickerWrapper ticker;
-  static TestUdsServiceHandler testclient(GetBaseUdsServer());
-  static DSCClient dschandler(GetBaseUdsServer());
+  static DSCClient dschandler(GetBaseUdsServer(), GetSessionInfoInstance());
+
   static DidKeeper<4> didkeeper;
   static TestDidReader didreader;
   static DidRouter didrouter(GetBaseUdsServer(), didkeeper);
@@ -65,7 +66,15 @@ void BuildApp()
   static RotineServ1 r1(baser);
   static RotineServ2 r2(baser);
 
-  assert(count++ == 0);
+  static MultiServiceManager<3> serviceHandlers(GetBaseUdsServer());
+
+  serviceHandlers.Add(&dschandler);
+  serviceHandlers.Add(&didrouter);
+  serviceHandlers.Add(&baser);
+
+  static ProxyUdsAppClient proxyClient(GetBaseUdsServer(), serviceHandlers);
+
+  GetBaseUdsServer().SetClient(&proxyClient);
 
   rkeeper.Add(&r1);
   rkeeper.Add(&r2);
@@ -79,8 +88,8 @@ void BuildApp()
   didkeeper.Add(&didreader);
 }
 
-CliMen& GetClientUds()
-{
+CliMen& GetClientUds() {
+
   static Menu sessctrl = Menu("Session Control");
   static Menu readdid = Menu("Read DID");
   static Menu reqroutine = Menu("Routine request");

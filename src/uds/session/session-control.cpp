@@ -2,16 +2,13 @@
 #include "session-control.h"
 #include <uds/inc/diag/nrcnames.h>
 
-void SessionControl::SendRequest(const uint8_t* data, uint32_t size, bool enhanced)
-{
+void SessionControl::SendRequest(const uint8_t* data, uint32_t size, bool enhanced) {
+
   isEtmActive = enhanced;
 
-  if (isEtmActive)
-  {
+  if (isEtmActive) {
     p2.Start(tims.p2_enhanced);
-  }
-  else
-  {
+  } else {
     // stop p2 timer on response sending
     p2.Stop();
   }
@@ -20,10 +17,9 @@ void SessionControl::SendRequest(const uint8_t* data, uint32_t size, bool enhanc
   host->Request(data, size);
 }
 
-void SessionControl::SetPending(uint32_t duration, uint32_t interval, SIDs si)
-{
-  if ((duration >= interval) && (interval > 999u))
-  {
+void SessionControl::SetPending(uint32_t duration, uint32_t interval, SIDs si) {
+
+  if ((duration >= interval) && (interval > 999u)) {
     etmWaitRespBuff[1] = SID_to_byte(si);
     SendRequest(etmWaitRespBuff, 3u, true);
     etmTim.Start(interval);
@@ -32,22 +28,19 @@ void SessionControl::SetPending(uint32_t duration, uint32_t interval, SIDs si)
   }
 }
 
-void SessionControl::Process()
-{
+void SessionControl::Process() {
+
   // process timers here and notify Diag in case of timeout
   ProcessSessionMode();
 
-  if (isEtmActive)
-  {
+  if (isEtmActive) {
     // left duration not zero, continue periodic send
-    if ((etmDuration != 0u) && etmTim.Elapsed())
-    {
+    if ((etmDuration != 0u) && etmTim.Elapsed()) {
       // etm pending message has to be sent
       etmDuration = (etmDuration > etmKeepAliveInterval) ? (etmDuration - etmKeepAliveInterval) : 0u;
       SendRequest(etmWaitRespBuff, 3, true);
 
-      if (etmDuration == 0)
-      {
+      if (etmDuration == 0) {
         // after this p2 timer will handled by general session processing
         etmTim.Stop();
       }
@@ -55,52 +48,40 @@ void SessionControl::Process()
   }
 }
 
-void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& info)
-{
+void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& info) {
+
   targetAddress = (info.address == N_TarAddress::TAtype_1_Physical) ? (TargetAddressType::PHYS) : (TargetAddressType::FUNC);
 
-  switch (event)
-  {
+  switch (event) {
     case (N_Event::Data):
-      if (res == N_Result::OK_r)
-      {
-        if (!isEtmActive)
-        {
+      if (res == N_Result::OK_r) {
+        if (!isEtmActive) {
           // data indication from Transport layer
           p2.Start(tims.p2_max);
 
-          if (sessType == SessionType::NONDEFAULT)
-          {
+          if (sessType == SessionType::NONDEFAULT) {
             // stop s3 here (to be restart on response conf)
             S3.Stop();
           }
 
-          NotifyInd(info.data, info.length, targetAddress);
-        }
-        else
-        {
+          OnSessIndication(info.data, info.length, targetAddress);
+        } else {
           // do not process any request while etm is active
         }
-      }
-      else
-      {
+      } else {
         // unexpected result
-        NotifyConf(S_Result::NOK);
+        OnSessConfirmation(S_Result::NOK);
       }
 
       break;
 
     case (N_Event::DataFF):
-      if (res == N_Result::OK_r)
-      {
-        if (sessType == SessionType::NONDEFAULT)
-        {
+      if (res == N_Result::OK_r) {
+        if (sessType == SessionType::NONDEFAULT) {
           // stop s3 here to be aviod session stop during long receiving
           S3.Stop();
         }
-      }
-      else
-      {
+      } else {
         // should never get here
         SetSessionMode(sessType);
         assert(false);
@@ -109,21 +90,15 @@ void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& in
       break;
 
     case (N_Event::Conf):
-      if (res == N_Result::OK_s)
-      {
-        if (!isEtmActive)
-        {
+      if (res == N_Result::OK_s) {
+        if (!isEtmActive) {
           // update current session state
           SetSessionMode(sessType);
         }
-      }
-      else if (res == N_Result::TIMEOUT_Cr)
-      {
+      } else if (res == N_Result::TIMEOUT_Cr) {
         // segmented receptions is broken
         SetSessionMode(sessType);
-      }
-      else
-      {
+      } else {
         // error occured
       }
   }
@@ -132,24 +107,18 @@ void SessionControl::OnIsoEvent(N_Event event, N_Result res, const IsoTpInfo& in
 }
 
 
-void SessionControl::SetSessionMode(bool is_default)
-{
-  if (is_default)
-  {
+void SessionControl::SetSessionMode(bool is_default) {
+
+  if (is_default) {
     // default session doesn't use s3 timer, so stop it
     S3.Stop();
     sessType = SessionType::DEFAULT;
-  }
-  else
-  {
-    if (sessType == SessionType::DEFAULT)
-    {
+  } else {
+    if (sessType == SessionType::DEFAULT) {
       // initial start of S3 timer
       S3.Start(tims.S3_max);
       sessType = SessionType::NONDEFAULT;
-    }
-    else
-    {
+    } else {
       // already not default -> subsequent start
       S3.Restart();
     }
@@ -157,27 +126,22 @@ void SessionControl::SetSessionMode(bool is_default)
 }
 
 
-void SessionControl::ProcessSessionMode()
-{
-  if (sessType != SessionType::DEFAULT)
-  {
-    if (S3.Elapsed())
-    {
+void SessionControl::ProcessSessionMode() {
+
+  if (sessType != SessionType::DEFAULT) {
+    if (S3.Elapsed()) {
       SetSessionMode(true);
       On_s3_Timeout();
     }
   }
 
-  if (p2.Elapsed())
-  {
-    if (sessType != SessionType::DEFAULT)
-    {
+  if (p2.Elapsed()) {
+    if (sessType != SessionType::DEFAULT) {
       // Restart S3 timer!
       S3.Restart();
     }
 
-    if (isEtmActive)
-    {
+    if (isEtmActive) {
       // no response from handler was sent
       isEtmActive = false;
       // send common NRC (protocol requirement)
@@ -189,12 +153,11 @@ void SessionControl::ProcessSessionMode()
   }
 }
 
-SessParamResult SessionControl::SetSessionParam(SessParamType par, uint32_t v)
-{
+SessParamResult SessionControl::SetSessionParam(SessParamType par, uint32_t v) {
+
   auto ret = SessParamResult::OK;
 
-  switch (par)
-  {
+  switch (par) {
     case (SessParamType::S3_TIM):
       tims.S3_max = v;
       break;

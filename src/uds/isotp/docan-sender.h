@@ -57,13 +57,11 @@ class DoCAN_Sender {
   DoCAN_TP& itp;
 
   /// @brief DoCAN sender states
-  enum class DtState
-  {
+  enum class DtState {
     IDLE, SF_DT, MF_DT, PAUSE, WAIT,
   };
 
-  struct TxDescriptor
-  {
+  struct TxDescriptor {
     /// @brief general sender state
     DtState state {DtState::IDLE};
     /// @brief control block: previously passed size
