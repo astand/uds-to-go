@@ -90,7 +90,7 @@ class MultiServiceManager : public MemKeeper<UdsAppClient, N>, public UdsAppClie
   }
 
   /// @brief Callback from application uds manager on session confirmation event
-  /// @param res
+  /// @param res Confirmation result (status)
   virtual void OnAppConfirmation(S_Result res) {
 
     this->StartIteration();
