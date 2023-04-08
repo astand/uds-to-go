@@ -36,10 +36,9 @@ class ProxyUdsAppClient : public UdsAppClient {
   virtual void OnSessionChange(bool s3timer_event) override {
 
     std::cout << ((s3timer_event) ? (" s3 ") : (" -- "));
+    realHandler.OnSessionChange(s3timer_event);
     std::cout << "Session update :" << (int) udsRouter.GetSession().currSession;
     std::cout << std::endl;
-
-    realHandler.OnSessionChange(s3timer_event);
   }
 
  private:

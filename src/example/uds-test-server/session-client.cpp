@@ -26,15 +26,20 @@ ProcessResult DSCClient::OnAppIndication(const IndicationInfo& inf) {
     std::cout << "SI ok, ";
 
     if (inf.head.SF > 0 && inf.head.SF <= 3) {
-      std::cout << "Session ok (" << (int) inf.head.SF << ")" << std::endl;
-      // session change request ok
-      udsRouter.pubBuff[2] = ((250 >> 8) & 0xFF);
-      udsRouter.pubBuff[3] = (250 & 0xFF);
-      udsRouter.pubBuff[4] = (((5000 / 10) >> 8) & 0xFF);
-      udsRouter.pubBuff[5] = ((5000 / 10) & 0xFF);
-      sessionInfoContext.currSession = inf.head.SF;
-      udsRouter.SetServiceSession(sessionInfoContext.currSession);
-      udsRouter.SendResponse(udsRouter.pubBuff, 6);
+      if (sessionInfoContext.currSession == 1u && inf.head.SF == 2u) {
+        // direct transition from default to programmaing session is not allowed
+        udsRouter.SendNegResponse(NRCs::SFNSIAS);
+      } else {
+        std::cout << "Session ok (" << (int) inf.head.SF << ")" << std::endl;
+        // session change request ok
+        udsRouter.pubBuff[2] = ((250 >> 8) & 0xFF);
+        udsRouter.pubBuff[3] = (250 & 0xFF);
+        udsRouter.pubBuff[4] = (((5000 / 10) >> 8) & 0xFF);
+        udsRouter.pubBuff[5] = ((5000 / 10) & 0xFF);
+        sessionInfoContext.currSession = inf.head.SF;
+        udsRouter.SetServiceSession(sessionInfoContext.currSession);
+        udsRouter.SendResponse(udsRouter.pubBuff, 6);
+      }
     } else {
       std::cout << "SF bad (" << (int) inf.head.SF << ")" << std::endl;
       udsRouter.SendNegResponse(NRCs::SFNS);
@@ -46,7 +51,6 @@ ProcessResult DSCClient::OnAppIndication(const IndicationInfo& inf) {
   }
 
   return ProcessResult::NOT_HANDLED;
-
 }
 
 

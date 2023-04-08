@@ -58,7 +58,7 @@ void BuildApp() {
   static DSCClient dschandler(GetBaseUdsServer(), GetSessionInfoInstance());
 
   static DidKeeper<4> didkeeper;
-  static TestDidReader didreader;
+  static TestDidReader didreader(GetSessionInfoInstance());
   static DidRouter didrouter(GetBaseUdsServer(), didkeeper);
 
   static MultiRoutineHandler<4> rkeeper;
@@ -97,6 +97,8 @@ CliMen& GetClientUds() {
   static Menu extsess = Menu("Extended");
   static Menu prgsess = Menu("Programming");
   static Menu read22 = Menu("Read 22");
+  static Menu readSession = Menu("Read Session");
+  static Menu readSecurity = Menu("Read Security");
   static Menu tester = Menu("Tester Present");
 
   static Menu routine1 = Menu("Routine #1 (0x0102)");
@@ -106,8 +108,10 @@ CliMen& GetClientUds() {
   extsess.cmd = { 0x10, 0x03 };
   prgsess.cmd = { 0x10, 0x02 };
 
-  read22.cmd = { 0x22, 0x22, 0x22 };
-  tester.cmd = { 0x3e, 0x00};
+  read22.cmd = { 0x22, 0x22, 0x00 };
+  readSession.cmd = { 0x22, 0x00, 0xa0 };
+  readSecurity.cmd = { 0x22, 0x00, 0xa1 };
+  tester.cmd = { 0x3e, 0x00 };
 
   routine1.cmd = { 0x31, 0x01, 0x01, 0x02, 1 };
   routine2.cmd = { 0x31, 0x01, 0xff, 0x00, 1 };
@@ -118,7 +122,7 @@ CliMen& GetClientUds() {
   defsess.SetNext(&extsess);
   extsess.SetNext(&prgsess);
 
-  readdid.SetDown(&read22);
+  readdid.SetDown(&read22)->SetNext(&readSession)->SetNext(&readSecurity);
   readdid.SetNext(&tester);
 
   reqroutine.SetDown(&routine1);
