@@ -15,51 +15,89 @@ class DoCAN_TP : public ICAN_Listener, public IsoTpImpl, public IProcessable {
     iso_client(client)
   {}
 
+  /// @brief Periodic processing
   virtual void Process() override;
+
+  /// @brief Function is called on each new CAN frame
+  /// @param data Pointer to CAN frame data
+  /// @param length CAN frame payload length
+  /// @param msgid CAN message ID
   virtual void ReadFrame(const uint8_t* data, size_t length, uint32_t msgid) override;
+
+  /// @brief Sencs CAN frame payload on bus
+  /// @param data Pointer to payload data
+  /// @param length Payload length
+  /// @return Sending result
   virtual IsoTpResult Request(const uint8_t* data, size_t length) override;
 
-  // API for sender/receiver
+  /// @brief Puts padding byte and sends CAN payload
+  /// @param data Pointer to payload to be sent
+  /// @param len Usefull part of payload length
+  /// @return CAN frame payload length
   size_t PduToCan(uint8_t* data, datasize_t len) {
-    // fill padding byte
     // WARNING: data has to have enough space for padding bytes,
-    // it cannot be maximun possible candl value (64)
-    while (len++ < docan_config.candl) {
-      data[len - 1] = docan_config.padding;
+    while (len < configDoCAN.candl) {
+      data[len] = configDoCAN.padding;
+      ++len;
     }
 
-    return can_sender.SendFrame(data, docan_config.candl, docan_config.resp_id);
+    return can_sender.SendFrame(data, configDoCAN.candl, configDoCAN.resp_id);
   }
 
+  /// @brief ISO TP receive event handler
+  /// @param event Type of receiving event
+  /// @param result Event result (status)
+  /// @param data Pointer to the income payload
+  /// @param length Length of the income payload
   void OnIsoRxEvent(N_Event event, N_Result result, const uint8_t* data = nullptr, size_t length = 0);
+
+  /// @brief ISO TP transmitt event handler
+  /// @param event Type of transmitting event
+  /// @param result Event result (status)
   void OnIsoTxEvent(N_Event event, N_Result result);
+
+  /// @brief Sets ISO TP parameter
+  /// @param name Parameter name
+  /// @param value Parameter value
+  /// @return Setting result
   SetParamResult SetParameter(ParName name, uint32_t value);
 
-  typedef struct
-  {
+  /// @brief DoCAN instance static configuration
+  typedef struct {
+    /// @brief CAN message Id for the physically addressed CAN requests (income)
     uint32_t phys_id;
+    /// @brief CAN message Id for the functionally addressed CAN requests (income)
     uint32_t func_id;
+    /// @brief CAN message Id for the response messages (outcome)
     uint32_t resp_id;
+    /// @brief CAN message payload capacity
     datasize_t candl;
+    /// @brief CAN message outcome payload padding byte
     uint8_t padding;
-  } DoCAN_Config_t;
+  } configDoCAN_t;
 
-  const DoCAN_Config_t& Config() const {
-    return docan_config;
+  /// @brief DoCAN static configuration reading export
+  /// @return Reference to the DoCAN configuration
+  const configDoCAN_t& Config() const {
+    return configDoCAN;
   }
 
  private:
+  /// @brief Instance of ISO TP DoCAN sender
   DoCAN_Sender iso_sender;
+  /// @brief Instance of ISO TP DoCAN receiver
   DoCAN_Receiver iso_receiver;
 
+  /// @brief Reference to the physical CAN message sender
   ICAN_Sender& can_sender;
+  /// @brief Reference to the ISO TP client (application level instance)
   IsoTpClient& iso_client;
 
-  IsoTpClient::IsoTpInfo paydsc{};
+  /// @brief PDU context info (data, length etc)
+  IsoTpClient::IsoTpInfo pduContext{};
 
-  DoCAN_Config_t docan_config{};
-
-  IsoTpResult state {IsoTpResult::WRONG_STATE};
+  /// @brief ISO TP DoCAN configuration
+  configDoCAN_t configDoCAN{};
 };
 
 template<size_t Rx, size_t Tx, template<typename, size_t> class Memgiver>

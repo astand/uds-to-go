@@ -44,13 +44,11 @@ class DoCAN_Receiver {
   /// @brief DoCAN host reference
   DoCAN_TP& itp;
 
-  enum class RxState
-  {
+  enum class RxState {
     IDLE, ACTIVE
   };
 
-  struct RxDescriptor
-  {
+  struct RxDescriptor {
     RxState state{RxState::IDLE};
 
     datasize_t rxsize{0};

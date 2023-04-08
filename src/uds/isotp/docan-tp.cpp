@@ -3,43 +3,36 @@
 #include "docan-tp.h"
 
 
-void DoCAN_TP::Process()
-{
+void DoCAN_TP::Process() {
+
   iso_sender.ProcessTx();
   iso_receiver.ProcessRx();
 }
 
-void DoCAN_TP::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
-{
-  bool is_phys = (msgid == docan_config.phys_id);
-  bool is_func = (msgid == docan_config.func_id);
+void DoCAN_TP::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid) {
+
+  bool is_phys = (msgid == configDoCAN.phys_id);
+  bool is_func = (msgid == configDoCAN.func_id);
 
   DC_FrameType ptype = static_cast<DC_FrameType>(data[0] & 0xf0u);
 
   // request with functional address can be only SF
-  if ((is_func) && (ptype == DC_FrameType::SF))
-  {
+  if ((is_func) && (ptype == DC_FrameType::SF)) {
     // request with functional address can be only SF
-    paydsc.address = N_TarAddress::TAtype_2_Functional;
+    pduContext.address = N_TarAddress::TAtype_2_Functional;
 
-    if ((data[0] & 0x0fu) == 0)
-    {
-      paydsc.data = data + 2;
-      paydsc.length = data[1];
-    }
-    else
-    {
-      paydsc.data = data + 1;
-      paydsc.length = data[0] & 0x0fu;
+    if ((data[0] & 0x0fu) == 0) {
+      pduContext.data = data + 2;
+      pduContext.length = data[1];
+    } else {
+      pduContext.data = data + 1;
+      pduContext.length = data[0] & 0x0fu;
     }
 
     // notify upper layer
-    iso_client.OnIsoEvent(N_Event::Data, N_Result::OK_r, paydsc);
-  }
-  else if (is_phys)
-  {
-    switch (ptype)
-    {
+    iso_client.OnIsoEvent(N_Event::Data, N_Result::OK_r, pduContext);
+  } else if (is_phys) {
+    switch (ptype) {
       case (DC_FrameType::FC):
         // flow control message for ICAN_Sender
         iso_sender.OnFlowControl(data[0] & 0x0fu, data[1], data[2]);
@@ -52,23 +45,21 @@ void DoCAN_TP::ReadFrame(const uint8_t* data, size_t length, uint32_t msgid)
   }
 }
 
-IsoTpResult DoCAN_TP::Request(const uint8_t* data, size_t length)
-{
+IsoTpResult DoCAN_TP::Request(const uint8_t* data, size_t length) {
+
   return iso_sender.Send(data, length);
 }
 
-SetParamResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
-{
+SetParamResult DoCAN_TP::SetParameter(ParName name, uint32_t v) {
+
   auto ret = SetParamResult::OK;
 
-  if (iso_sender.IsBusy() || iso_receiver.IsBusy())
-  {
+  if (iso_sender.IsBusy() || iso_receiver.IsBusy()) {
     // TODO: make this return more clear (for the case when Tx is busy)
     return SetParamResult::RX_ON;
   }
 
-  switch (name)
-  {
+  switch (name) {
     case (ParName::BLKSZ):
     case (ParName::ST_MIN):
     case (ParName::Br_TIM_ms):
@@ -82,23 +73,23 @@ SetParamResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
       break;
 
     case (ParName::CANDL):
-      docan_config.candl = (v <= MAX_CANDL) ? v : MAX_CANDL;
+      configDoCAN.candl = (v <= MAX_CANDL) ? v : MAX_CANDL;
       break;
 
     case (ParName::PADD_BYTE):
-      docan_config.padding = static_cast<uint8_t>(v);
+      configDoCAN.padding = static_cast<uint8_t>(v);
       break;
 
     case (ParName::PHYS_ADDR):
-      docan_config.phys_id = v;
+      configDoCAN.phys_id = v;
       break;;
 
     case (ParName::FUNC_ADDR):
-      docan_config.func_id = v;
+      configDoCAN.func_id = v;
       break;
 
     case (ParName::RESP_ADDR):
-      docan_config.resp_id = v;
+      configDoCAN.resp_id = v;
       break;
 
     default:
@@ -108,16 +99,16 @@ SetParamResult DoCAN_TP::SetParameter(ParName name, uint32_t v)
   return ret;
 }
 
-void DoCAN_TP::OnIsoRxEvent(N_Event event, N_Result result, const uint8_t* data, size_t length)
-{
-  paydsc.data = data;
-  paydsc.length = length;
-  paydsc.address = N_TarAddress::TAtype_1_Physical;
+void DoCAN_TP::OnIsoRxEvent(N_Event event, N_Result result, const uint8_t* data, size_t length) {
 
-  iso_client.OnIsoEvent(event, result, paydsc);
+  pduContext.data = data;
+  pduContext.length = length;
+  pduContext.address = N_TarAddress::TAtype_1_Physical;
+
+  iso_client.OnIsoEvent(event, result, pduContext);
 }
 
-void DoCAN_TP::OnIsoTxEvent(N_Event event, N_Result result)
-{
-  iso_client.OnIsoEvent(event, result, paydsc);
+void DoCAN_TP::OnIsoTxEvent(N_Event event, N_Result result) {
+
+  iso_client.OnIsoEvent(event, result, pduContext);
 }
