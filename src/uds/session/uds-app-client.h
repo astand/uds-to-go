@@ -100,5 +100,15 @@ class MultiServiceManager : public MemKeeper<UdsAppClient, N>, public UdsAppClie
     }
   }
 
+  /// @brief Callback from uds session layer on session change event
+  /// @param isdefault true when current session is default
+  virtual void OnSessionChange(bool isdefault) {
+
+    this->StartIteration();
+
+    while (!this->IsLastIteration()) {
+      this->IterNextElem()->OnSessionChange(isdefault);
+    }
+  }
 };
 

@@ -81,7 +81,7 @@ void UdsAppManager::SetServiceSession(uint8_t sessionValue) {
 
   // all the clients must be informed
   assert(clientHandler != nullptr);
-  clientHandler->OnSessionChange(true);
+  clientHandler->OnSessionChange(sessionValue == 1u);
 }
 
 
