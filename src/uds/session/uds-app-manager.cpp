@@ -51,6 +51,7 @@ void UdsAppManager::SendResponse(const uint8_t* data, uint32_t length) {
     SendRequest(data, length, false);
   }
 
+  nrcPending = false;
   // reset session layer anyway
   SetSessionMode(sessionState.currSession == 1u);
 }
@@ -61,7 +62,6 @@ void UdsAppManager::SendNegResponse(SIDs sid, NRCs nrc) {
   pubBuff[0] = SID_to_byte(SIDs::NR_SI);
   pubBuff[1] = SID_to_byte(sid);
   pubBuff[2] = NRC_to_byte(nrc);
-  nrcBadParam = (nrc == NRCs::IMLOIF);
   nrcOutCode = nrc;
 
   SendResponse(pubBuff, 3);
@@ -88,7 +88,6 @@ void UdsAppManager::SetServiceSession(uint8_t sessionValue) {
 void UdsAppManager::OnSessIndication(const uint8_t* data, uint32_t length, TargetAddressType addr) {
 
   nrcOutCode = NRCs::PR;
-  nrcBadParam = false;
 
   reqContext.addr = addr;
   reqContext.data = data;
@@ -149,6 +148,7 @@ void UdsAppManager::On_s3_Timeout() {
 bool UdsAppManager::ResponseAllowed() {
 
   if ((reqContext.addr == TargetAddressType::FUNC)
+      && (nrcPending == false)
       && ((nrcOutCode == NRCs::SNSIAS)
           || (nrcOutCode == NRCs::SNS)
           || (nrcOutCode == NRCs::SFNS)
@@ -167,6 +167,7 @@ bool UdsAppManager::ResponseAllowed() {
 
 void UdsAppManager::StartPending(const size_t maxduration, const size_t resendperiod) {
 
+  nrcPending = true;
   SetPending(maxduration, resendperiod, reqContext.head.SI);
 }
 

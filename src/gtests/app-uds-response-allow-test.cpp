@@ -22,6 +22,7 @@ constexpr uint8_t SIDSF_SF_SNSIAS = 0x08u;
 
 constexpr uint8_t SIDSF_SF_PARAM_OK = 0x33u;
 constexpr uint8_t SIDSF_SF_PARAM_CNC = 0x34u;
+constexpr uint8_t SIDSF_SF_PARAM_PENDING = 0x35u;
 
 // The frist class must be mock for IsoTpImpl
 class MockIsoTp : public IsoTpImpl {
@@ -79,6 +80,10 @@ class MockUdsAppClient : public UdsAppClient {
           retLength = 2u;
         } else if (inf.data[2] == SIDSF_SF_PARAM_CNC) {
           udsRouter.SendNegResponse(NRCs::CNC);
+        } else if (inf.data[2] == SIDSF_SF_PARAM_PENDING) {
+          udsRouter.StartPending(10000);
+          // 78 sent one time
+          udsRouter.SendNegResponse(NRCs::ROOR);
         } else {
           udsRouter.SendNegResponse(NRCs::ROOR);
         }
@@ -375,6 +380,16 @@ TEST(ResponseUdsAppTest, GeneralTests) {
 
   // j)
   set_func_sub_func_suppres(SID_SF, { 0, SIDSF_SF_PARAM_OK }, 2);
+  testAppManger.OnIsoEvent(N_Event::Data, N_Result::OK_r, isoContext);
+  EXPECT_EQ(responseCounter, no_response_sent());
+
+  // RCRRP
+  set_func_sub_func_suppres(SID_SF, { SIDSF_SF_OK, SIDSF_SF_PARAM_PENDING }, 2);
+  testAppManger.OnIsoEvent(N_Event::Data, N_Result::OK_r, isoContext);
+  response_sent();
+  EXPECT_EQ(responseCounter, response_sent());
+
+  set_func_sub_func_suppres(SID_SF, { SIDSF_SF_OK, SIDSF_SF_PARAM_OK }, 2);
   testAppManger.OnIsoEvent(N_Event::Data, N_Result::OK_r, isoContext);
   EXPECT_EQ(responseCounter, no_response_sent());
 

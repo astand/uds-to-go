@@ -100,8 +100,8 @@ class UdsAppManager : public SessionControl {
   UdsAppClient* clientHandler;
   /// @brief Negative output code to be sent as response
   NRCs nrcOutCode;
-  /// @brief Negative output code means 'wrong parameter'
-  bool nrcBadParam;
+  /// @brief Pending mode activation indicator
+  bool nrcPending;
   /// @brief Manager activity flag, manager blocks requests when false
   bool isManagerActive;
 
