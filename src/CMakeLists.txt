@@ -82,11 +82,14 @@ enable_testing()
 
 add_executable(
   test_run
+  ${CMAKE_CURRENT_SOURCE_DIR}/uds/session/session-control.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/uds/session/uds-app-manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/d-timer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/etc/timers/tickerup.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/gtests/etc/timer-tests.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/gtests/ophelper-be-test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/gtests/ophelper-le-test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/gtests/app-uds-response-allow-test.cpp
 )
 
 target_link_libraries(
@@ -97,6 +100,7 @@ target_link_libraries(
 target_include_directories(
   test_run PRIVATE 
   ${CMAKE_CURRENT_SOURCE_DIR}/
+  ${CMAKE_CURRENT_SOURCE_DIR}/etc
 )
 
 include(GoogleTest)

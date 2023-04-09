@@ -149,16 +149,18 @@ void UdsAppManager::On_s3_Timeout() {
 bool UdsAppManager::ResponseAllowed() {
 
   if (reqContext.addr == TargetAddressType::FUNC) {
-    // ISO 14229-1 Table 5
-    return (nrcBadParam || (reqContext.head.suppressPosResponse == false && nrcOutCode == NRCs::PR));
+    if (nrcOutCode == NRCs::PR) {
+      return reqContext.head.suppressPosResponse == false;
+    } else if (nrcOutCode == NRCs::ROOR || nrcOutCode == NRCs::SNS || nrcOutCode == NRCs::SNSIAS) {
+      return false;
+    } else {
+      return true;
+    }
   } else if (reqContext.addr == TargetAddressType::PHYS) {
-    // ISO 14229-1 Table 4
     if (nrcOutCode != NRCs::RCRRP) {
-      // check h), i), j) or g)
       return (reqContext.head.suppressPosResponse == false)
           || (!nrc_to_send_when_pos_suppressed(nrcOutCode) && !nrcBadParam);
     } else {
-      // when RCRRP is sent suppress indicator must be cleared to avoid blocking final response
       reqContext.head.suppressPosResponse = false;
       return true;
     }
