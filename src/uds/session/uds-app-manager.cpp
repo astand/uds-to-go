@@ -148,25 +148,20 @@ void UdsAppManager::On_s3_Timeout() {
 
 bool UdsAppManager::ResponseAllowed() {
 
-  if (reqContext.addr == TargetAddressType::FUNC) {
-    if (nrcOutCode == NRCs::PR) {
-      return reqContext.head.suppressPosResponse == false;
-    } else if (nrcOutCode == NRCs::ROOR || nrcOutCode == NRCs::SNS || nrcOutCode == NRCs::SNSIAS) {
-      return false;
-    } else {
-      return true;
-    }
-  } else if (reqContext.addr == TargetAddressType::PHYS) {
-    if (nrcOutCode != NRCs::RCRRP) {
-      return (reqContext.head.suppressPosResponse == false)
-          || (!nrc_to_send_when_pos_suppressed(nrcOutCode) && !nrcBadParam);
-    } else {
-      reqContext.head.suppressPosResponse = false;
-      return true;
-    }
+  if ((reqContext.addr == TargetAddressType::FUNC)
+      && ((nrcOutCode == NRCs::SNSIAS)
+          || (nrcOutCode == NRCs::SNS)
+          || (nrcOutCode == NRCs::SFNS)
+          || (nrcOutCode == NRCs::SFNSIAS)
+          || (nrcOutCode == NRCs::ROOR))) {
+    return false;
+  } else if (nrcOutCode == NRCs::PR && reqContext.head.suppressPosResponse == true) {
+    return false;
+  } else if (nrcOutCode == NRCs::RCRRP) {
+    reqContext.head.suppressPosResponse = false;
   }
 
-  return false;
+  return true;
 }
 
 
