@@ -2,8 +2,7 @@
 
 #include <stdint.h>
 
-enum class NRCs : uint8_t
-{
+enum class NRCs : uint8_t {
   PR = 0, // positive response PR
   GR = 0x10, // generalReject GR
   SNS = 0x11, // serviceNotSupported SNS
@@ -54,7 +53,7 @@ enum class NRCs : uint8_t
 
 };
 
-constexpr uint8_t NRC_to_byte(NRCs nrc)
-{
+constexpr uint8_t NRC_to_byte(NRCs nrc) {
+
   return static_cast<uint8_t>(nrc);
 }

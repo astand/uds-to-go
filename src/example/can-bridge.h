@@ -14,6 +14,7 @@
 class SocketCanSender : public ICAN_Sender {
  public:
   size_t SendFrame(const uint8_t* data, size_t length, uint32_t msgid) {
+
     assert(length <= 8);
     assert(txsocket != 0);
 
@@ -26,6 +27,7 @@ class SocketCanSender : public ICAN_Sender {
   }
 
   void SetSocket(int s) {
+
     assert(s != 0);
     txsocket = s;
   }
@@ -37,16 +39,19 @@ class SocketCanSender : public ICAN_Sender {
 class SocketCanReader : public IProcessable {
  public:
   SocketCanReader(ICAN_Listener& receiver) : isoreceiver(receiver) {
+
     select_to.tv_sec = 0u;
     select_to.tv_usec = 0u;
   }
 
   void SetSocket(int s) {
+
     assert(s != 0);
     rxsock = s;
   }
 
   virtual void Process() override {
+
     assert(rxsock != 0);
     struct canfd_frame read_frame;
 
@@ -68,18 +73,14 @@ class SocketCanReader : public IProcessable {
           }
 
           break;
-        }
-        else if (recv_bytes == CAN_MTU) {
+        } else if (recv_bytes == CAN_MTU) {
           isoreceiver.ReadFrame(read_frame.data, 8, read_frame.can_id);
-        }
-        else if (recv_bytes == 0) {
+        } else if (recv_bytes == 0) {
           break;
-        }
-        else {
+        } else {
           std::cout << "Unexpected length: " << recv_bytes << std::endl;
         }
-      }
-      while (true);
+      } while (true);
     }
   }
 

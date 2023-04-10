@@ -6,8 +6,8 @@
 //------------------------------------------------------------------------------
 // Result of handling
 //------------------------------------------------------------------------------
-enum class DidResult
-{
+enum class DidResult {
+
   // DID request is not processed and another attempt can be performed using another DIDHandler class
   Ignored,
 

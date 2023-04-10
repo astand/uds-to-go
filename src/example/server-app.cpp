@@ -22,40 +22,26 @@ static DoCAN_TP& iso_tp = GetDoCAN();
 // get CAN can_reader to process it in the loop
 static SocketCanReader can_reader(iso_tp);
 
+static void set_do_can_parameters(DoCAN_TP&, argsret& params) {
 
-
-static void set_do_can_parameters(DoCAN_TP&, argsret& params)
-{
   uint32_t phys_id = 0x700u;
   uint32_t resp_id = 0x701u;
   uint32_t func_id = 0x7dfu;
   uint32_t stmin = 0u;
   uint32_t blksize = 8u;
 
-  for (size_t i = 0; i < params.size(); i++)
-  {
-    if (params[i].first.compare("-blksize") == 0)
-    {
+  for (size_t i = 0; i < params.size(); i++) {
+    if (params[i].first.compare("-blksize") == 0) {
       try_to_set_param(params[i], blksize);
-    }
-    else if (params[i].first.compare("-phys") == 0)
-    {
+    } else if (params[i].first.compare("-phys") == 0) {
       try_to_set_param(params[i], phys_id);
-    }
-    else if (params[i].first.compare("-resp") == 0)
-    {
+    } else if (params[i].first.compare("-resp") == 0) {
       try_to_set_param(params[i], resp_id);
-    }
-    else if (params[i].first.compare("-func") == 0)
-    {
+    } else if (params[i].first.compare("-func") == 0) {
       try_to_set_param(params[i], func_id);
-    }
-    else if (params[i].first.compare("-stmin") == 0)
-    {
+    } else if (params[i].first.compare("-stmin") == 0) {
       try_to_set_param(params[i], stmin);
-    }
-    else if (params[i].first.compare("-iface") == 0)
-    {
+    } else if (params[i].first.compare("-iface") == 0) {
       ifname = params[i].second;
     }
   }
@@ -81,8 +67,7 @@ static void set_do_can_parameters(DoCAN_TP&, argsret& params)
   iso_tp.SetParameter(ParName::FUNC_ADDR, func_id);
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   auto params = collectargs(argc, argv);
 
   std::cout << " ----------- ECU simulation -------------- " << std::endl;
@@ -123,8 +108,7 @@ int main(int argc, char** argv)
 
   for (size_t i = 0; i < buffer.size(); buffer[i] = static_cast<uint8_t>(i), i++);
 
-  std::thread th1([&]()
-  {
+  std::thread th1([&]() {
     climen.Run();
   });
 
@@ -132,13 +116,11 @@ int main(int argc, char** argv)
 
   std::string readcmd;
 
-  while (true)
-  {
+  while (true) {
     GetMainProcHandler().Process();
     can_reader.Process();
 
-    if (climen.IsCmd())
-    {
+    if (climen.IsCmd()) {
       auto payload = climen.GetData();
       iso_tp.Request(payload.data(), payload.size());
     }

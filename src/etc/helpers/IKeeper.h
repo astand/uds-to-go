@@ -19,8 +19,7 @@ class IKeeper {
   using ElemPtr_t = Tptr_t<T>;
 
   /// @brief Result of any keeper opearion
-  enum class KeeperResult
-  {
+  enum class KeeperResult {
     ERROR,
     OK,
   };
@@ -41,8 +40,7 @@ class IKeeper {
       if ((elemArray[i] == elem) && (multi == false)) {
         // element is already in collection, break the loop and return error
         break;
-      }
-      else if (elemArray[i] == nullptr) {
+      } else if (elemArray[i] == nullptr) {
         // add new element
         elemArray[i] = elem;
         currElemNumber++;

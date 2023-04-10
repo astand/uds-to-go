@@ -6,8 +6,7 @@
 #include "typedefs.h"
 
 /// @brief Network event result
-enum class N_Result : enumbase_t
-{
+enum class N_Result : enumbase_t {
   // This value means that the service execution has been completed successfully; it can be issued to a
   // service user on both the sender and receiver sides.
   OK_s,
@@ -50,8 +49,7 @@ enum class N_Result : enumbase_t
 };
 
 /// @brief Result of attempt to change parameter
-enum class SetParamResult : enumbase_t
-{
+enum class SetParamResult : enumbase_t {
   // This value means that the service execution has been completed successfully; it can be issued to a
   // service user on both the sender and receiver sides.
   OK,
@@ -68,8 +66,7 @@ enum class SetParamResult : enumbase_t
 };
 
 /// @brief List of parameters
-enum class ParName : enumbase_t
-{
+enum class ParName : enumbase_t {
   ST_MIN,
   BLKSZ,
   PHYS_ADDR,
@@ -85,16 +82,14 @@ enum class ParName : enumbase_t
 
 
 /// @brief Network event type
-enum class N_Event : enumbase_t
-{
+enum class N_Event : enumbase_t {
   Conf,
   Data,
   DataFF,
 };
 
 /// @brief Result of request ot iso-tp
-enum class IsoTpResult : enumbase_t
-{
+enum class IsoTpResult : enumbase_t {
   OK,
   BUSY,
   WRONG_STATE,
@@ -102,8 +97,7 @@ enum class IsoTpResult : enumbase_t
 };
 
 /// @brief List of possible CAN datalength
-enum class CanDl : enumbase_t
-{
+enum class CanDl : enumbase_t {
   CANDL_8 = 8,
   CANDL_12 = 12,
   CANDL_16 = 16,
@@ -115,8 +109,7 @@ enum class CanDl : enumbase_t
 };
 
 /// @brief ISO-TP target address
-enum class N_TarAddress
-{
+enum class N_TarAddress {
   TAtype_Invalid = 0,
   // CAN base format (CLASSICAL CAN, 11-bit)
   TAtype_1_Physical,

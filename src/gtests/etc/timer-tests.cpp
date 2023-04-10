@@ -4,17 +4,16 @@
 
 using namespace DTimers;
 
-void RollRootCounter(uint32_t ticks)
-{
-  while (ticks--)
-  {
+void RollRootCounter(uint32_t ticks) {
+
+  while (ticks--) {
     Timers::TickerCounter::ProcessTick();
   }
 }
 
 // Demonstrate some basic assertions.
-TEST(DTimerTests, GeneralTests)
-{
+TEST(DTimerTests, GeneralTests) {
+
   // no explicit construction
   // Timer d = {1};
   Timer t0{};
@@ -57,8 +56,8 @@ TEST(DTimerTests, GeneralTests)
 }
 
 
-TEST(DTimerTests, ZeroInterval)
-{
+TEST(DTimerTests, ZeroInterval) {
+
   Timer t1;
 
   t1.Start(0);
@@ -82,8 +81,8 @@ TEST(DTimerTests, ZeroInterval)
   EXPECT_EQ(t1.Elapsed(), true);
 }
 
-TEST(DTimersTests, Restart)
-{
+TEST(DTimersTests, Restart) {
+
   Timer t2{10};
 
   EXPECT_EQ(t2.IsActive(), true);

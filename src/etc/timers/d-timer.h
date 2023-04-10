@@ -4,8 +4,7 @@
 
 using interval_t = Timers::TickerCounter::systick_t;
 
-namespace DTimers
-{
+namespace DTimers {
 
 using namespace Timers;
 

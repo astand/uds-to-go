@@ -7,8 +7,7 @@
 class IsoTpClient {
  public:
   /// @brief ISO TP event context information descriptor
-  typedef struct
-  {
+  typedef struct {
     const uint8_t* data;
     size_t length;
     N_TarAddress address;

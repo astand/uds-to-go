@@ -15,6 +15,7 @@ class RotineServ1 : public ClientRoutineBase, public IProcessable {
   RotineServ1(RoutineRouter& routiner) : ClientRoutineBase(routiner) {}
 
   ProcessResult OnRoutine(routine_id_t rid, uint8_t, const uint8_t*, size_t) {
+
     auto ret = ProcessResult::NOT_HANDLED;
 
     if (rid == 0x0102) {
@@ -24,8 +25,7 @@ class RotineServ1 : public ClientRoutineBase, public IProcessable {
         timeout.Restart();
         // return HANDLED_PENDING status to inform host that final response will be sent later
         ret = ProcessResult::HANDLED_PENDING;
-      }
-      else {
+      } else {
         routman.SendRoutineNegResponse(NRCs::IMLOIF);
       }
     }
@@ -34,6 +34,7 @@ class RotineServ1 : public ClientRoutineBase, public IProcessable {
   }
 
   virtual void Process() override {
+
     if (pending && timeout.Elapsed()) {
       pending = false;
       timeout.Stop();
@@ -57,6 +58,7 @@ class RotineServ2 : public ClientRoutineBase {
   RotineServ2(RoutineRouter& routiner) : ClientRoutineBase(routiner) {}
 
   ProcessResult OnRoutine(routine_id_t rid, uint8_t, const uint8_t*, size_t) {
+
     if (rid == 0xff00) {
       if (true) {
         // Ok
@@ -65,8 +67,7 @@ class RotineServ2 : public ClientRoutineBase {
         rcontext.type = 64;
         routman.SendRoutineResponse(rcontext);
         return ProcessResult::HANDLED_RESP_NO;
-      }
-      else {
+      } else {
         routman.SendRoutineNegResponse(NRCs::IMLOIF);
         return ProcessResult::HANDLED_RESP_NO;
       }

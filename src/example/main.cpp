@@ -29,38 +29,26 @@ static std::string ifname = "vcan0";
 static DoCAN_TP& iso_tp = GetDoCAN();
 static SocketCanReader listener(iso_tp);
 
-static void set_do_can_parameters(DoCAN_TP&, argsret& params)
-{
+static void set_do_can_parameters(DoCAN_TP&, argsret& params) {
+
   uint32_t phys_id = 0x700u;
   uint32_t resp_id = 0x701u;
   uint32_t func_id = 0x7dfu;
   uint32_t stmin = 0u;
   uint32_t blksize = 8u;
 
-  for (size_t i = 0; i < params.size(); i++)
-  {
-    if (params[i].first.compare("-blksize") == 0)
-    {
+  for (size_t i = 0; i < params.size(); i++) {
+    if (params[i].first.compare("-blksize") == 0) {
       try_to_set_param(params[i], blksize);
-    }
-    else if (params[i].first.compare("-phys") == 0)
-    {
+    } else if (params[i].first.compare("-phys") == 0) {
       try_to_set_param(params[i], phys_id);
-    }
-    else if (params[i].first.compare("-resp") == 0)
-    {
+    } else if (params[i].first.compare("-resp") == 0) {
       try_to_set_param(params[i], resp_id);
-    }
-    else if (params[i].first.compare("-func") == 0)
-    {
+    } else if (params[i].first.compare("-func") == 0) {
       try_to_set_param(params[i], func_id);
-    }
-    else if (params[i].first.compare("-stmin") == 0)
-    {
+    } else if (params[i].first.compare("-stmin") == 0) {
       try_to_set_param(params[i], stmin);
-    }
-    else if (params[i].first.compare("-iface") == 0)
-    {
+    } else if (params[i].first.compare("-iface") == 0) {
       ifname = params[i].second;
     }
   }
@@ -86,8 +74,8 @@ static void set_do_can_parameters(DoCAN_TP&, argsret& params)
   iso_tp.SetParameter(ParName::FUNC_ADDR, func_id);
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
+
   auto params = collectargs(argc, argv);
 
   iso_tp.SetParameter(ParName::CANDL, 8);
@@ -125,22 +113,18 @@ int main(int argc, char** argv)
 
   for (size_t i = 0; i < buffer.size(); buffer[i] = static_cast<uint8_t>(i), i++);
 
-  std::thread th1([&]()
-  {
+  std::thread th1([&]() {
     std::string readcmd;
     std::cout << "Command read thread started... OK" << std::endl;
     std::cout << "To send ISO TP packet input number (payload size) and press Enter" << std::endl;
     std::cout << "If the target instance is available you will see the result in its output..." << std::endl;
     bool run = true;
 
-    while (run)
-    {
+    while (run) {
       std::cin >> readcmd;
 
-      if (readcmd.size() > 0)
-      {
-        if (readcmd.at(0) == 'e')
-        {
+      if (readcmd.size() > 0) {
+        if (readcmd.at(0) == 'e') {
           // return from thread (exit)
           run = false;
         }
@@ -155,34 +139,27 @@ int main(int argc, char** argv)
 
   std::string readcmd;
 
-  while (true)
-  {
+  while (true) {
     GetMainProcHandler().Process();
     listener.Process();
 
     {
       std::lock_guard<std::mutex> guard(mtx);
 
-      if (cmd.size() > 0)
-      {
+      if (cmd.size() > 0) {
         readcmd = cmd;
         cmd.clear();
       }
     }
 
-    if (readcmd.size() > 0)
-    {
-      if (readcmd.at(0) == 'e')
-      {
+    if (readcmd.size() > 0) {
+      if (readcmd.at(0) == 'e') {
         // exit
         break;
-      }
-      else
-      {
+      } else {
         uint32_t sendsize = 0u;
 
-        if (sscanf(readcmd.c_str(), "%u", &sendsize) == 1)
-        {
+        if (sscanf(readcmd.c_str(), "%u", &sendsize) == 1) {
           std::cout << " ---> SEND " << sendsize << " bytes payload" << std::endl;
           iso_tp.Request(buffer.data(), sendsize);
         }

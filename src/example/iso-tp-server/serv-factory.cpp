@@ -14,33 +14,33 @@
 constexpr size_t RxBufferSize = 8192;
 constexpr size_t TxBufferSize = 8192;
 
-SocketCanSender& GetCanSender()
-{
+SocketCanSender& GetCanSender() {
+
   static SocketCanSender sender;
   return sender;
 }
 
-DoCAN_TP& GetDoCAN()
-{
+DoCAN_TP& GetDoCAN() {
+
   static IsoApp isoapp;
   static DoCAN_TP_Mem<RxBufferSize, TxBufferSize, StaticMemAllocator> isotpsource(GetCanSender(), isoapp);
 
   return isotpsource;
 }
 
-static ProcRunner<4>& GetProcRunner()
-{
+static ProcRunner<4>& GetProcRunner() {
+
   static ProcRunner<4> procrunner;
   return procrunner;
 }
 
-IProcessable& GetMainProcHandler()
-{
+IProcessable& GetMainProcHandler() {
+
   return GetProcRunner();
 }
 
-void BuildApp()
-{
+void BuildApp() {
+
   static TickerWrapper ticker;
 
   GetProcRunner().Add(&ticker);

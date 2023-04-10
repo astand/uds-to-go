@@ -8,6 +8,7 @@
 class IsoApp : public IsoTpClient {
  public:
   void OnIsoEvent(N_Event t, N_Result res, const IsoTpInfo& inf) {
+
     assert((uint8_t)t < 3 && (uint8_t)res < 13);
 
     std::cout << "Event [" << type_names[(uint8_t)t] << "] Status [" << res_names[(uint8_t)res] << "]";
@@ -34,8 +35,7 @@ class IsoApp : public IsoTpClient {
 
       std::cout << std::endl << "------------------------------------------------" << std::dec;
       std::cout << std::endl << " <--- RECV OK: " << inf.length << " bytes.";
-    }
-    else if (t == N_Event::DataFF && res == N_Result::OK_r) {
+    } else if (t == N_Event::DataFF && res == N_Result::OK_r) {
       std::cout << " Expected size = " << inf.length << " bytes.";
     }
 
@@ -43,15 +43,13 @@ class IsoApp : public IsoTpClient {
   }
 
  private:
-  const char* type_names[3] =
-  {
+  const char* type_names[3] = {
     "Conf  ",
     "Data  ",
     "DataFF"
   };
 
-  const char* res_names[13] =
-  {
+  const char* res_names[13] = {
     "OK_s",
     "OK_r",
     "TIMEOUT_As",

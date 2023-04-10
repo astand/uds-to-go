@@ -16,30 +16,36 @@ class Menu {
   std::vector<uint8_t> cmd;
 
   Menu* SetNext(Menu* next) {
+
     assert(next != nullptr);
     this->next = next;
     return this->next;
   }
 
   Menu* SetDown(Menu* d) {
+
     assert(d != nullptr);
     this->down = d;
     return d;
   }
 
   Menu* GetNext() {
+
     return next;
   }
 
   bool IsNext() {
+
     return next != nullptr;
   }
 
   Menu* GetDown() {
+
     return down;
   }
 
   bool IsDown() {
+
     return down != nullptr;
   }
 
@@ -54,11 +60,13 @@ class Menu {
 class CliMen {
  public:
   CliMen(Menu* m) : root(m) {
+
     assert(root != nullptr);
   }
 
  public:
   void Run() {
+
     Menu* item = root;
     Menu* start = root;
 
@@ -66,8 +74,7 @@ class CliMen {
 
       if (!deep.empty()) {
         start = deep.top();
-      }
-      else {
+      } else {
         start = root;
       }
 
@@ -77,8 +84,7 @@ class CliMen {
       do {
         std::cout << ++count << " : " << item->text << std::endl;
         item = item->GetNext();
-      }
-      while (item != nullptr);
+      } while (item != nullptr);
 
       std::string in;
       std::cout << "Input number > ";
@@ -99,29 +105,24 @@ class CliMen {
               // get down pointer
               item = item->GetDown();
               deep.push(item);
-            }
-            else {
+            } else {
               std::cout << "Send command '" << item->text << "' to iso TP" << std::endl << std::endl;
               std::lock_guard<std::mutex> guard(mtx);
               veccmd = &item->cmd;
               cmd_ready = true;
             }
           }
-        }
-        else if (scaned == 0) {
+        } else if (scaned == 0) {
           // exit here
-        }
-        else {
+        } else {
           // print again
         }
-      }
-      else {
+      } else {
         // try to go up
         if (deep.empty() == false) {
           item = deep.top();
           deep.pop();
-        }
-        else {
+        } else {
           item = root;
         }
       }
@@ -129,10 +130,12 @@ class CliMen {
   }
 
   bool IsCmd() const {
+
     return cmd_ready;
   }
 
   std::vector<uint8_t> GetData() {
+
     std::lock_guard<std::mutex> guard(mtx);
     auto retv = *veccmd;
     cmd_ready = false;

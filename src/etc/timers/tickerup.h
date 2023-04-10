@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 
-namespace Timers
-{
+namespace Timers {
+
 /// @brief Base static class to process base timers counter
 class TickerCounter {
  public:
@@ -12,12 +12,14 @@ class TickerCounter {
 
   /// @brief Tick counter increment call
   static void ProcessTick() {
+
     ++root_tick_counter;
   }
 
   /// @brief Read root ticker counter
   /// @return root ticker counter value
   static systick_t ReadRootTick() {
+
     return root_tick_counter;
   }
 
@@ -35,6 +37,7 @@ template<class Atomic>
 class TickerUp : public TickerCounter {
  protected:
   static systick_t now() {
+
     Atomic guard;
     (void) guard;
 
