@@ -81,7 +81,7 @@ class RoutineRouter : public UdsAppClient {
     }
 
     // Setup head of routine response
-    udsRouter.pubBuff[0] = SID_response(SIDs::RC);
+    udsRouter.pubBuff[0] = sidhelper::to_response(sidhelper::RC);
     udsRouter.pubBuff[1] = rtype;
     HWREGH(udsRouter.pubBuff + 2) = ophelper::to_be_u16(rid);
     udsRouter.pubBuff[4] = rinfo;
@@ -120,17 +120,17 @@ class RoutineRouter : public UdsAppClient {
   SendResult SendRoutineNegResponse(NRCs n) {
 
     if (n != NRCs::PR) {
-      udsRouter.SendNegResponse(SIDs::RC, n);
+      udsRouter.SendNegResponse(sidhelper::RC, n);
     }
 
     return SendResult::OK;
   }
 
-  virtual bool IsServiceSupported(SIDs sid, size_t& minlength, bool& subfunc) override {
+  virtual bool IsServiceSupported(sid_t sid, size_t& minlength, bool& subfunc) override {
 
     (void) subfunc;
 
-    if (sid == SIDs::RC) {
+    if (sid == sidhelper::RC) {
       minlength = 3u;
       return true;
     }
@@ -141,7 +141,7 @@ class RoutineRouter : public UdsAppClient {
   ProcessResult OnAppIndication(const IndicationInfo& inf) {
 
     // Minimal service length (4) is tested on the initial service check
-    if (inf.head.SI != SIDs::RC) {
+    if (inf.head.SI != sidhelper::RC) {
       return ProcessResult::NOT_HANDLED;
     } else if (inf.head.SF == 0 || inf.head.SF > 3) {
       udsRouter.SendNegResponse(NRCs::SFNS);

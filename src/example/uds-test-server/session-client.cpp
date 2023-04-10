@@ -2,14 +2,14 @@
 #include "session-client.h"
 
 
-bool DSCClient::IsServiceSupported(SIDs sid, size_t& minlength, bool& subfunc) {
+bool DSCClient::IsServiceSupported(sid_t sid, size_t& minlength, bool& subfunc) {
 
   (void) subfunc;
 
-  if (sid == SIDs::DSC) {
+  if (sid == sidhelper::DSC) {
     minlength = 2u;
     return true;
-  } else if (sid == SIDs::SA) {
+  } else if (sid == sidhelper::SA) {
     minlength = 5u;
     return true;
   }
@@ -22,7 +22,7 @@ ProcessResult DSCClient::OnAppIndication(const IndicationInfo& inf) {
 
   std::cout << "DSC handler : ";
 
-  if (inf.head.SI == SIDs::DSC) {
+  if (inf.head.SI == sidhelper::DSC) {
     std::cout << "SI ok, ";
 
     if (inf.head.SF > 0 && inf.head.SF <= 3) {

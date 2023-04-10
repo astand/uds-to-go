@@ -7,18 +7,18 @@
 
 static uint32_t responseCounter = 0u;
 
-constexpr uint8_t SID_1 = 0x22u;
-constexpr uint8_t SID1_DATA_PR = 0x33u;
-constexpr uint8_t SID1_DATA_VTH = 0x34u;
-constexpr uint8_t SID1_DATA_ROOR = 0xFFu;
+constexpr sid_t SID_1 = 0x22u;
+constexpr sid_t SID1_DATA_PR = 0x33u;
+constexpr sid_t SID1_DATA_VTH = 0x34u;
+constexpr sid_t SID1_DATA_ROOR = 0xFFu;
 
-constexpr uint8_t SID_2_SNSIAS = 0x32u;
-constexpr uint8_t SID_SNS = 0x23u;
+constexpr sid_t SID_2_SNSIAS = 0x32u;
+constexpr sid_t SID_SNS = 0x23u;
 
-constexpr uint8_t SID_SF = 0x20u;
+constexpr sid_t SID_SF = 0x20u;
 
-constexpr uint8_t SIDSF_SF_OK = 0x07u;
-constexpr uint8_t SIDSF_SF_SNSIAS = 0x08u;
+constexpr sid_t SIDSF_SF_OK = 0x07u;
+constexpr sid_t SIDSF_SF_SNSIAS = 0x08u;
 
 constexpr uint8_t SIDSF_SF_PARAM_OK = 0x33u;
 constexpr uint8_t SIDSF_SF_PARAM_CNC = 0x34u;
@@ -39,9 +39,9 @@ class MockUdsAppClient : public UdsAppClient {
  public:
   MockUdsAppClient(UdsAppManager& appManager) : UdsAppClient(appManager) {}
 
-  virtual bool IsServiceSupported(const SIDs sid, size_t& minlenght, bool& subfunc) {
+  virtual bool IsServiceSupported(const sid_t sid, size_t& minlenght, bool& subfunc) {
 
-    uint8_t sidbyte = SID_to_byte(sid);
+    sid_t sidbyte = sid;
 
     if (sidbyte == SID_1 || sidbyte == SID_2_SNSIAS) {
       minlenght = 3u;
@@ -58,7 +58,7 @@ class MockUdsAppClient : public UdsAppClient {
 
   virtual ProcessResult OnAppIndication(const IndicationInfo& inf) {
 
-    uint8_t sidbyte = SID_to_byte(inf.head.SI);
+    sid_t sidbyte = inf.head.SI;
     size_t retLength = 0u;
 
     if (sidbyte == SID_1) {

@@ -11,7 +11,7 @@ class DSCClient : public UdsAppClient {
     sessionInfoContext.secLevel = 0u;
   }
 
-  virtual bool IsServiceSupported(SIDs sid, size_t& minlength, bool& subfunc) override;
+  virtual bool IsServiceSupported(sid_t sid, size_t& minlength, bool& subfunc) override;
 
   virtual ProcessResult OnAppIndication(const IndicationInfo& inf) override;
 

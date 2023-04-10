@@ -57,13 +57,11 @@ enum class SendResult {
 typedef struct {
 
   /// @brief Service identifier
-  SIDs SI;
+  sid_t SI;
   /// @brief Sub-function code
   uint8_t SF;
   /// @brief Suppress positive response indicator
   bool suppressPosResponse;
-  /// @brief Response `
-  uint8_t respSI;
 } RequestContext;
 
 

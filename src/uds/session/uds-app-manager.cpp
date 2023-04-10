@@ -2,31 +2,7 @@
 #include "uds-app-manager.h"
 #include "uds-app-client.h"
 
-// ISO 14229-1 7.3.2 table 2 (p. 25)
-constexpr uint8_t range1begin = 0x10u;
-constexpr uint8_t range1end = 0x3f;
-constexpr uint8_t range2begin = 0x83u;
-constexpr uint8_t range2end = 0x88u;
-
-/// @brief Checks if NRC code is
-/// @param nrc Negative response code in response
-/// @return true when NRC can be sent when positive response is suppressed
-constexpr bool nrc_to_send_when_pos_suppressed(const NRCs nrc) {
-
-  return ((nrc == NRCs::ROOR)
-      || (nrc == NRCs::SNS)
-      || (nrc == NRCs::SFNS));
-}
-
-/// @brief Check if the service identificator can be handled
-/// @param sid Service value
-/// @return true if requested service can be handled, otherwise false
-constexpr bool is_sid_processable(SIDs sid) {
-
-  return ophelper::is_in_range<range1begin, range1end>(SID_to_byte(sid)) ||
-      ophelper::is_in_range<range2begin, range2end>(SID_to_byte(sid));
-}
-
+using namespace sidhelper;
 
 UdsAppManager::UdsAppManager(uint8_t* membuff, datasize_t capacity, const SessionInfo& sessinstance) :
   pubBuff(membuff),
@@ -57,10 +33,10 @@ void UdsAppManager::SendResponse(const uint8_t* data, uint32_t length) {
 }
 
 
-void UdsAppManager::SendNegResponse(SIDs sid, NRCs nrc) {
+void UdsAppManager::SendNegResponse(const sid_t sid, const NRCs nrc) {
 
-  pubBuff[0] = SID_to_byte(SIDs::NR_SI);
-  pubBuff[1] = SID_to_byte(sid);
+  pubBuff[0] = NR_SI;
+  pubBuff[1] = sid;
   pubBuff[2] = NRC_to_byte(nrc);
   nrcOutCode = nrc;
 
@@ -85,38 +61,43 @@ void UdsAppManager::SetServiceSession(uint8_t sessionValue) {
 }
 
 
-void UdsAppManager::OnSessIndication(const uint8_t* data, uint32_t length, TargetAddressType addr) {
+void UdsAppManager::OnSessIndication(const uint8_t* payload, uint32_t length, TargetAddressType addr) {
 
   nrcOutCode = NRCs::PR;
 
-  reqContext.addr = addr;
-  reqContext.data = data;
-  reqContext.size = length;
-  reqContext.head.SI = SID_from_byte(reqContext.data[0]);
+  assert(length != 0u);
 
-  if (!isManagerActive || !is_sid_processable(reqContext.head.SI)) {
+  if (!isManagerActive || !is_sid_processable(payload[0])) {
     return;
   }
 
-  reqContext.head.SF = SID_get_subfunc(reqContext.data[1]);
-  reqContext.head.respSI = SID_response(reqContext.head.SI);
+  reqContext.addr = addr;
+  reqContext.data = payload;
+  reqContext.size = length;
+
+  reqContext.head.SI = reqContext.data[0];
+  reqContext.head.SF = get_subfunc(reqContext.data[1]);
   // by default request is handled as with SubFunction
-  reqContext.head.suppressPosResponse = SID_is_pos_response_suppress(reqContext.data[1]);
+  reqContext.head.suppressPosResponse = is_pos_response_suppress(reqContext.data[1]);
   // set most frequent case
-  pubBuff[0] = reqContext.head.respSI;
+  pubBuff[0] = to_response(reqContext.head.SI);
   pubBuff[1] = reqContext.data[1];
   pubRespLength = 0;
 
-  // Handle base service functions
-  if (HandleReqInternally()) {
-    SendResponse(pubBuff, pubRespLength);
-    return;
+  bool isrequest = !is_response(reqContext.data[0]);
+
+  if (isrequest) {
+    // Handle base service functions
+    if (HandleReqInternally()) {
+      SendResponse(pubBuff, pubRespLength);
+      return;
+    }
   }
 
   assert(clientHandler != nullptr);
   ProcessResult clientHandRes = clientHandler->OnAppIndication(reqContext);
 
-  if (clientHandRes == ProcessResult::NOT_HANDLED) {
+  if (clientHandRes == ProcessResult::NOT_HANDLED && isrequest) {
     // there was no service to answer. so if the address is physycal
     // NRC NRCs::SNS must be sent (ISO 14229-1 table 4 (i))
     if (reqContext.addr == TargetAddressType::PHYS) {
@@ -188,7 +169,7 @@ void UdsAppManager::SetActiveMode(bool isactive) {
 
 bool UdsAppManager::HandleReqInternally() {
 
-  if (reqContext.head.SI == SIDs::TP) {
+  if (reqContext.head.SI == TP) {
     SID_TesterPresent();
   } else if (CheckIfSidSupported()) {
     return false;

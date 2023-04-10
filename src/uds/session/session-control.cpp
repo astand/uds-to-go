@@ -17,10 +17,10 @@ void SessionControl::SendRequest(const uint8_t* data, uint32_t size, bool enhanc
   host->Request(data, size);
 }
 
-void SessionControl::SetPending(uint32_t duration, uint32_t interval, SIDs si) {
+void SessionControl::SetPending(uint32_t duration, uint32_t interval, sid_t si) {
 
   if ((duration >= interval) && (interval > 999u)) {
-    etmWaitRespBuff[1] = SID_to_byte(si);
+    etmWaitRespBuff[1] = si;
     SendRequest(etmWaitRespBuff, 3u, true);
     etmTim.Start(interval);
     etmKeepAliveInterval = interval;

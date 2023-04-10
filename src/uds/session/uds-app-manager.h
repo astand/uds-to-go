@@ -27,7 +27,7 @@ class UdsAppManager : public SessionControl {
   /// @brief Send negative response for specific service
   /// @param sid Service identificator
   /// @param nrc Negative response code
-  void SendNegResponse(SIDs sid, NRCs nrc);
+  void SendNegResponse(const sid_t sid, const NRCs nrc);
 
   /// @brief Send negative response code RCRRP
   /// @param maxduration Global enhanced mode timeout

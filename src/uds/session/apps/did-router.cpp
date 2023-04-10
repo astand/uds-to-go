@@ -4,11 +4,11 @@
 constexpr uint32_t SI_SIZE_BYTES = (1u);
 constexpr uint32_t DID_SIZE_BYTES = (2u);
 
-bool DidRouter::IsServiceSupported(SIDs sid, size_t& minlength, bool& subfunc) {
+bool DidRouter::IsServiceSupported(sid_t sid, size_t& minlength, bool& subfunc) {
 
   (void) subfunc;
 
-  if (sid == SIDs::RDBI) {
+  if (sid == sidhelper::RDBI) {
     minlength = 3u;
     return true;
   }
@@ -23,11 +23,11 @@ ProcessResult DidRouter::OnAppIndication(const IndicationInfo& inf) {
   data_ = inf.data;
 
   switch (inf.head.SI) {
-    case SIDs::RDBI:
+    case sidhelper::RDBI:
       ReadDataByIdentifierHandler();
       break;
 
-    case SIDs::WDBI:
+    case sidhelper::WDBI:
       WriteDataByIdentifierHandler();
       break;
 

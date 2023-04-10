@@ -8,7 +8,7 @@ class ProxyUdsAppClient : public UdsAppClient {
   ProxyUdsAppClient(UdsAppManager& router, UdsAppClient& handler) :
     UdsAppClient(router), realHandler(handler) {}
 
-  virtual bool IsServiceSupported(SIDs sid, size_t& minlength, bool& subfunc) {
+  virtual bool IsServiceSupported(sid_t sid, size_t& minlength, bool& subfunc) {
 
     return realHandler.IsServiceSupported(sid, minlength, subfunc);
   }

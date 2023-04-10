@@ -15,7 +15,7 @@ class UdsAppClient {
   /// @param minlenght Minimal payload for requested service
   /// @param subfunc Does the service have sub function
   /// @return true when instance can handle requested service, otherwise false
-  virtual bool IsServiceSupported(const SIDs sid, size_t& minlenght, bool& subfunc) = 0;
+  virtual bool IsServiceSupported(const sid_t sid, size_t& minlenght, bool& subfunc) = 0;
 
   /// @brief Callback from application uds manager on session indication event
   /// @param inf Indication event descriptor
@@ -53,7 +53,7 @@ class MultiServiceManager : public MemKeeper<UdsAppClient, N>, public UdsAppClie
   /// @param minlenght Minimal payload for requested service
   /// @param subfunc Does the service have sub function
   /// @return true when instance can handle requested service, otherwise false
-  virtual bool IsServiceSupported(const SIDs sid, size_t& minlenght, bool& subfunc) {
+  virtual bool IsServiceSupported(const sid_t sid, size_t& minlenght, bool& subfunc) {
 
     bool ret = false;
     UdsAppClient* service = nullptr;
