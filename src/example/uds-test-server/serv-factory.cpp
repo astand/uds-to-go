@@ -104,9 +104,18 @@ CliMen& GetClientUds() {
   static Menu routine1 = Menu("Routine #1 (0x0102)");
   static Menu routine2 = Menu("Routine #2 (0xff00)");
 
+  static Menu securitymenu = Menu("Security control");
+
+  static Menu securityreq_1 = Menu("Security lev 1");
+  static Menu securityreq_2 = Menu("Security lev 2");
+  static Menu securityreq_3 = Menu("Security lev 3");
+
   defsess.cmd = { 0x10, 0x01 };
   extsess.cmd = { 0x10, 0x03 };
   prgsess.cmd = { 0x10, 0x02 };
+  securityreq_1.cmd = { 0x27, 0x01 };
+  securityreq_2.cmd = { 0x27, 0x03 };
+  securityreq_3.cmd = { 0x27, 0x05 };
 
   read22.cmd = { 0x22, 0x22, 0x00 };
   readSession.cmd = { 0x22, 0x00, 0xa0 };
@@ -116,7 +125,7 @@ CliMen& GetClientUds() {
   routine1.cmd = { 0x31, 0x01, 0x01, 0x02, 1 };
   routine2.cmd = { 0x31, 0x01, 0xff, 0x00, 1 };
 
-  sessctrl.SetNext(&readdid)->SetNext(&tester)->SetNext(&reqroutine);
+  sessctrl.SetNext(&readdid)->SetNext(&tester)->SetNext(&reqroutine)->SetNext(&securitymenu);
   sessctrl.SetDown(&defsess);
 
   defsess.SetNext(&extsess);
@@ -127,6 +136,8 @@ CliMen& GetClientUds() {
 
   reqroutine.SetDown(&routine1);
   routine1.SetNext(&routine2);
+
+  securitymenu.SetDown(&securityreq_1)->SetNext(&securityreq_2)->SetNext(&securityreq_3);
 
   static CliMen client(&sessctrl);
   return client;

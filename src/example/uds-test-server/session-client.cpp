@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cstdlib>
+#include <iostream>
 #include "session-client.h"
 
 
@@ -10,7 +12,7 @@ bool DSCClient::IsServiceSupported(sid_t sid, size_t& minlength, bool& subfunc) 
     minlength = 2u;
     return true;
   } else if (sid == sidhelper::SA) {
-    minlength = 5u;
+    minlength = 2u;
     return true;
   }
 
@@ -46,8 +48,10 @@ ProcessResult DSCClient::OnAppIndication(const IndicationInfo& inf) {
     }
 
     return ProcessResult::HANDLED_RESP_OK;
-  } else {
-    std::cout << std::endl;
+  } else if (inf.head.SI == sidhelper::SA) {
+    return Handle_SA_request(inf);
+  } else if (inf.head.SI == sidhelper::to_response(sidhelper::SA)) {
+    return Handle_SA_response(inf);
   }
 
   return ProcessResult::NOT_HANDLED;
@@ -60,4 +64,78 @@ void DSCClient::OnSessionChange(bool isdefault) {
     sessionInfoContext.currSession = 1u;
     sessionInfoContext.secLevel = 0u;
   }
+}
+
+ProcessResult DSCClient::Handle_SA_request(const IndicationInfo& reqcontext) {
+
+  uint16_t keytocheck = 0u;
+
+  // if request check if seed can be sent
+  if ((reqcontext.data[1] & 0x01u) == 0u) {
+    // key must be checked
+    switch (reqcontext.data[1] >> 1u) {
+      case (1):
+        keytocheck = seedsent + 4u;
+        break;
+
+      case (2):
+        keytocheck = seedsent + 8u;
+        break;
+
+      default:
+        keytocheck = 0xabab;
+        break;
+    }
+
+    if (ophelper::from_be_u16(HWREGH(reqcontext.data + 2)) == keytocheck) {
+      udsRouter.pubRespLength = 2u;
+    } else {
+      udsRouter.SendNegResponse(NRCs::SAD);
+      return ProcessResult::HANDLED_RESP_NO;
+    }
+  } else {
+    seedsent = rand() & 0xffffu;
+    HWREGH(udsRouter.pubBuff + 2) = ophelper::to_be_u16(seedsent);
+    udsRouter.pubRespLength = 4u;
+  }
+
+  return ProcessResult::HANDLED_RESP_OK;
+}
+
+ProcessResult DSCClient::Handle_SA_response(const IndicationInfo& reqcontext) {
+
+  // if response the key must be calculated and send back
+  uint16_t seedvalue = ophelper::from_be_u16(HWREGH(reqcontext.data + 2));
+  uint16_t keyvalue = 0u;
+  bool isready = true;
+
+  if ((reqcontext.data[1] & 0x01u) == 0x01u) {
+    switch (reqcontext.data[1] >> 1u) {
+      case (0):
+        keyvalue = seedvalue + 4;
+        break;
+
+      case (1):
+        keyvalue = seedvalue + 8;
+        break;
+
+      default:
+        keyvalue = 0x0000;
+        break;
+    }
+  } else {
+    isready = false;
+  }
+
+  std::cout << "is ready : " << isready << std::endl;
+
+  // key must be send to server as the second step
+  if (isready) {
+    udsRouter.pubBuff[0] = sidhelper::SA;
+    udsRouter.pubBuff[1] = reqcontext.data[1] + 1;
+    HWREGH(udsRouter.pubBuff + 2) = ophelper::to_be_u16(keyvalue);
+    udsRouter.SendResponse(udsRouter.pubBuff, 4);
+  }
+
+  return ProcessResult::NOT_HANDLED;
 }

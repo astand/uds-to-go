@@ -20,5 +20,10 @@ class DSCClient : public UdsAppClient {
   virtual void OnSessionChange(bool isdefault) override;
 
  private:
+
+  ProcessResult Handle_SA_request(const IndicationInfo& rcont);
+  ProcessResult Handle_SA_response(const IndicationInfo& rcont);
+
   SessionInfo& sessionInfoContext;
+  uint16_t seedsent{0};
 };
