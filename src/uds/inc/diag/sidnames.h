@@ -83,6 +83,17 @@ enum class SIDs : uint8_t {
   NR_SI = 0x7f,
 };
 
+// Diagnostic session levels (4) defined by standard (ISO 14299-1:2020)
+
+/// @brief Default diagnostic session level
+constexpr uint8_t DSC_LEV_DEFT = 1u;
+/// @brief Programming diagnostic session level
+constexpr uint8_t DSC_LEV_PRGM = 2u;
+/// @brief Extended diagnostic session level
+constexpr uint8_t DSC_LEV_EXTD = 3u;
+/// @brief Safety system diagnostic session level
+constexpr uint8_t DSC_LEV_SSYS = 4u;
+
 constexpr uint8_t SID_to_byte(SIDs sid) {
 
   return static_cast<uint8_t>(sid);
@@ -106,5 +117,13 @@ constexpr uint8_t SID_get_subfunc(const uint8_t byte) {
 constexpr bool SID_is_pos_response_suppress(const uint8_t secondbyte) {
 
   return (secondbyte & 0x80u) == 0x80u;
+}
+
+/// @brief Checks if current session value is default session
+/// @param sessvalue current session value
+/// @return true if the value is equal to DSC_LEV_DEFT, otherwise false
+constexpr bool is_dsc_def_session(uint8_t sessvalue) {
+
+  return sessvalue == DSC_LEV_DEFT;
 }
 

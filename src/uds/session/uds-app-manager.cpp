@@ -53,7 +53,7 @@ void UdsAppManager::SendResponse(const uint8_t* data, uint32_t length) {
 
   nrcPending = false;
   // reset session layer anyway
-  SetSessionMode(sessionState.currSession == 1u);
+  SetSessionMode(is_dsc_def_session(sessionState.currSession));
 }
 
 
@@ -77,11 +77,11 @@ void UdsAppManager::SendNegResponse(NRCs nrc) {
 void UdsAppManager::SetServiceSession(uint8_t sessionValue) {
 
   // reset session layer anyway
-  SetSessionMode(sessionValue == 1u);
+  SetSessionMode(is_dsc_def_session(sessionValue));
 
   // all the clients must be informed
   assert(clientHandler != nullptr);
-  clientHandler->OnSessionChange(sessionValue == 1u);
+  clientHandler->OnSessionChange(is_dsc_def_session(sessionValue));
 }
 
 
@@ -126,7 +126,7 @@ void UdsAppManager::OnSessIndication(const uint8_t* data, uint32_t length, Targe
     SendResponse(pubBuff, pubRespLength);
   } else if (clientHandRes == ProcessResult::HANDLED_RESP_NO) {
     // reset session layer anyway
-    SetSessionMode(sessionState.currSession == 1u);
+    SetSessionMode(is_dsc_def_session(sessionState.currSession));
   }
 }
 
