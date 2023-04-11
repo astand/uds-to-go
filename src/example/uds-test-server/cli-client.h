@@ -9,6 +9,7 @@
 #include <mutex>
 
 class Menu {
+
  public:
   Menu(const std::string& str) : text(str) {}
 
@@ -58,6 +59,7 @@ class Menu {
 };
 
 class CliMen {
+
  public:
   CliMen(Menu* m) : root(m) {
 

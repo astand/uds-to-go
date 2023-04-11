@@ -9,6 +9,7 @@
 /// @brief UDS session layer abstraction
 /// Abstract class, must be expand but actual implementation
 class SessionControl : public IsoTpClient, public IProcessable {
+
  public:
   /// @brief sets new TP sender
   /// @param sender pointer to TP sender instance
@@ -86,6 +87,7 @@ class SessionControl : public IsoTpClient, public IProcessable {
 
   /// @brief Stub class to avoid host nullptr value
   class EmptyTpSender : public IsoTpImpl {
+
    public:
     virtual IsoTpResult Request(const uint8_t*, size_t) override {
       return IsoTpResult::BUSY;

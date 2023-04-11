@@ -9,6 +9,7 @@ namespace DTimers {
 using namespace Timers;
 
 class Timer : private TickerUp<void*> {
+
  public:
   /// @brief Default empty constuctor (stopped, interval 0, non repeat)
   Timer() = default;

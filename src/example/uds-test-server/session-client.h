@@ -3,6 +3,7 @@
 #include <uds/session/uds-app-client.h>
 
 class DSCClient : public UdsAppClient {
+
  public:
   DSCClient(UdsAppManager& router_, SessionInfo& sessInfo) :
     UdsAppClient(router_), sessionInfoContext(sessInfo) {

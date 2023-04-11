@@ -6,6 +6,7 @@
 
 
 class TickerWrapper : public IProcessable {
+
   virtual void Process() override {
     static auto first_stamp = std::chrono::steady_clock::now();
 

@@ -7,6 +7,7 @@
 /// @tparam N Elements capacity
 template<typename T, size_t N>
 class StaticMemAllocator {
+
  public:
   /// @brief Memory begin address getter
   /// @return Pointer to allocated memory
@@ -31,7 +32,6 @@ class StaticMemAllocator {
   StaticMemAllocator& operator=(const StaticMemAllocator&) = delete;
 
  private:
-
   /// @brief Raw memory array
   uint8_t __raw__[N * sizeof(T)] = {0};
 };

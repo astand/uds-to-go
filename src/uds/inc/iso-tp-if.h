@@ -5,6 +5,7 @@
 /// @brief ISO TP client interface. ISO TP handler calls this interface
 /// on each ISO TP event (confirmation, indication etc)
 class IsoTpClient {
+
  public:
   /// @brief ISO TP event context information descriptor
   typedef struct {
@@ -23,6 +24,7 @@ class IsoTpClient {
 /// @brief ISO TP implementation main interface. Clients use this
 /// interface to invoke payload transmittion
 class IsoTpImpl {
+
  public:
 
   /// @brief ISO TP request
@@ -33,6 +35,7 @@ class IsoTpImpl {
 
 /// @brief CAN message receiver interface
 class ICAN_Listener {
+
  public:
 
   /// @brief Callback on CAN message receiving
@@ -44,6 +47,7 @@ class ICAN_Listener {
 
 /// @brief CAN message sender interface
 class ICAN_Sender {
+
  public:
 
   /// @brief Sends CAN message to CAN line

@@ -12,6 +12,7 @@
 #include <helpers/IProcessable.h>
 
 class SocketCanSender : public ICAN_Sender {
+
  public:
   size_t SendFrame(const uint8_t* data, size_t length, uint32_t msgid) {
 
@@ -37,6 +38,7 @@ class SocketCanSender : public ICAN_Sender {
 };
 
 class SocketCanReader : public IProcessable {
+
  public:
   SocketCanReader(ICAN_Listener& receiver) : isoreceiver(receiver) {
 

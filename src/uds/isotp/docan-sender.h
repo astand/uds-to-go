@@ -7,6 +7,7 @@
 class DoCAN_TP;
 
 class DoCAN_Sender {
+
  public:
   /// @brief DoCAN sender constructor
   /// @param mem pointer to buffer for transmit message

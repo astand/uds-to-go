@@ -68,6 +68,7 @@ static void set_do_can_parameters(DoCAN_TP&, argsret& params) {
 }
 
 int main(int argc, char** argv) {
+
   auto params = collectargs(argc, argv);
 
   std::cout << " ----------- ECU simulation -------------- " << std::endl;

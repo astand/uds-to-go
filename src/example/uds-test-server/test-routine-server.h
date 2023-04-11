@@ -3,6 +3,7 @@
 #include <uds/session/apps/rctrl-router.h>
 
 class ClientRoutineBase : public RoutineHandler {
+
  public:
   ClientRoutineBase(RoutineRouter& b) : routman(b) {}
 
@@ -11,6 +12,7 @@ class ClientRoutineBase : public RoutineHandler {
 };
 
 class RotineServ1 : public ClientRoutineBase, public IProcessable {
+
  public:
   RotineServ1(RoutineRouter& routiner) : ClientRoutineBase(routiner) {}
 
@@ -54,6 +56,7 @@ class RotineServ1 : public ClientRoutineBase, public IProcessable {
 };
 
 class RotineServ2 : public ClientRoutineBase {
+
  public:
   RotineServ2(RoutineRouter& routiner) : ClientRoutineBase(routiner) {}
 

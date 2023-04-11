@@ -14,6 +14,7 @@ using Tptr_t = T*;
 /// @tparam T Type of keeping elements
 template<class T>
 class IKeeper {
+
  public:
   /// @brief Private container pointer-type redifinition
   using ElemPtr_t = Tptr_t<T>;
@@ -121,6 +122,7 @@ class IKeeper {
 /// @tparam C Type which must be wrapped by AsKeeper
 template<typename C>
 class AsKeeper : public IKeeper<C>, public C {
+
  protected:
   /// @brief Constructor
   /// @param array Pointer to the array allocated for this container memory
@@ -133,6 +135,7 @@ class AsKeeper : public IKeeper<C>, public C {
 /// @tparam N Container array capacity
 template<typename T, size_t N>
 class MemKeeper : public IKeeper<T> {
+
  public:
   /// @brief Constructor
   /// @tparam T Type of container element
@@ -149,6 +152,7 @@ class MemKeeper : public IKeeper<T> {
 /// @tparam N Container capacity
 template<typename T, size_t N>
 class MemAsKeeper : public AsKeeper<T> {
+
  public:
   /// @brief Constructor
   /// @tparam T Type of container element

@@ -8,6 +8,7 @@
 class UdsAppClient;
 
 class UdsAppManager : public SessionControl {
+
  public:
   /// @brief Constructor
   /// @param membuff Pointer to memory for using as response buffer

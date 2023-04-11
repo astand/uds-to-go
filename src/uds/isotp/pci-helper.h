@@ -7,16 +7,19 @@
 
 /// @brief DoCAN frame type
 enum class DC_FrameType {
+
   SF = 0, FF = 0x10, FC = 0x30, CF = 0x20, ERROR = 0xffu
 };
 
 /// @brief Segmented transaction state
 enum class DC_FlowState {
+
   CTS = 0, WAIT = 1, OVERFLOW = 2
 };
 
 /// @brief Helper class for DoCAN protocol information handling
 class PciHelper {
+
  public:
   typedef struct {
     datasize_t pcilen;

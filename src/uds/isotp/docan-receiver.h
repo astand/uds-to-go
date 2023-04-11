@@ -8,6 +8,7 @@ class DoCAN_TP;
 
 /// @brief DoCAN receiver class
 class DoCAN_Receiver {
+
  public:
   /// @brief DoCAN receiver constructor
   /// @param mem pointer to buffer for income paylaod

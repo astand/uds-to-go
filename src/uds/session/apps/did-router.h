@@ -8,6 +8,7 @@
 class DidHandler;
 
 class DidRouter : public UdsAppClient {
+
  public:
   DidRouter(UdsAppManager& r, DidHandler& didhandler) : UdsAppClient(r), dider(didhandler) {}
   virtual bool IsServiceSupported(sid_t sid, size_t& minlength, bool& subfunc) override;

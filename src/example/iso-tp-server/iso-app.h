@@ -6,6 +6,7 @@
 
 /* ---------------------------------------------------------------------------- */
 class IsoApp : public IsoTpClient {
+
  public:
   void OnIsoEvent(N_Event t, N_Result res, const IsoTpInfo& inf) {
 

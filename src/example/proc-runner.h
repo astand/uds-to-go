@@ -5,6 +5,7 @@
 
 template<size_t N>
 class ProcRunner : public MemAsKeeper<IProcessable, N> {
+
  public:
   ProcRunner() : MemAsKeeper<IProcessable, N>() {
     assert(N != 0);

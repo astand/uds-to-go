@@ -6,6 +6,7 @@ namespace Timers {
 
 /// @brief Base static class to process base timers counter
 class TickerCounter {
+
  public:
   /// @brief tick counter type
   using systick_t = volatile uint32_t;
@@ -35,6 +36,7 @@ class TickerCounter {
 /// @tparam Atomic RAII type to fulfill atomicy
 template<class Atomic>
 class TickerUp : public TickerCounter {
+
  protected:
   static systick_t now() {
 

@@ -2,8 +2,8 @@
 
 /// @brief Processable interface
 class IProcessable {
- public:
 
+ public:
   /// @brief Run process implementation
   virtual void Process() = 0;
 };

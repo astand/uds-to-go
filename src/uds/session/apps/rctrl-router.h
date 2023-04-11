@@ -27,6 +27,7 @@ class RoutineRouter;
  *
  */
 class RoutineHandler {
+
  public:
 
   /**
@@ -61,6 +62,7 @@ class RoutineHandler {
  * control UDS service
  */
 class RoutineRouter : public UdsAppClient {
+
  public:
   RoutineRouter(UdsAppManager& bserver, RoutineHandler& r) : UdsAppClient(bserver), rhandler(r) {}
 
@@ -176,6 +178,7 @@ class RoutineRouter : public UdsAppClient {
 
 template<size_t N>
 class MultiRoutineHandler : public MemAsKeeper<RoutineHandler, N> {
+
  public:
   MultiRoutineHandler() : MemAsKeeper<RoutineHandler, N>() {}
 

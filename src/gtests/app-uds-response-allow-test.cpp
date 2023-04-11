@@ -29,6 +29,7 @@ class MockIsoTp : public IsoTpImpl {
 
  public:
   virtual IsoTpResult Request(const uint8_t* data, size_t length) override {
+
     ++responseCounter;
     return IsoTpResult::OK;
   }
@@ -104,9 +105,7 @@ class MockUdsAppClient : public UdsAppClient {
     }
   }
 
-  virtual void OnAppConfirmation(S_Result) {
-
-  }
+  virtual void OnAppConfirmation(S_Result) {}
 };
 
 static MockIsoTp testIsoTp;
@@ -128,6 +127,7 @@ static IsoTpClient::IsoTpInfo isoContext = {
 
 
 void set_payload(uint8_t sid, std::array<uint8_t, 8> data, size_t len) {
+
   assert(len <= 7);
   memset(rxArray, 0, 8);
   rxArray[0] = sid;
@@ -135,22 +135,26 @@ void set_payload(uint8_t sid, std::array<uint8_t, 8> data, size_t len) {
 }
 
 void set_phys_payload(uint8_t sid, std::array<uint8_t, 8> data, size_t len) {
+
   isoContext.address = N_TarAddress::TAtype_1_Physical;
   set_payload(sid, data, len);
   isoContext.length = 1 + len;
 }
 
 void set_func_payload(uint8_t sid, std::array<uint8_t, 8> data, size_t len) {
+
   set_phys_payload(sid, data, len);
   isoContext.address = N_TarAddress::TAtype_2_Functional;
 }
 
 void set_phys_payload_supress(uint8_t sid, std::array<uint8_t, 8> data, size_t len) {
+
   set_phys_payload(sid, data, len);
   rxArray[1] |= 0x80u;
 }
 
 void set_func_sub_func_suppres(uint8_t sid, std::array<uint8_t, 8> data, size_t len) {
+
   set_func_payload(sid, data, len);
   rxArray[1] |= 0x80u;
 }
@@ -158,10 +162,12 @@ void set_func_sub_func_suppres(uint8_t sid, std::array<uint8_t, 8> data, size_t 
 static uint32_t response_expected = 0u;
 
 uint32_t no_response_sent() {
+
   return response_expected;
 }
 
 uint32_t response_sent() {
+
   ++response_expected;
   return no_response_sent();
 }

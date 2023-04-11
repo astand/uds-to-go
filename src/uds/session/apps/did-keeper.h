@@ -6,6 +6,7 @@
 
 template<size_t N>
 class DidKeeper : public MemAsKeeper<DidHandler, N> {
+
  public:
   DidKeeper() : MemAsKeeper<DidHandler, N>() {}
 

@@ -7,6 +7,7 @@
 #include "docan-receiver.h"
 
 class DoCAN_TP : public ICAN_Listener, public IsoTpImpl, public IProcessable {
+
  public:
   DoCAN_TP(uint8_t* memrx, size_t lengthrx, uint8_t* memtx, size_t lengthtx, ICAN_Sender& sender, IsoTpClient& client) :
     iso_sender(memtx, lengthtx, *this),
@@ -102,6 +103,7 @@ class DoCAN_TP : public ICAN_Listener, public IsoTpImpl, public IProcessable {
 
 template<size_t Rx, size_t Tx, template<typename, size_t> class Memgiver>
 class DoCAN_TP_Mem : public DoCAN_TP {
+
  public:
   DoCAN_TP_Mem(ICAN_Sender& s, IsoTpClient& c) : DoCAN_TP(rxalloc.ptr(), Rx, rxalloc.ptr(), Tx, s, c) {}
 

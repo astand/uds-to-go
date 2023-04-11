@@ -5,6 +5,7 @@
 
 /// @brief Uds app client interface class
 class UdsAppClient {
+
  public:
   /// @brief Constructor
   /// @param udsapp Reference to application uds manager
@@ -42,6 +43,7 @@ class UdsAppClient {
 /// @tparam N Number of possible uds application clients
 template<size_t N>
 class MultiServiceManager : public MemKeeper<UdsAppClient, N>, public UdsAppClient {
+
  public:
 
   /// @brief Constructor
