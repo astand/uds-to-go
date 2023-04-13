@@ -75,18 +75,26 @@ ProcessResult DSCClient::Handle_SA_request(const IndicationInfo& reqcontext) {
 
   // if request check if seed can be sent
   if (isseedreq) {
-    if (udsRouter.GetSession().secLevel != seclev + 1u) {
-      // security level is always unlocked, send 0u
-      seedsent = rand() & 0xffffu;
+    const auto sesscontext = udsRouter.GetSession();
 
-      if (seedsent == 0u) {
-        seedsent = 0xf0edu;
+    if (seclev + 1 == 1u && sesscontext.currSession == 1u) {
+      udsRouter.SendNegResponse(NRCs::SFNSIAS);
+    } else if (seclev + 1 == 2u && sesscontext.currSession != 2u) {
+      udsRouter.SendNegResponse(NRCs::SFNSIAS);
+    } else {
+      if (udsRouter.GetSession().secLevel != seclev + 1u) {
+        // security level is always unlocked, send 0u
+        seedsent = rand() & 0xffffu;
+
+        if (seedsent == 0u) {
+          seedsent = 0xf0edu;
+        }
       }
-    }
 
-    // seed must be sent to the client
-    HWREGH(udsRouter.pubBuff + 2) = ophelper::to_be_u16(seedsent);
-    udsRouter.pubRespLength = 4u;
+      // seed must be sent to the client
+      HWREGH(udsRouter.pubBuff + 2) = ophelper::to_be_u16(seedsent);
+      udsRouter.pubRespLength = 4u;
+    }
   } else {
     // key must be checked
     switch (seclev) {
