@@ -69,11 +69,27 @@ void DSCClient::OnSessionChange(bool isdefault) {
 ProcessResult DSCClient::Handle_SA_request(const IndicationInfo& reqcontext) {
 
   uint16_t keytocheck = 0u;
+  // request can only be odd number: 1, 3, 5 etc
+  uint8_t seclev = reqcontext.data[1] >> 1u;
+  bool isseedreq = ((reqcontext.data[1] & 0x01u) == 0x01u) ? true : false;
 
   // if request check if seed can be sent
-  if ((reqcontext.data[1] & 0x01u) == 0u) {
+  if (isseedreq) {
+    if (udsRouter.GetSession().secLevel != seclev + 1u) {
+      // security level is always unlocked, send 0u
+      seedsent = rand() & 0xffffu;
+
+      if (seedsent == 0u) {
+        seedsent = 0xf0edu;
+      }
+    }
+
+    // seed must be sent to the client
+    HWREGH(udsRouter.pubBuff + 2) = ophelper::to_be_u16(seedsent);
+    udsRouter.pubRespLength = 4u;
+  } else {
     // key must be checked
-    switch (reqcontext.data[1] >> 1u) {
+    switch (seclev) {
       case (1):
         keytocheck = seedsent + 4u;
         break;
@@ -89,14 +105,13 @@ ProcessResult DSCClient::Handle_SA_request(const IndicationInfo& reqcontext) {
 
     if (ophelper::from_be_u16(HWREGH(reqcontext.data + 2)) == keytocheck) {
       udsRouter.pubRespLength = 2u;
+      seedsent = 0u;
+      // unlock security level
+      sessionInfoContext.secLevel = seclev;
     } else {
       udsRouter.SendNegResponse(NRCs::SAD);
       return ProcessResult::HANDLED_RESP_NO;
     }
-  } else {
-    seedsent = rand() & 0xffffu;
-    HWREGH(udsRouter.pubBuff + 2) = ophelper::to_be_u16(seedsent);
-    udsRouter.pubRespLength = 4u;
   }
 
   return ProcessResult::HANDLED_RESP_OK;
@@ -109,13 +124,19 @@ ProcessResult DSCClient::Handle_SA_response(const IndicationInfo& reqcontext) {
   uint16_t keyvalue = 0u;
   bool isready = true;
 
-  if ((reqcontext.data[1] & 0x01u) == 0x01u) {
-    switch (reqcontext.data[1] >> 1u) {
-      case (0):
+  uint8_t seclev = (reqcontext.data[1] >> 1u) + 1;
+  bool isseedreq = ((reqcontext.data[1] & 0x01u) == 0x01u) ? true : false;
+
+  if (seedvalue == 0u) {
+    // security level is already unlock, do nothing
+    isready = false;
+  } else if (isseedreq) {
+    switch (seclev) {
+      case (1):
         keyvalue = seedvalue + 4;
         break;
 
-      case (1):
+      case (2):
         keyvalue = seedvalue + 8;
         break;
 
