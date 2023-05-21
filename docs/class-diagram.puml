@@ -1,0 +1,117 @@
+@startuml
+
+
+package UDS <<Rectangle>> {
+ 
+interface IProcessable {
++void {abstract} Process() 
+}
+
+interface IsoTpImpl {
++IsoTpResult {abstract} Request() 
+}
+
+interface ICAN_Listener{
++void {abstract} ReadFrame()
+}
+
+interface ICAN_Sender {
++size_t {abstract} SendFrame()
+}
+
+interface IsoTpClient {
++void {abstract} OnIsoEvent()
+}
+
+interface IDidHandler {
++void {abstract} ReadDID()
++void {abstract} WriteDID()
+}
+
+interface IRoutineHandler {
++void {abstract} OnRoutine()
+}
+
+class DoCAN_TP {
++void Process()
++void ReadFrame()
++IsoTpResult Request()
+}
+
+class UdsServerBase {
+}
+
+abstract SessionControl {
++void Process()
++void OnIsoEvent()
+}
+
+
+IProcessable <|---- SessionControl
+IsoTpClient <|-- SessionControl
+
+IsoTpImpl <|- DoCAN_TP
+ICAN_Listener <|--- DoCAN_TP
+IProcessable <|--- DoCAN_TP
+
+DoCAN_TP *.. ICAN_Sender
+IsoTpClient .* DoCAN_TP
+IsoTpImpl ....o SessionControl
+
+SessionControl <|-- UdsServerBase
+
+abstract UdsServerHandler {
++ProcessResult {abstract} OnIndication()
++ProcessResult {abstract} OnConfirmation()
++void DSCSessionEvent()
+
+#UdsServerBase rtr1
+}
+
+UdsServerHandler *.. UdsServerBase
+UdsServerBase o. UdsServerHandler
+
+class DidRouter{
+}
+
+IDidHandler .o DidRouter
+
+class RoutineRouter {
+}
+
+RoutineRouter o. IRoutineHandler 
+
+UdsServerHandler <|-- DidRouter
+UdsServerHandler <|-- RoutineRouter
+
+}
+
+package User <<Rectangle>>
+{
+
+class AppUdsServer {
+}
+
+UdsServerBase <|---- AppUdsServer 
+
+class AppRoutineHandler {
+void OnRoutine()
+}
+
+class AppDidHandler {
+void ReadDID()
+void WriteDID()
+}
+
+IDidHandler <|--- AppDidHandler
+IRoutineHandler <|---- AppRoutineHandler
+
+class UserCanSender {
+}
+
+ICAN_Sender <|- UserCanSender
+
+}
+
+
+@enduml

@@ -3,10 +3,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
-using BaseEnum = uint8_t;
+#include "typedefs.h"
 
-enum class N_Result : BaseEnum
-{
+/// @brief Network event result
+enum class N_Result : enumbase_t {
   // This value means that the service execution has been completed successfully; it can be issued to a
   // service user on both the sender and receiver sides.
   OK_s,
@@ -48,11 +48,8 @@ enum class N_Result : BaseEnum
   ERROR_r
 };
 
-// Type: enumeration.
-// Range: N_OK, N_RX_ON, N_WRONG_PARAMETER, N_WRONG_VALUE
-// Description: This parameter contains the status relating to the outcome of a service execution.
-enum class ParChangeResult : BaseEnum
-{
+/// @brief Result of attempt to change parameter
+enum class SetParamResult : enumbase_t {
   // This value means that the service execution has been completed successfully; it can be issued to a
   // service user on both the sender and receiver sides.
   OK,
@@ -68,8 +65,8 @@ enum class ParChangeResult : BaseEnum
   WRONG_VALUE
 };
 
-enum class ParName : BaseEnum
-{
+/// @brief List of parameters
+enum class ParName : enumbase_t {
   ST_MIN,
   BLKSZ,
   PHYS_ADDR,
@@ -78,29 +75,29 @@ enum class ParName : BaseEnum
   CANDL,
   As_TIM_ms,
   Bs_TIM_ms,
-  Cs_TIM_ms,
   Br_TIM_ms,
+  Cr_TIM_ms,
   PADD_BYTE,
 };
 
 
-enum class N_Type : BaseEnum
-{
+/// @brief Network event type
+enum class N_Event : enumbase_t {
   Conf,
   Data,
   DataFF,
 };
 
-enum class IsoTpResult : BaseEnum
-{
+/// @brief Result of request ot iso-tp
+enum class IsoTpResult : enumbase_t {
   OK,
   BUSY,
   WRONG_STATE,
   OVERFLOW
 };
 
-enum class CanDl : BaseEnum
-{
+/// @brief List of possible CAN datalength
+enum class CanDl : enumbase_t {
   CANDL_8 = 8,
   CANDL_12 = 12,
   CANDL_16 = 16,
@@ -111,8 +108,8 @@ enum class CanDl : BaseEnum
   CANDL_64 = 64
 };
 
-enum class N_TarAddress
-{
+/// @brief ISO-TP target address
+enum class N_TarAddress {
   TAtype_Invalid = 0,
   // CAN base format (CLASSICAL CAN, 11-bit)
   TAtype_1_Physical,

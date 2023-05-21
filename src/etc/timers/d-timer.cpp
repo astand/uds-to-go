@@ -1,74 +1,60 @@
 #include "d-timer.h"
 
-namespace DTimers
-{
+namespace DTimers {
 
 Timer::Timer(interval_t intv, bool start, bool repeat)
-  : freeze_ticks_(0), is_active_(start), repeat_(repeat)
-{
-  // First: set interval (with check on 0 value)
-  SetIntv(intv);
+  : tick_period(intv), tick_start(0), is_active(start), is_endless(repeat) {
 
-  if (is_active_)
-  {
+  if (is_active) {
     // if is active try to Restart immediately
     Restart();
   }
 }
 
-bool Timer::Start(interval_t interval)
-{
-  is_active_ = false;
+void Timer::Start(interval_t interval) {
 
-  if (SetIntv(interval))
-  {
-    FixCurrentTicks();
-    is_active_ = true;
-  }
-
-  return is_active_;
+  tick_period = interval;
+  SetStartTick(now());
+  is_active = true;
 }
 
-bool Timer::Start(interval_t interval, bool repeat)
-{
-  if (Start(interval))
-  {
-    repeat_ = repeat;
-    return true;
-  }
+void Timer::Start(interval_t interval, bool repeat) {
 
-  return false;
+  Start(interval);
+  is_endless = repeat;
 }
 
-bool Timer::Restart()
-{
-  return Start(interval_);
+void Timer::Restart() {
+
+  Start(tick_period);
 }
 
-bool Timer::Elapsed()
-{
-  systick_t liveticks = now();
+bool Timer::Elapsed() {
 
-  if (IsActive() && (GetTicksToNextElapse(liveticks) == 0))
-  {
-    is_active_ = repeat_;
-    AdjustInterval(liveticks);
-    return true;
+  if (IsActive()) {
+    if (tick_period == 0) {
+      is_active = is_endless;
+      return true;
+    } else {
+      systick_t liveticks = now();
 
+      if (GetTicksToNextElapse(liveticks) == 0) {
+        is_active = is_endless;
+        SetStartTick(liveticks);
+        return true;
+      }
+    }
   }
 
   return false;
 }
 
 
-uint32_t Timer::Ticks() const
-{
-  if (IsActive())
-  {
+uint32_t Timer::Ticks() const {
+
+  if (IsActive()) {
     return static_cast<uint32_t>(GetTicksToNextElapse(now()));
-  }
-  else
-  {
+  } else {
     return 0;
   }
 }

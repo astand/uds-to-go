@@ -1,68 +1,59 @@
 #include <assert.h>
 #include <string.h>
 #include "docan-receiver.h"
-#include "iso-tp.h"
+#include "docan-tp.h"
 #include "pci-helper.h"
 
-void DoCAN_Receiver::ProcessRx()
-{
-  if (rxds.state == RxState::ACTIVE)
-  {
-    if (Cr_tim.Elapsed())
-    {
+void DoCAN_Receiver::ProcessRx() {
+
+  if (rxds.state == RxState::ACTIVE) {
+    if (Cr_tim.Elapsed()) {
       // no consequitive frame in time
       rxds.state = RxState::IDLE;
       rxds.passed = 0;
       rxds.rxsize = 0;
-      itp.OnIsoRxEvent(N_Type::Conf, N_Result::TIMEOUT_Cr);
+      itp.OnIsoRxEvent(N_Event::Conf, N_Result::TIMEOUT_Cr);
     }
   }
 }
 
 
-void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t candl)
-{
+void DoCAN_Receiver::Receive(const uint8_t* data, datasize_t candl) {
+
   PciHelper helper;
   PciHelper::PciMeta inf;
-  size_t pcioffset = helper.UnpackPciInfo(data, candl, inf);
+  datasize_t pcioffset = helper.UnpackPciInfo(data, candl, inf);
 
-  assert(pcioffset <= candl && candl < 64u);
+  assert(pcioffset <= candl && candl < CANFD_DL_MAX);
 
-  if (pcioffset > 0)
-  {
-    switch (inf.type)
-    {
-      case (PciType::FF):
-        if (rxds.state == RxState::ACTIVE)
-        {
-          // reception is in progress (ISO 15765 tab 23 p 38)
-          itp.OnIsoRxEvent(N_Type::Data, N_Result::UNEXP_PDU);
+  if (pcioffset > 0) {
+    switch (inf.type) {
+      case (DC_FrameType::FF):
+        if (rxds.state == RxState::ACTIVE) {
+          // reception is in progress (ISO 15765-2 tab 23 (p 38))
+          itp.OnIsoRxEvent(N_Event::Data, N_Result::UNEXP_PDU);
         }
 
         // start new multi reception (cannot be less than 7 bytes)
-        if (inf.dlen < 8)
-        {
-          // Ignore case (ISO 15765 9.6.3.2 (p 29))
-        }
-        else if (inf.dlen > RXLEN)
-        {
+        if (inf.dlen < MIN_FF_CANDL) {
+          // Ignore case (ISO 15765-2 9.6.3.2 (p 29))
+        } else if (inf.dlen > RXLEN) {
           rxds.state = RxState::IDLE;
           // send FC with overflow status
-          helper.PackFlowControl(can_message, FlowState::OVERFLOW, 0, 0);
-          sender.SendFrame(can_message, candl, rxds.respid);
-        }
-        else
-        {
+          auto ret = helper.PackFlowControl(can_message, DC_FlowState::OVERFLOW, 0, 0);
+          itp.PduToCan(can_message, ret);
+        } else {
           // fine, reception can be processed
-          helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
-          sender.SendFrame(can_message, candl, rxds.respid);
+          auto ret = helper.PackFlowControl(can_message, DC_FlowState::CTS, rxds.blksize, rxds.stmin);
+          itp.PduToCan(can_message, ret);
+
           rxds.currblkn = 0;
           rxds.rxsize = inf.dlen;
-          uint32_t cpylen = candl - pcioffset;
+          datasize_t cpylen = candl - pcioffset;
           memcpy(rxbuff + rxds.passed, data + pcioffset, cpylen);
           rxds.passed = cpylen;
           rxds.expectsn = 1;
-          itp.OnIsoRxEvent(N_Type::DataFF, N_Result::OK_r, nullptr, rxds.rxsize);
+          itp.OnIsoRxEvent(N_Event::DataFF, N_Result::OK_r, nullptr, rxds.rxsize);
           // start timer
           rxds.state = RxState::ACTIVE;
           Cr_tim.Restart();
@@ -70,27 +61,20 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
 
         break;
 
-      case (PciType::CF):
-        if (rxds.state != RxState::ACTIVE || pcioffset != 1)
-        {
+      case (DC_FrameType::CF):
+        if (rxds.state != RxState::ACTIVE || pcioffset != 1) {
           rxds.state = RxState::IDLE;
-          itp.OnIsoRxEvent(N_Type::Data, N_Result::UNEXP_PDU);
-        }
-        else
-        {
-          if (inf.sn != (rxds.expectsn & 0xfu))
-          {
+          itp.OnIsoRxEvent(N_Event::Data, N_Result::UNEXP_PDU);
+        } else {
+          if (inf.sn != (rxds.expectsn & 0xfu)) {
             // Abort (ISO 15765 9.6.4.4 (p.30))
             rxds.state = RxState::IDLE;
-            itp.OnIsoRxEvent(N_Type::Data, N_Result::UNEXP_PDU);
-          }
-          else
-          {
+            itp.OnIsoRxEvent(N_Event::Data, N_Result::UNEXP_PDU);
+          } else {
             Cr_tim.Restart();
-            size_t cpylen = candl - pcioffset;
+            datasize_t cpylen = candl - pcioffset;
 
-            if ((rxds.passed + cpylen) > rxds.rxsize)
-            {
+            if ((rxds.passed + cpylen) > rxds.rxsize) {
               cpylen = rxds.rxsize - rxds.passed;
             }
 
@@ -101,45 +85,38 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
             ++rxds.expectsn;
             ++rxds.currblkn;
 
-            if (rxds.passed == rxds.rxsize)
-            {
+            if (rxds.passed == rxds.rxsize) {
               // reception ended, notify client
               rxds.state = RxState::IDLE;
-              itp.OnIsoRxEvent(N_Type::Data, N_Result::OK_r, rxbuff, rxds.rxsize);
-            }
-
-            if (rxds.currblkn >= rxds.blksize)
-            {
+              itp.OnIsoRxEvent(N_Event::Data, N_Result::OK_r, rxbuff, rxds.rxsize);
+            } else if (rxds.currblkn >= rxds.blksize) {
               // block ended, send FC
-              helper.PackFlowControl(can_message, FlowState::CTS, rxds.blksize, rxds.stmin);
-              sender.SendFrame(can_message, candl, rxds.respid);
+              auto ret = helper.PackFlowControl(can_message, DC_FlowState::CTS, rxds.blksize, rxds.stmin);
+              itp.PduToCan(can_message, ret);
               rxds.currblkn = 0;
             }
-
           }
         }
 
         break;
 
-      case (PciType::SF):
-        if (rxds.state == RxState::ACTIVE)
-        {
+      case (DC_FrameType::SF):
+        if (rxds.state == RxState::ACTIVE) {
           // ISO 15765-2 tab 23 (p 38) Notify unexpected pdu, abort multi reception
           // and process SF payload
           rxds.state = RxState::IDLE;
-          itp.OnIsoRxEvent(N_Type::Data, N_Result::UNEXP_PDU);
+          itp.OnIsoRxEvent(N_Event::Data, N_Result::UNEXP_PDU);
         }
 
-        itp.OnIsoRxEvent(N_Type::Data, N_Result::OK_r, data + pcioffset, inf.dlen);
+        itp.OnIsoRxEvent(N_Event::Data, N_Result::OK_r, data + pcioffset, inf.dlen);
 
         break;
 
       default:
-        if (rxds.state == RxState::ACTIVE)
-        {
+        if (rxds.state == RxState::ACTIVE) {
           // unexpected PDU during active reception
           rxds.state = RxState::IDLE;
-          itp.OnIsoRxEvent(N_Type::Conf, N_Result::UNEXP_PDU);
+          itp.OnIsoRxEvent(N_Event::Conf, N_Result::UNEXP_PDU);
         }
 
         break;
@@ -147,10 +124,11 @@ void DoCAN_Receiver::Receive(IsoSender& sender, const uint8_t* data, size_t cand
   }
 }
 
-ParChangeResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v)
-{
-  switch (name)
-  {
+SetParamResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v) {
+
+  auto ret = SetParamResult::OK;
+
+  switch (name) {
     case (ParName::BLKSZ):
       rxds.blksize = v;
       break;
@@ -159,13 +137,15 @@ ParChangeResult DoCAN_Receiver::SetParameter(ParName name, uint32_t v)
       rxds.stmin = v;
       break;
 
-    case (ParName::RESP_ADDR):
-      rxds.respid = v;
+    case (ParName::Cr_TIM_ms):
+      Cr_tim.Start(v);
+      Cr_tim.Stop();
       break;
 
     default:
+      ret = SetParamResult::WRONG_PARAMETER;
       break;
   }
 
-  return ParChangeResult::WRONG_PARAMETER;
+  return ret;
 }

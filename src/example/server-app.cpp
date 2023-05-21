@@ -1,33 +1,26 @@
 #include <assert.h>
 #include <stdlib.h>
-#include <iostream>
-#include <array>
 #include <thread>
-#include <string.h>
-#include <chrono>
-#include <sys/types.h>
+#include <string>
 #include <sys/ioctl.h>
-#include <sys/select.h>
-#include <mutex>
-#include <uds/isotp/docan-tp.h>
-#include <etc/helpers/static-allocator.h>
-#include "can-bridge.h"
 #include "argcollector.h"
-#include "iso-tp-server/serv-factory.h"
+#include "uds-test-server/serv-factory.h"
+#include "uds-test-server/cli-client.h"
 #include "app-helper.h"
 
 /* ---------------------------------------------------------------------------- */
-constexpr size_t RxBufferSize = 8192;
-constexpr size_t TxBufferSize = 8192;
 std::string cmd;
-std::mutex mtx;
 
 // name of socketcan interface for ISO-TP communication test
 static std::string ifname = "vcan0";
 
+static CliMen& climen = GetClientUds();
+
 /* ---------------------------------------------------------------------------- */
+// get ISO tp instance to set its params from arguments in command line
 static DoCAN_TP& iso_tp = GetDoCAN();
-static SocketCanReader listener(iso_tp);
+// get CAN can_reader to process it in the loop
+static SocketCanReader can_reader(iso_tp);
 
 static void set_do_can_parameters(DoCAN_TP&, argsret& params) {
 
@@ -78,13 +71,15 @@ int main(int argc, char** argv) {
 
   auto params = collectargs(argc, argv);
 
+  std::cout << " ----------- ECU simulation -------------- " << std::endl;
+  set_do_can_parameters(iso_tp, params);
+  std::cout << " ----------------------------------------- " << std::endl << std::endl;
+
   iso_tp.SetParameter(ParName::CANDL, 8);
   iso_tp.SetParameter(ParName::PADD_BYTE, 0xcc);
 
-  std::cout << "ISO Tp starting. Binding to '" << ifname << "'" << std::endl;
-  std::cout << " ----------------------------------------- " << std::endl;
-  set_do_can_parameters(iso_tp, params);
-  std::cout << " ----------------------------------------- " << std::endl << std::endl;
+  std::cout << "Can channel name '" << ifname << "'" << std::endl;
+
   auto sockfd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
   assert(sockfd > 0);
 
@@ -104,35 +99,18 @@ int main(int argc, char** argv) {
   assert(bind(sockfd, (struct sockaddr*)&loc_addr, sizeof(loc_addr)) >= 0);
 
   std::cout << "Started succesfully." << std::endl;
-  std::cout << " ----------------------------------------- " << std::endl << std::endl;
 
-  listener.SetSocket(sockfd);
+  // Bind FD to can_reader
+  can_reader.SetSocket(sockfd);
+  // Bind FD to sender
   GetCanSender().SetSocket(sockfd);
 
-  std::array<uint8_t, TxBufferSize> buffer;
+  std::array<uint8_t, 5000> buffer;
 
   for (size_t i = 0; i < buffer.size(); buffer[i] = static_cast<uint8_t>(i), i++);
 
   std::thread th1([&]() {
-    std::string readcmd;
-    std::cout << "Command read thread started... OK" << std::endl;
-    std::cout << "To send ISO TP packet input number (payload size) and press Enter" << std::endl;
-    std::cout << "If the target instance is available you will see the result in its output..." << std::endl;
-    bool run = true;
-
-    while (run) {
-      std::cin >> readcmd;
-
-      if (readcmd.size() > 0) {
-        if (readcmd.at(0) == 'e') {
-          // return from thread (exit)
-          run = false;
-        }
-
-        std::lock_guard<std::mutex> guard(mtx);
-        cmd = readcmd;
-      }
-    }
+    climen.Run();
   });
 
   BuildApp();
@@ -141,31 +119,11 @@ int main(int argc, char** argv) {
 
   while (true) {
     GetMainProcHandler().Process();
-    listener.Process();
+    can_reader.Process();
 
-    {
-      std::lock_guard<std::mutex> guard(mtx);
-
-      if (cmd.size() > 0) {
-        readcmd = cmd;
-        cmd.clear();
-      }
-    }
-
-    if (readcmd.size() > 0) {
-      if (readcmd.at(0) == 'e') {
-        // exit
-        break;
-      } else {
-        uint32_t sendsize = 0u;
-
-        if (sscanf(readcmd.c_str(), "%u", &sendsize) == 1) {
-          std::cout << " ---> SEND " << sendsize << " bytes payload" << std::endl;
-          iso_tp.Request(buffer.data(), sendsize);
-        }
-      }
-
-      readcmd.clear();
+    if (climen.IsCmd()) {
+      auto payload = climen.GetData();
+      iso_tp.Request(payload.data(), payload.size());
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
