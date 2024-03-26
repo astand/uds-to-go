@@ -1,3 +1,4 @@
+#include <array>
 #include <assert.h>
 #include <stdlib.h>
 #include <thread>
